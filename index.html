@@ -12,16 +12,19 @@
 <body>
   <div class="app-container">
 
+    <!-- Global header — always visible -->
+    <header class="app-header">
+      <h1 class="app-title" id="btn-go-home">Baza Deluxe</h1>
+      <div>
+        <input type="file" id="file-input" class="file-input-hidden" accept=".json">
+        <a href="docs.html" class="btn btn-secondary btn-sm">Dokumentacja</a>
+        <button class="btn btn-secondary btn-sm" id="btn-app-settings">Ustawienia</button>
+        <button class="btn btn-primary btn-sm" id="btn-import">Importuj talię</button>
+      </div>
+    </header>
+
     <!-- === DECK LIST VIEW === -->
     <div id="view-deck-list" class="view active">
-      <header class="app-header">
-        <h1 class="app-title">Baza Deluxe</h1>
-        <div>
-          <input type="file" id="file-input" class="file-input-hidden" accept=".json">
-          <button class="btn btn-secondary btn-sm" id="btn-app-settings">Ustawienia</button>
-          <button class="btn btn-primary" id="btn-import">Importuj talię</button>
-        </div>
-      </header>
       <div id="deck-list-container" class="deck-list"></div>
     </div>
 

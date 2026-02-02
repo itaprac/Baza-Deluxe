@@ -1,0 +1,335 @@
+{
+  "deck": {
+    "id": "randomize-demo",
+    "name": "Losowe wartości — Przykłady",
+    "description": "Talia demonstracyjna pokazująca możliwości systemu losowych wartości (randomize). Każde pytanie generuje inne liczby przy każdym wyświetleniu.",
+    "version": 1,
+    "categories": [
+      { "id": "arytmetyka", "name": "1. Arytmetyka", "questionCount": 4 },
+      { "id": "algebra", "name": "2. Algebra i wzory", "questionCount": 4 },
+      { "id": "geometria", "name": "3. Geometria", "questionCount": 3 },
+      { "id": "logarytmy", "name": "4. Logarytmy i potęgi", "questionCount": 3 },
+      { "id": "statystyka", "name": "5. Statystyka i prawdopodobieństwo", "questionCount": 3 },
+      { "id": "informatyka", "name": "6. Informatyka", "questionCount": 3 }
+    ]
+  },
+  "questions": [
+    {
+      "id": "rd-01",
+      "text": "Oblicz: {a} + {b} = ?",
+      "category": "arytmetyka",
+      "randomize": {
+        "a": [10, 99],
+        "b": [10, 99]
+      },
+      "answers": [
+        { "id": "a", "text": "={a+b}", "correct": true },
+        { "id": "b", "text": "={a+b+1}", "correct": false },
+        { "id": "c", "text": "={a+b-2}", "correct": false },
+        { "id": "d", "text": "={a*b}", "correct": false }
+      ],
+      "explanation": "{a} + {b} = ={a+b}"
+    },
+    {
+      "id": "rd-02",
+      "text": "Oblicz: {a} * {b} = ?",
+      "category": "arytmetyka",
+      "randomize": {
+        "a": [2, 15],
+        "b": [2, 15]
+      },
+      "answers": [
+        { "id": "a", "text": "={a*b}", "correct": true },
+        { "id": "b", "text": "={a*b+a}", "correct": false },
+        { "id": "c", "text": "={a*b-b}", "correct": false },
+        { "id": "d", "text": "={a+b}", "correct": false }
+      ],
+      "explanation": "{a} * {b} = ={a*b}"
+    },
+    {
+      "id": "rd-03",
+      "text": "Ile wynosi reszta z dzielenia {a} przez {b}?",
+      "category": "arytmetyka",
+      "randomize": {
+        "a": [20, 200],
+        "b": [3, 13]
+      },
+      "answers": [
+        { "id": "a", "text": "={mod(a,b)}", "correct": true },
+        { "id": "b", "text": "={mod(a,b)+1}", "correct": false },
+        { "id": "c", "text": "={floor(a/b)}", "correct": false },
+        { "id": "d", "text": "={b-1}", "correct": false }
+      ],
+      "explanation": "{a} mod {b} = ={mod(a,b)}, bo {a} = {b} * ={floor(a/b)} + ={mod(a,b)}"
+    },
+    {
+      "id": "rd-04",
+      "text": "NWD({a}, {b}) = ?",
+      "category": "arytmetyka",
+      "randomize": {
+        "a": [12, 120],
+        "b": [6, 80]
+      },
+      "answers": [
+        { "id": "a", "text": "={gcd(a,b)}", "correct": true },
+        { "id": "b", "text": "={lcm(a,b)}", "correct": false },
+        { "id": "c", "text": "={min(a,b)}", "correct": false },
+        { "id": "d", "text": "={gcd(a,b)+1}", "correct": false }
+      ],
+      "explanation": "NWD({a}, {b}) = ={gcd(a,b)}. NWW({a}, {b}) = ={lcm(a,b)}."
+    },
+    {
+      "id": "rd-05",
+      "text": "Rozwiąż równanie liniowe: {a}x + {b} = {c}. Ile wynosi x?",
+      "category": "algebra",
+      "randomize": {
+        "a": [2, 10],
+        "b": [-20, 20],
+        "c": [-20, 50]
+      },
+      "answers": [
+        { "id": "a", "text": "x = ={round((c-b)/a * 1000) / 1000}", "correct": true },
+        { "id": "b", "text": "x = ={round((c+b)/a * 1000) / 1000}", "correct": false },
+        { "id": "c", "text": "x = ={round((b-c)/a * 1000) / 1000}", "correct": false },
+        { "id": "d", "text": "x = ={round(c/a * 1000) / 1000}", "correct": false }
+      ],
+      "explanation": "{a}x + {b} = {c} => {a}x = {c} - ({b}) = ={c-b} => x = ={c-b} / {a} = ={round((c-b)/a * 1000) / 1000}"
+    },
+    {
+      "id": "rd-06",
+      "text": "Oblicz wartość wyrażenia: ({a} + {b})^2 = ?",
+      "category": "algebra",
+      "randomize": {
+        "a": [1, 12],
+        "b": [1, 12]
+      },
+      "answers": [
+        { "id": "a", "text": "={pow(a+b, 2)}", "correct": true },
+        { "id": "b", "text": "={a*a + b*b}", "correct": false },
+        { "id": "c", "text": "={2*a*b}", "correct": false },
+        { "id": "d", "text": "={pow(a+b, 2) + 1}", "correct": false }
+      ],
+      "explanation": "({a} + {b})^2 = ={a+b}^2 = ={pow(a+b, 2)}. Wzór: (a+b)^2 = a^2 + 2ab + b^2 = ={a*a} + ={2*a*b} + ={b*b} = ={pow(a+b, 2)}"
+    },
+    {
+      "id": "rd-07",
+      "text": "Wyznacz wyróżnik (delta) równania kwadratowego: {a}x^2 + {b}x + {c} = 0",
+      "category": "algebra",
+      "randomize": {
+        "a": [1, 5],
+        "b": [-10, 10],
+        "c": [-8, 8]
+      },
+      "answers": [
+        { "id": "a", "text": "delta = ={b*b - 4*a*c}", "correct": true },
+        { "id": "b", "text": "delta = ={b*b + 4*a*c}", "correct": false },
+        { "id": "c", "text": "delta = ={4*a*c - b*b}", "correct": false },
+        { "id": "d", "text": "delta = ={2*a*c}", "correct": false }
+      ],
+      "explanation": "delta = b^2 - 4ac = ({b})^2 - 4*{a}*({c}) = ={b*b} - ={4*a*c} = ={b*b - 4*a*c}"
+    },
+    {
+      "id": "rd-08",
+      "text": "Jaka jest wartość bezwzględna wyrażenia: {a} - {b} = ?",
+      "category": "algebra",
+      "randomize": {
+        "a": [-20, 20],
+        "b": [-20, 20]
+      },
+      "answers": [
+        { "id": "a", "text": "|{a} - {b}| = ={abs(a-b)}", "correct": true },
+        { "id": "b", "text": "|{a} - {b}| = ={a-b}", "correct": false },
+        { "id": "c", "text": "|{a} - {b}| = ={abs(a-b)+1}", "correct": false },
+        { "id": "d", "text": "|{a} - {b}| = ={abs(a+b)}", "correct": false }
+      ],
+      "explanation": "{a} - {b} = ={a-b}, wartość bezwzględna: |={a-b}| = ={abs(a-b)}"
+    },
+    {
+      "id": "rd-09",
+      "text": "Oblicz pole trójkąta o podstawie {a} cm i wysokości {h} cm.",
+      "category": "geometria",
+      "randomize": {
+        "a": [3, 25],
+        "h": [2, 20]
+      },
+      "answers": [
+        { "id": "a", "text": "={a*h/2} cm^2", "correct": true },
+        { "id": "b", "text": "={a*h} cm^2", "correct": false },
+        { "id": "c", "text": "={a+h} cm^2", "correct": false },
+        { "id": "d", "text": "={2*a*h} cm^2", "correct": false }
+      ],
+      "explanation": "P = (a * h) / 2 = ({a} * {h}) / 2 = ={a*h} / 2 = ={a*h/2} cm^2"
+    },
+    {
+      "id": "rd-10",
+      "text": "Jaką długość ma przekątna prostokąta o bokach {a} i {b}?",
+      "category": "geometria",
+      "randomize": {
+        "a": [3, 12, 4, 5, 6, 8, 9, 10, 15, 20],
+        "b": [3, 4, 5, 6, 7, 8, 12, 16]
+      },
+      "answers": [
+        { "id": "a", "text": "d = ={round(sqrt(a*a+b*b)*100)/100}", "correct": true },
+        { "id": "b", "text": "d = ={a+b}", "correct": false },
+        { "id": "c", "text": "d = ={round(sqrt(a*a+b*b)*100)/100 + 1}", "correct": false },
+        { "id": "d", "text": "d = ={round(sqrt(a*b)*100)/100}", "correct": false }
+      ],
+      "explanation": "Z tw. Pitagorasa: d = sqrt({a}^2 + {b}^2) = sqrt(={a*a} + ={b*b}) = sqrt(={a*a+b*b}) = ={round(sqrt(a*a+b*b)*100)/100}"
+    },
+    {
+      "id": "rd-11",
+      "text": "Oblicz pole koła o promieniu r = {r} cm. Wynik zaokrąglij do setnych.",
+      "category": "geometria",
+      "randomize": {
+        "r": [1, 15]
+      },
+      "answers": [
+        { "id": "a", "text": "P = ={round(PI*r*r*100)/100} cm^2", "correct": true },
+        { "id": "b", "text": "P = ={round(2*PI*r*100)/100} cm^2", "correct": false },
+        { "id": "c", "text": "P = ={round(PI*r*100)/100} cm^2", "correct": false },
+        { "id": "d", "text": "P = ={r*r} cm^2", "correct": false }
+      ],
+      "explanation": "P = pi * r^2 = pi * {r}^2 = pi * ={r*r} = ={round(PI*r*r*100)/100} cm^2. Obwód: 2*pi*r = ={round(2*PI*r*100)/100} cm."
+    },
+    {
+      "id": "rd-12",
+      "text": "Oblicz: log2({n}) = ?",
+      "category": "logarytmy",
+      "randomize": {
+        "n": [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
+      },
+      "answers": [
+        { "id": "a", "text": "={round(log2(n))}", "correct": true },
+        { "id": "b", "text": "={round(log2(n))+1}", "correct": false },
+        { "id": "c", "text": "={round(log2(n))-1}", "correct": false },
+        { "id": "d", "text": "={round(log10(n))}", "correct": false }
+      ],
+      "explanation": "log2({n}) = ={round(log2(n))}, bo 2^={round(log2(n))} = {n}"
+    },
+    {
+      "id": "rd-13",
+      "text": "Oblicz: {base}^{exp} = ?",
+      "category": "logarytmy",
+      "randomize": {
+        "base": [2, 3, 4, 5, 6, 7, 8, 9, 10],
+        "exp": [2, 3, 4]
+      },
+      "answers": [
+        { "id": "a", "text": "={pow(base, exp)}", "correct": true },
+        { "id": "b", "text": "={base * exp}", "correct": false },
+        { "id": "c", "text": "={pow(base, exp) + base}", "correct": false },
+        { "id": "d", "text": "={pow(base, exp) - 1}", "correct": false }
+      ],
+      "explanation": "{base}^{exp} = ={pow(base, exp)}"
+    },
+    {
+      "id": "rd-14",
+      "text": "Uprość: sqrt({n}^2) = ?",
+      "category": "logarytmy",
+      "randomize": {
+        "n": [-20, 20]
+      },
+      "answers": [
+        { "id": "a", "text": "={abs(n)}", "correct": true },
+        { "id": "b", "text": "={n}", "correct": false },
+        { "id": "c", "text": "={n*n}", "correct": false },
+        { "id": "d", "text": "=(-{n})", "correct": false }
+      ],
+      "explanation": "sqrt(x^2) = |x|, więc sqrt(({n})^2) = sqrt(={n*n}) = |{n}| = ={abs(n)}"
+    },
+    {
+      "id": "rd-15",
+      "text": "Średnia arytmetyczna liczb {a}, {b} i {c} wynosi:",
+      "category": "statystyka",
+      "randomize": {
+        "a": [1, 30],
+        "b": [1, 30],
+        "c": [1, 30]
+      },
+      "answers": [
+        { "id": "a", "text": "={round((a+b+c)/3*100)/100}", "correct": true },
+        { "id": "b", "text": "={a+b+c}", "correct": false },
+        { "id": "c", "text": "={round((a+b+c)/2*100)/100}", "correct": false },
+        { "id": "d", "text": "={round((a*b*c)/3*100)/100}", "correct": false }
+      ],
+      "explanation": "Średnia = ({a} + {b} + {c}) / 3 = ={a+b+c} / 3 = ={round((a+b+c)/3*100)/100}"
+    },
+    {
+      "id": "rd-16",
+      "text": "W urnie jest {r} kul czerwonych i {b} kul niebieskich. Jakie jest prawdopodobieństwo wylosowania kuli czerwonej? Podaj w procentach (zaokrąglij do setnych).",
+      "category": "statystyka",
+      "randomize": {
+        "r": [1, 15],
+        "b": [1, 15]
+      },
+      "answers": [
+        { "id": "a", "text": "={round(r/(r+b)*10000)/100}%", "correct": true },
+        { "id": "b", "text": "={round(b/(r+b)*10000)/100}%", "correct": false },
+        { "id": "c", "text": "={round(r/b*10000)/100}%", "correct": false },
+        { "id": "d", "text": "50%", "correct": false }
+      ],
+      "explanation": "P(czerwona) = {r} / ({r} + {b}) = {r} / ={r+b} = ={round(r/(r+b)*10000)/100}%"
+    },
+    {
+      "id": "rd-17",
+      "text": "Ile permutacji (sposobów uporządkowania) ma zbiór {n}-elementowy?",
+      "category": "statystyka",
+      "randomize": {
+        "n": [3, 4, 5, 6, 7, 8]
+      },
+      "answers": [
+        { "id": "a", "text": "{n}! = ={fact(n)}", "correct": true },
+        { "id": "b", "text": "={pow(n, 2)}", "correct": false },
+        { "id": "c", "text": "={pow(2, n)}", "correct": false },
+        { "id": "d", "text": "={n * (n-1)}", "correct": false }
+      ],
+      "explanation": "{n}! = ={fact(n)}"
+    },
+    {
+      "id": "rd-18",
+      "text": "Ile bitów potrzeba do zapisania liczby {n} w systemie binarnym?",
+      "category": "informatyka",
+      "randomize": {
+        "n": [2, 3, 4, 7, 8, 15, 16, 31, 32, 63, 64, 127, 128, 255, 256, 511, 512, 1023, 1024]
+      },
+      "answers": [
+        { "id": "a", "text": "={floor(log2(n))+1}", "correct": true },
+        { "id": "b", "text": "={floor(log2(n))}", "correct": false },
+        { "id": "c", "text": "={floor(log2(n))+2}", "correct": false },
+        { "id": "d", "text": "={ceil(sqrt(n))}", "correct": false }
+      ],
+      "explanation": "Minimalna liczba bitów = floor(log2({n})) + 1 = ={floor(log2(n))} + 1 = ={floor(log2(n))+1}. Zakres ={floor(log2(n))+1} bitów: 0 do ={pow(2, floor(log2(n))+1) - 1}."
+    },
+    {
+      "id": "rd-19",
+      "text": "Ile maksymalnie porównań potrzeba w wyszukiwaniu binarnym dla tablicy {n}-elementowej?",
+      "category": "informatyka",
+      "randomize": {
+        "n": [8, 16, 32, 64, 100, 128, 256, 500, 512, 1000, 1024, 2048, 4096, 10000]
+      },
+      "answers": [
+        { "id": "a", "text": "={ceil(log2(n+1))}", "correct": true },
+        { "id": "b", "text": "={round(log2(n))}", "correct": false },
+        { "id": "c", "text": "={n}", "correct": false },
+        { "id": "d", "text": "={floor(sqrt(n))}", "correct": false }
+      ],
+      "explanation": "Binary search: O(log2 n). Dla {n} elementów: ceil(log2({n}+1)) = ={ceil(log2(n+1))} porównań."
+    },
+    {
+      "id": "rd-20",
+      "text": "W sieci neuronowej mamy warstwę z {inp} wejściami i {out} neuronami. Ile jest wag (bez biasów)?",
+      "category": "informatyka",
+      "randomize": {
+        "inp": [2, 3, 4, 5, 8, 10, 16, 32, 64],
+        "out": [2, 3, 4, 5, 8, 10, 16]
+      },
+      "answers": [
+        { "id": "a", "text": "={inp * out}", "correct": true },
+        { "id": "b", "text": "={inp + out}", "correct": false },
+        { "id": "c", "text": "={inp * out + out}", "correct": false },
+        { "id": "d", "text": "={pow(inp, 2)}", "correct": false }
+      ],
+      "explanation": "Każdy z {out} neuronów ma {inp} wag = {inp} * {out} = ={inp*out}. Z biasami byłoby ={inp*out + out} ({inp}*{out} + {out})."
+    }
+  ]
+}

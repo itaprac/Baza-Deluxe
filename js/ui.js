@@ -62,16 +62,23 @@ export function renderDeckList(decks, statsMap) {
 
 // --- Question Rendering ---
 
-export function renderQuestion(question, cardNumber, totalForSession, isMultiSelect, shouldShuffle = true) {
+export function renderQuestion(question, cardNumber, totalForSession, isMultiSelect, shouldShuffle = true, showReroll = false) {
   const shuffledAnswers = shouldShuffle ? shuffle(question.answers) : [...question.answers];
   const hint = isMultiSelect ? '(Zaznacz wszystkie poprawne)' : '(Wybierz jedną odpowiedź)';
   const indicatorType = isMultiSelect ? 'checkbox' : '';
+
+  const rerollBtn = showReroll
+    ? '<button class="btn-reroll" id="btn-reroll-question" title="Wylosuj ponownie">&#x1F3B2;</button>'
+    : '';
 
   const html = `
     <div class="question-card">
       <div class="question-card-topbar">
         <div class="question-number">Pytanie ${cardNumber}</div>
-        <button class="btn-edit-question" id="btn-edit-question" title="Edytuj pytanie">&#9998;</button>
+        <div class="question-card-topbar-actions">
+          ${rerollBtn}
+          <button class="btn-edit-question" id="btn-edit-question" title="Edytuj pytanie">&#9998;</button>
+        </div>
       </div>
       <div class="question-text">${renderLatex(escapeHtml(question.text))}</div>
       <div class="question-hint">${hint}</div>
@@ -172,7 +179,9 @@ export function renderAnswerFeedback(question, shuffledAnswers, selectedIds, exp
     <div class="question-card">
       <div class="question-card-topbar">
         <div></div>
-        <button class="btn-edit-question" id="btn-edit-question" title="Edytuj pytanie">&#9998;</button>
+        <div class="question-card-topbar-actions">
+          <button class="btn-edit-question" id="btn-edit-question" title="Edytuj pytanie">&#9998;</button>
+        </div>
       </div>
       <div class="question-text">${renderLatex(escapeHtml(question.text))}</div>
       <div class="answers-list">${answersHtml}</div>
@@ -553,8 +562,8 @@ export function renderSettings(settings, defaults) {
     <div class="settings-form">
       <div class="settings-group">
         <label class="settings-label" for="set-newCardsPerDay">Nowe karty dziennie</label>
-        <input class="settings-input" type="number" id="set-newCardsPerDay" min="1" max="100" value="${settings.newCardsPerDay}">
-        <div class="settings-hint">Ile nowych kart wprowadzić dziennie (1–100)</div>
+        <input class="settings-input" type="number" id="set-newCardsPerDay" min="1" max="9999" value="${settings.newCardsPerDay}">
+        <div class="settings-hint">Ile nowych kart wprowadzić dziennie (1–9999)</div>
       </div>
       <div class="settings-group">
         <label class="settings-label" for="set-maxReviewsPerDay">Maks. powtórek dziennie</label>
@@ -612,6 +621,17 @@ export function renderQuestionEditor(question) {
     </div>
   `).join('');
 
+  const hasRandomize = question.randomize && typeof question.randomize === 'object';
+  const vars = hasRandomize ? Object.entries(question.randomize) : [];
+
+  const varsHtml = vars.map(([name, values]) => `
+    <div class="editor-var-row">
+      <input type="text" class="editor-var-name" value="${escapeAttr(name)}" placeholder="nazwa">
+      <input type="text" class="editor-var-values" value="${escapeAttr(values.join(', '))}" placeholder="min, max lub v1, v2, v3...">
+      <button class="btn-remove-var" title="Usuń zmienną">&times;</button>
+    </div>
+  `).join('');
+
   document.getElementById('study-content').innerHTML = `
     <div class="question-card question-editor">
       <div class="editor-section">
@@ -628,12 +648,73 @@ export function renderQuestionEditor(question) {
         <label class="editor-label">Wyjaśnienie <span class="editor-label-hint">(opcjonalne)</span></label>
         <textarea class="editor-textarea" id="editor-explanation" rows="2">${escapeHtml(question.explanation || '')}</textarea>
       </div>
+      <div class="editor-section editor-randomize-section">
+        <div class="editor-randomize-header">
+          <label class="editor-label">Losowe wartości</label>
+          <label class="toggle-switch toggle-switch-sm">
+            <input type="checkbox" id="editor-randomize-toggle" ${hasRandomize ? 'checked' : ''}>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="editor-randomize-body" id="editor-randomize-body" style="${hasRandomize ? '' : 'display:none'}">
+          <div class="editor-randomize-hint">
+            Użyj <code>{nazwa}</code> w treści, <code>=&#123;wyrażenie&#125;</code> w odpowiedziach.
+            Zakres: <code>min, max</code> (2 liczby) lub lista: <code>v1, v2, v3</code> (3+).
+          </div>
+          <div class="editor-vars-list" id="editor-vars-list">
+            ${varsHtml}
+          </div>
+          <button class="btn btn-secondary btn-sm" id="btn-add-var">+ Dodaj zmienną</button>
+        </div>
+      </div>
       <div class="editor-actions">
         <button class="btn btn-secondary" id="btn-editor-cancel">Anuluj</button>
         <button class="btn btn-primary" id="btn-editor-save">Zapisz zmiany</button>
       </div>
     </div>
   `;
+
+  // Bind randomize editor events
+  bindRandomizeEditorEvents();
+}
+
+function bindRandomizeEditorEvents() {
+  const toggle = document.getElementById('editor-randomize-toggle');
+  const body = document.getElementById('editor-randomize-body');
+  if (toggle && body) {
+    toggle.addEventListener('change', () => {
+      body.style.display = toggle.checked ? '' : 'none';
+    });
+  }
+
+  const addBtn = document.getElementById('btn-add-var');
+  if (addBtn) {
+    addBtn.addEventListener('click', () => {
+      const list = document.getElementById('editor-vars-list');
+      const row = document.createElement('div');
+      row.className = 'editor-var-row';
+      row.innerHTML = `
+        <input type="text" class="editor-var-name" value="" placeholder="nazwa">
+        <input type="text" class="editor-var-values" value="" placeholder="min, max lub v1, v2, v3...">
+        <button class="btn-remove-var" title="Usuń zmienną">&times;</button>
+      `;
+      list.appendChild(row);
+      bindRemoveVarButtons();
+    });
+  }
+
+  bindRemoveVarButtons();
+}
+
+function bindRemoveVarButtons() {
+  document.querySelectorAll('.btn-remove-var').forEach(btn => {
+    btn.replaceWith(btn.cloneNode(true)); // Remove old listeners
+  });
+  document.querySelectorAll('.btn-remove-var').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.closest('.editor-var-row').remove();
+    });
+  });
 }
 
 // --- App Settings ---
@@ -671,6 +752,40 @@ export function renderAppSettings(appSettings, defaults) {
     </button>
   `).join('');
 
+  const colorThemes = [
+    { value: 'academic-noir', label: 'Academic Noir', colors: ['#c45d3e', '#c9a227', '#4a6fa5', '#3a8a5c'] },
+    { value: 'ocean', label: 'Ocean', colors: ['#2b7a9e', '#3aa5a0', '#4a8cc4', '#2d9a6f'] },
+    { value: 'forest', label: 'Forest', colors: ['#5a8a4a', '#8ab060', '#7a9968', '#c4a43a'] },
+    { value: 'midnight', label: 'Midnight', colors: ['#5b5fc7', '#7b6fb0', '#4a6fa5', '#8b5fc7'] },
+    { value: 'lavender', label: 'Lavender', colors: ['#9b6fa0', '#c47a9a', '#8a7ab5', '#b07aaa'] },
+  ];
+
+  const colorThemeHtml = colorThemes.map(ct => `
+    <button class="color-theme-option ${appSettings.colorTheme === ct.value ? 'active' : ''}" data-color-theme="${ct.value}">
+      <div class="color-theme-preview">
+        ${ct.colors.map(c => `<span class="color-dot" style="background:${c}"></span>`).join('')}
+      </div>
+      <div class="color-theme-label">${ct.label}</div>
+    </button>
+  `).join('');
+
+  const layoutWidths = [
+    { value: '35%', label: 'Wąski', desc: '35%' },
+    { value: '40%', label: 'Kompaktowy', desc: '40%' },
+    { value: '50%', label: 'Normalny', desc: '50%' },
+    { value: '65%', label: 'Szeroki', desc: '65%' },
+  ];
+
+  const currentWidthNum = parseInt(appSettings.layoutWidth);
+  const isPreset = layoutWidths.some(lw => lw.value === appSettings.layoutWidth);
+
+  const layoutHtml = layoutWidths.map(lw => `
+    <button class="layout-width-option ${appSettings.layoutWidth === lw.value ? 'active' : ''}" data-width="${lw.value}">
+      <div class="layout-width-label">${lw.label}</div>
+      <div class="layout-width-desc">${lw.desc}</div>
+    </button>
+  `).join('');
+
   document.getElementById('app-settings-content').innerHTML = `
     <div class="app-settings-form">
       <div class="settings-section">
@@ -684,9 +799,32 @@ export function renderAppSettings(appSettings, defaults) {
       </div>
 
       <div class="settings-section">
-        <div class="settings-section-title">Motyw</div>
+        <div class="settings-section-title">Motyw kolorystyczny</div>
+        <div class="color-theme-options" id="color-theme-options">
+          ${colorThemeHtml}
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Tryb wyświetlania</div>
         <div class="theme-options" id="theme-options">
           ${themeHtml}
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Szerokość układu</div>
+        <div class="layout-width-options" id="layout-width-options">
+          ${layoutHtml}
+        </div>
+        <div class="custom-width-row">
+          <label for="custom-width-input">Własna szerokość:</label>
+          <div class="custom-width-input-wrap">
+            <input type="number" id="custom-width-input" min="20" max="100" step="5"
+              value="${!isNaN(currentWidthNum) ? currentWidthNum : ''}"
+              placeholder="np. 70">
+            <span class="custom-width-unit">%</span>
+          </div>
         </div>
       </div>
 
@@ -722,6 +860,14 @@ export function renderAppSettings(appSettings, defaults) {
             <span class="toggle-slider"></span>
           </label>
         </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Informacje</div>
+        <p style="font-size: 0.85rem; line-height: 1.6; color: var(--color-text-secondary); margin-bottom: 12px;">
+          Baza Deluxe — aplikacja do nauki z powtarzaniem rozłożonym w czasie.
+        </p>
+        <a href="docs.html" class="btn btn-secondary btn-sm">Dokumentacja</a>
       </div>
     </div>
   `;

@@ -168,29 +168,29 @@ export function recordStat(deckId, rating, cardSource) {
 /**
  * Get summary stats for a deck (for the deck list screen).
  */
-export function getDeckStats(deckId) {
+export function getDeckStats(deckId, settings = DEFAULT_SETTINGS) {
   const now = Date.now();
   const today = startOfDay(now);
   const cards = storage.getCards(deckId);
 
   const dueReview = cards.filter(c => isReview(c) && c.dueDate <= now).length;
   const dueLearning = cards.filter(c => (isLearning(c) || isRelearning(c)) && c.dueDate <= now).length;
+  const totalNew = cards.filter(c => isNew(c)).length;
+  const learningTotal = cards.filter(c => isLearning(c) || isRelearning(c)).length;
   const newCardsToday = cards.filter(c =>
     c.firstStudiedDate != null && startOfDay(c.firstStudiedDate) === today
   ).length;
-  const totalNew = cards.filter(c => isNew(c)).length;
-
-  const learningTotal = cards.filter(c => isLearning(c) || isRelearning(c)).length;
+  const newAvailable = Math.min(totalNew, Math.max(0, settings.newCardsPerDay - newCardsToday));
 
   return {
     dueToday: dueReview + dueLearning,
     dueReview,
     dueLearning,
     learningTotal,
-    newAvailable: totalNew,
+    newAvailable,
+    totalNew,
     totalCards: cards.length,
     learned: cards.filter(c => isReview(c)).length,
-    newCardsToday,
   };
 }
 

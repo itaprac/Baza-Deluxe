@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dokumentacja — Baza Deluxe</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <script>
+    // Apply saved theme, color theme, and layout width from localStorage
+    (function() {
+      try {
+        var s = JSON.parse(localStorage.getItem('baza_appSettings'));
+        if (!s) return;
+        if (s.colorTheme) document.documentElement.setAttribute('data-color-theme', s.colorTheme);
+        if (s.layoutWidth) document.documentElement.style.setProperty('--app-max-width', s.layoutWidth);
+        if (s.theme === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        } else if (s.theme === 'light') {
+          document.documentElement.setAttribute('data-theme', 'light');
+        } else {
+          var dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+        }
+      } catch(e) {}
+    })();
+  </script>
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <a href="index.html" class="app-title">Baza Deluxe</a>
+      <div>
+        <a href="index.html" class="btn btn-secondary btn-sm">Powrót do aplikacji</a>
+      </div>
+    </header>
+
+    <div class="docs-content">
+
+      <nav class="docs-toc">
+        <div class="docs-toc-title">Spis treści</div>
+        <ul>
+          <li><a href="#about">Czym jest Baza Deluxe</a></li>
+          <li><a href="#import">Import talii</a></li>
+          <li><a href="#modes">Tryby nauki</a></li>
+          <li><a href="#sm2">Algorytm SM-2</a></li>
+          <li><a href="#shortcuts">Skróty klawiszowe</a></li>
+          <li><a href="#settings">Ustawienia</a></li>
+          <li><a href="#randomize">Losowe wartości (szablony)</a></li>
+        </ul>
+      </nav>
+
+      <!-- Section: About -->
+      <section class="docs-section" id="about">
+        <h2 class="docs-section-title">Czym jest Baza Deluxe</h2>
+        <p>
+          Baza Deluxe to aplikacja webowa do nauki z wykorzystaniem fiszek i powtarzania rozłożonego w czasie.
+          Działa całkowicie w przeglądarce — dane są przechowywane w localStorage, nie wymagany jest serwer ani konto.
+        </p>
+        <p>
+          Aplikacja obsługuje talie pytań wielokrotnego wyboru z wieloma poprawnymi odpowiedziami,
+          kategoriami, wyjaśnieniami i trzema trybami nauki: Anki (powtarzanie rozłożone), Test i Przeglądanie.
+        </p>
+      </section>
+
+      <!-- Section: Import -->
+      <section class="docs-section" id="import">
+        <h2 class="docs-section-title">Import talii</h2>
+        <p>
+          Talie importuje się przez pliki JSON. Kliknij przycisk <strong>Importuj talię</strong> na stronie głównej
+          i wybierz plik JSON. Ponowny import tej samej talii (ten sam <code>id</code>) zaktualizuje istniejące pytania
+          i doda nowe, zachowując postęp nauki.
+        </p>
+        <h3>Format JSON</h3>
+        <p>Plik JSON powinien mieć następującą strukturę:</p>
+        <pre class="docs-code"><code>{
+  "id": "moja-talia",
+  "name": "Nazwa talii",
+  "description": "Opcjonalny opis",
+  "categories": [
+    { "id": "cat1", "name": "1. Kategoria pierwsza" },
+    { "id": "cat2", "name": "2. Kategoria druga" }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "text": "Treść pytania?",
+      "category": "cat1",
+      "answers": [
+        { "id": "a1", "text": "Odpowiedź A", "correct": true },
+        { "id": "a2", "text": "Odpowiedź B", "correct": false },
+        { "id": "a3", "text": "Odpowiedź C", "correct": true },
+        { "id": "a4", "text": "Odpowiedź D", "correct": false }
+      ],
+      "explanation": "Opcjonalne wyjaśnienie."
+    }
+  ]
+}</code></pre>
+        <h3>Wymagane pola</h3>
+        <ul>
+          <li><code>id</code> — unikalny identyfikator talii (string)</li>
+          <li><code>name</code> — nazwa wyświetlana w aplikacji</li>
+          <li><code>questions</code> — tablica pytań, każde z <code>id</code>, <code>text</code>, <code>answers</code></li>
+          <li>Każda odpowiedź musi mieć <code>id</code>, <code>text</code> i <code>correct</code> (boolean)</li>
+        </ul>
+        <h3>Opcjonalne pola</h3>
+        <ul>
+          <li><code>description</code> — opis talii</li>
+          <li><code>categories</code> — lista kategorii do filtrowania pytań</li>
+          <li><code>category</code> w pytaniu — przypisanie do kategorii</li>
+          <li><code>explanation</code> w pytaniu — wyjaśnienie wyświetlane po odpowiedzi</li>
+        </ul>
+
+        <h3>Wbudowane talie (katalog data/)</h3>
+        <p>
+          Pliki JSON umieszczone w katalogu <code>data/</code> obok <code>index.html</code> są automatycznie
+          ładowane przy starcie aplikacji. Ścieżki wbudowanych talii są zdefiniowane w kodzie aplikacji
+          (tablica <code>builtInFiles</code> w <code>app.js</code>).
+        </p>
+        <p>
+          Aby dodać własną wbudowaną talię:
+        </p>
+        <ul>
+          <li>Umieść plik JSON w katalogu <code>data/</code> (np. <code>data/moja-talia.json</code>)</li>
+          <li>Dodaj ścieżkę do tablicy <code>builtInFiles</code> w pliku <code>js/app.js</code></li>
+          <li>Talia załaduje się automatycznie przy pierwszym uruchomieniu aplikacji</li>
+        </ul>
+        <p>
+          Jeśli talia o tym samym <code>id</code> już istnieje w localStorage, ponowny import zaktualizuje
+          pytania i doda nowe, zachowując postęp nauki.
+        </p>
+      </section>
+
+      <!-- Section: Modes -->
+      <section class="docs-section" id="modes">
+        <h2 class="docs-section-title">Tryby nauki</h2>
+
+        <h3>Anki — powtarzanie rozłożone</h3>
+        <p>
+          Główny tryb nauki oparty na algorytmie SM-2. Karty wyświetlane są w kolejności wyznaczonej
+          przez algorytm. Po zobaczeniu pytania i odpowiedzi, oceniasz swoją wiedzę jednym z czterech przycisków:
+          <strong>Powtórz</strong>, <strong>Trudne</strong>, <strong>Dobrze</strong>, <strong>Łatwe</strong>.
+        </p>
+        <p>
+          Algorytm dostosowuje interwały powtórek na podstawie Twoich ocen — pytania, które znasz dobrze,
+          pojawiają się coraz rzadziej, a te trudne wracają częściej.
+        </p>
+
+        <h3>Test</h3>
+        <p>
+          Tryb egzaminacyjny. Wybierasz liczbę pytań (suwakiem), a aplikacja losuje je z talii.
+          Odpowiadasz na pytania jedno po drugim, na końcu widzisz wynik procentowy
+          i przegląd poprawnych/błędnych odpowiedzi.
+        </p>
+        <p>
+          W trybie testu możesz cofać się do poprzednich pytań przyciskiem <strong>Wstecz</strong>.
+          Test nie wpływa na postęp w trybie Anki.
+        </p>
+
+        <h3>Przeglądanie</h3>
+        <p>
+          Lista wszystkich pytań z odpowiedziami i wyjaśnieniami. Przydatne do nauki pasywnej
+          lub szybkiego sprawdzenia materiału. Dostępna wyszukiwarka pytań.
+        </p>
+      </section>
+
+      <!-- Section: SM-2 -->
+      <section class="docs-section" id="sm2">
+        <h2 class="docs-section-title">Algorytm SM-2</h2>
+        <p>
+          Baza Deluxe implementuje algorytm SM-2 w wariancie zbliżonym do Anki.
+          Każda karta przechodzi przez cztery stany:
+        </p>
+
+        <div class="docs-states">
+          <div class="docs-state">
+            <div class="docs-state-name">Nowa</div>
+            <div class="docs-state-desc">Karta nigdy nie była uczona. Czeka w kolejce nowych kart.</div>
+          </div>
+          <div class="docs-state">
+            <div class="docs-state-name">W nauce</div>
+            <div class="docs-state-desc">Karta przechodzi przez kroki nauki (domyślnie 1 min, 10 min). Odpowiedź "Dobrze" na ostatnim kroku przechodzi kartę do stanu "Powtórka".</div>
+          </div>
+          <div class="docs-state">
+            <div class="docs-state-name">Powtórka</div>
+            <div class="docs-state-desc">Karta z wyznaczonym interwałem w dniach. Interwał rośnie po każdej poprawnej odpowiedzi.</div>
+          </div>
+          <div class="docs-state">
+            <div class="docs-state-name">Ponowna nauka</div>
+            <div class="docs-state-desc">Karta z powtórki oceniona "Powtórz" — wraca do kroków nauki, ale zachowuje historię.</div>
+          </div>
+        </div>
+
+        <h3>Oceny i ich efekt</h3>
+        <table class="docs-table">
+          <thead>
+            <tr>
+              <th>Ocena</th>
+              <th>Karta w nauce</th>
+              <th>Karta w powtórce</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Powtórz</strong> (1)</td>
+              <td>Powrót do pierwszego kroku</td>
+              <td>Ease -0.20, przejście do ponownej nauki</td>
+            </tr>
+            <tr>
+              <td><strong>Trudne</strong> (2)</td>
+              <td>Powtórzenie bieżącego kroku (x1.5)</td>
+              <td>Ease -0.15, interwał x1.2</td>
+            </tr>
+            <tr>
+              <td><strong>Dobrze</strong> (3)</td>
+              <td>Następny krok (lub promocja do powtórki)</td>
+              <td>Interwał x ease factor</td>
+            </tr>
+            <tr>
+              <td><strong>Łatwe</strong> (4)</td>
+              <td>Natychmiastowa promocja z dłuższym interwałem</td>
+              <td>Ease +0.15, interwał x ease x 1.3</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Parametry algorytmu</h3>
+        <table class="docs-table">
+          <thead>
+            <tr>
+              <th>Parametr</th>
+              <th>Domyślna wartość</th>
+              <th>Opis</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Kroki nauki</td>
+              <td>1, 10 min</td>
+              <td>Interwały minutowe dla nowych kart</td>
+            </tr>
+            <tr>
+              <td>Kroki ponownej nauki</td>
+              <td>10 min</td>
+              <td>Interwały dla kart z błędem</td>
+            </tr>
+            <tr>
+              <td>Interwał początkowy</td>
+              <td>1 dzień</td>
+              <td>Pierwszy interwał po ukończeniu nauki</td>
+            </tr>
+            <tr>
+              <td>Łatwy interwał</td>
+              <td>4 dni</td>
+              <td>Interwał po naciśnięciu "Łatwe"</td>
+            </tr>
+            <tr>
+              <td>Ease startowy</td>
+              <td>2.5</td>
+              <td>Mnożnik interwału (rośnie/maleje z ocenami)</td>
+            </tr>
+            <tr>
+              <td>Minimalne ease</td>
+              <td>1.3</td>
+              <td>Ease nie spadnie poniżej tej wartości</td>
+            </tr>
+            <tr>
+              <td>Nowe karty dziennie</td>
+              <td>20</td>
+              <td>Limit nowych kart na dzień</td>
+            </tr>
+            <tr>
+              <td>Maks. powtórek</td>
+              <td>200</td>
+              <td>Limit powtórek na dzień</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Section: Shortcuts -->
+      <section class="docs-section" id="shortcuts">
+        <h2 class="docs-section-title">Skróty klawiszowe</h2>
+        <p>Domyślne skróty klawiszowe w trybie nauki (Anki). Można je zmienić w ustawieniach aplikacji.</p>
+        <table class="docs-table">
+          <thead>
+            <tr>
+              <th>Akcja</th>
+              <th>Klawisz(e)</th>
+              <th>Opis</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Pokaż odpowiedź</td>
+              <td><kbd>Spacja</kbd> / <kbd>Enter</kbd></td>
+              <td>Pokazuje odpowiedź i przyciski oceny</td>
+            </tr>
+            <tr>
+              <td>Powtórz (Again)</td>
+              <td><kbd>1</kbd></td>
+              <td>Ocena: nie pamiętam</td>
+            </tr>
+            <tr>
+              <td>Trudne (Hard)</td>
+              <td><kbd>2</kbd></td>
+              <td>Ocena: trudne, ale pamiętam</td>
+            </tr>
+            <tr>
+              <td>Dobrze (Good)</td>
+              <td><kbd>3</kbd></td>
+              <td>Ocena: poprawna odpowiedź</td>
+            </tr>
+            <tr>
+              <td>Łatwe (Easy)</td>
+              <td><kbd>4</kbd></td>
+              <td>Ocena: bardzo łatwe</td>
+            </tr>
+            <tr>
+              <td>Wybór odpowiedzi</td>
+              <td><kbd>1</kbd>-<kbd>9</kbd></td>
+              <td>Zaznacz odpowiedź o danym numerze (w fazie pytania)</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Po wyświetleniu odpowiedzi <kbd>Spacja</kbd> / <kbd>Enter</kbd> działa jako "Dobrze".
+        </p>
+      </section>
+
+      <!-- Section: Settings -->
+      <section class="docs-section" id="settings">
+        <h2 class="docs-section-title">Ustawienia</h2>
+
+        <h3>Ustawienia aplikacji</h3>
+        <p>Dostępne z poziomu strony głównej (przycisk "Ustawienia"). Obejmują:</p>
+        <ul>
+          <li><strong>Motyw kolorystyczny</strong> — 5 palet kolorów (Academic Noir, Ocean, Forest, Midnight, Lavender)</li>
+          <li><strong>Tryb wyświetlania</strong> — Jasny, Ciemny lub Automatyczny (wg systemu)</li>
+          <li><strong>Szerokość układu</strong> — Kompaktowy (800px), Normalny (960px), Szeroki (1200px), Pełna szerokość</li>
+          <li><strong>Skróty klawiszowe</strong> — zmiana klawiszy do nawigacji w trybie nauki</li>
+          <li><strong>Mieszanie odpowiedzi</strong> — losowa kolejność odpowiedzi</li>
+          <li><strong>Kolejność pytań</strong> — losowa lub wg tematu (test)</li>
+          <li><strong>Losowe wartości</strong> — zmienne liczby w pytaniach obliczeniowych</li>
+        </ul>
+
+        <h3>Ustawienia talii</h3>
+        <p>Dostępne z poziomu karty talii (przycisk "Ustawienia"). Obejmują parametry algorytmu SM-2 dla danej talii:</p>
+        <ul>
+          <li>Nowe karty dziennie</li>
+          <li>Maks. powtórek dziennie</li>
+          <li>Kroki nauki i ponownej nauki (w minutach)</li>
+          <li>Interwał początkowy i łatwy (w dniach)</li>
+          <li>Maksymalny interwał</li>
+        </ul>
+        <p>
+          W strefie zagrożenia można zresetować postęp talii — wszystkie karty wrócą do stanu "nowe".
+        </p>
+
+        <h3>Przechowywanie danych</h3>
+        <p>
+          Wszystkie dane (talie, karty, postęp, ustawienia) są przechowywane w <code>localStorage</code> przeglądarki
+          z prefiksem <code>baza_</code>. Dane nie są wysyłane na żaden serwer. Wyczyszczenie danych przeglądarki
+          spowoduje utratę postępu.
+        </p>
+      </section>
+
+      <!-- Section: Randomize Templates -->
+      <section class="docs-section" id="randomize">
+        <h2 class="docs-section-title">Losowe wartości (szablony)</h2>
+        <p>
+          Pytania mogą zawierać opcjonalne pole <code>randomize</code>, które definiuje zmienne losowe.
+          Przy każdym wyświetleniu pytania losowane są nowe wartości, a w treści, odpowiedziach
+          i wyjaśnieniu podstawiane są obliczone wyniki. Wymaga włączenia opcji
+          <strong>Losowe wartości w pytaniach obliczeniowych</strong> w ustawieniach aplikacji.
+        </p>
+
+        <h3>Format pola randomize</h3>
+        <pre class="docs-code"><code>{
+  "id": "q1",
+  "text": "Oblicz {a} + {b} = ?",
+  "randomize": {
+    "a": [1, 50],
+    "b": [1, 50]
+  },
+  "answers": [
+    { "id": "a", "text": "={a+b}", "correct": true },
+    { "id": "b", "text": "={a-b}", "correct": false },
+    { "id": "c", "text": "={a*b}", "correct": false },
+    { "id": "d", "text": "42", "correct": false }
+  ],
+  "explanation": "Suma {a} + {b} wynosi ={a+b}"
+}</code></pre>
+
+        <h3>Definiowanie zmiennych</h3>
+        <table class="docs-table">
+          <thead>
+            <tr>
+              <th>Format</th>
+              <th>Opis</th>
+              <th>Przykład</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>[min, max]</code></td>
+              <td>Losowy integer z zakresu (2 elementy)</td>
+              <td><code>"a": [1, 100]</code></td>
+            </tr>
+            <tr>
+              <td><code>[v1, v2, v3, ...]</code></td>
+              <td>Losowy wybór z listy (3+ elementów)</td>
+              <td><code>"eta": [0.5, 1.0, 2.0]</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Podstawienia w tekście</h3>
+        <table class="docs-table">
+          <thead>
+            <tr>
+              <th>Składnia</th>
+              <th>Opis</th>
+              <th>Przykład</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>{zmienna}</code></td>
+              <td>Podstawienie wartości zmiennej</td>
+              <td><code>{a}</code> &rarr; <code>42</code></td>
+            </tr>
+            <tr>
+              <td><code>={wyrażenie}</code></td>
+              <td>Ewaluacja wyrażenia matematycznego</td>
+              <td><code>={a+b}</code> &rarr; <code>85</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Obsługiwane operacje w wyrażeniach</h3>
+        <p><strong>Operatory:</strong> <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>%</code>, nawiasy <code>()</code>, ujemne liczby <code>-a</code></p>
+        <p><strong>Stałe:</strong> <code>PI</code> (lub <code>pi</code>) = 3.14159..., <code>E</code> (lub <code>e</code>) = 2.71828...</p>
+
+        <table class="docs-table">
+          <thead>
+            <tr>
+              <th>Kategoria</th>
+              <th>Funkcje</th>
+              <th>Przykład</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Zaokrąglanie</td>
+              <td><code>round(x)</code>, <code>floor(x)</code>, <code>ceil(x)</code>, <code>trunc(x)</code></td>
+              <td><code>={round(a/b)}</code></td>
+            </tr>
+            <tr>
+              <td>Podstawowe</td>
+              <td><code>abs(x)</code>, <code>sign(x)</code>, <code>min(a,b,...)</code>, <code>max(a,b,...)</code></td>
+              <td><code>={abs(a-b)}</code></td>
+            </tr>
+            <tr>
+              <td>Potęgi i pierwiastki</td>
+              <td><code>pow(x,n)</code>, <code>sqrt(x)</code>, <code>cbrt(x)</code></td>
+              <td><code>={sqrt(a*a + b*b)}</code></td>
+            </tr>
+            <tr>
+              <td>Logarytmy</td>
+              <td><code>log(x)</code> (ln), <code>log2(x)</code>, <code>log10(x)</code>, <code>exp(x)</code></td>
+              <td><code>={log2(n)}</code></td>
+            </tr>
+            <tr>
+              <td>Trygonometria</td>
+              <td><code>sin(x)</code>, <code>cos(x)</code>, <code>tan(x)</code>, <code>asin(x)</code>, <code>acos(x)</code>, <code>atan(x)</code>, <code>atan2(y,x)</code></td>
+              <td><code>={round(sin(x)*100)/100}</code></td>
+            </tr>
+            <tr>
+              <td>Kombinatoryka</td>
+              <td><code>fact(n)</code> (n!), <code>comb(n,k)</code> (C(n,k)), <code>perm(n,k)</code> (P(n,k))</td>
+              <td><code>={fact(5)}</code> &rarr; 120</td>
+            </tr>
+            <tr>
+              <td>Narzędziowe</td>
+              <td><code>gcd(a,b)</code>, <code>lcm(a,b)</code>, <code>mod(a,b)</code>, <code>clamp(x,min,max)</code>, <code>frac(x)</code></td>
+              <td><code>={gcd(a,b)}</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Edge-case'y</h3>
+        <ul>
+          <li>Dzielenie przez zero &mdash; pytanie jest losowane ponownie (do 10 prób), potem wyświetlane bez zmian</li>
+          <li>Wyniki zmiennoprzecinkowe &mdash; max 4 miejsca po przecinku, bez trailing zeros</li>
+          <li><code>mod(a,b)</code> zawsze zwraca wynik nieujemny (modulo matematyczne, nie reszta z dzielenia)</li>
+        </ul>
+
+        <h3>Edytor randomizacji</h3>
+        <p>
+          W trybie edycji pytania (przycisk &#9998;) dostępna jest sekcja <strong>Losowe wartości</strong>
+          z przełącznikiem on/off. Po włączeniu można dodawać i usuwać zmienne oraz definiować ich zakresy.
+        </p>
+
+        <h3>Przycisk "Wylosuj ponownie"</h3>
+        <p>
+          W trybie nauki (Anki), przy pytaniach z losowymi wartościami, obok przycisku edycji wyświetlany jest
+          przycisk &#x1F3B2; (kość). Kliknięcie losuje nowe wartości. W trybie testu przycisk nie jest dostępny
+          &mdash; wartości są stałe dla danego podejścia.
+        </p>
+      </section>
+
+    </div>
+  </div>
+</body>
+</html>

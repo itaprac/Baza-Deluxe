@@ -27,7 +27,7 @@ import {
   showConfirm,
 } from './ui.js';
 import { shuffle } from './utils.js';
-import { hasRandomizer, randomize } from './randomizers.js';
+import { hasRandomizer, hasTemplate, randomize } from './randomizers.js';
 
 // --- App State ---
 
@@ -36,6 +36,8 @@ const DEFAULT_FONT_LEVEL = 2;
 
 const DEFAULT_APP_SETTINGS = {
   theme: 'auto',
+  colorTheme: 'academic-noir',
+  layoutWidth: '65%',
   shuffleAnswers: true,
   questionOrder: 'shuffled', // 'shuffled' or 'ordered'
   randomizeNumbers: false,
@@ -49,11 +51,12 @@ const DEFAULT_APP_SETTINGS = {
 };
 
 let appSettings = { ...DEFAULT_APP_SETTINGS, keybindings: { ...DEFAULT_APP_SETTINGS.keybindings } };
-let settings = { ...DEFAULT_SETTINGS };
 let fontLevel = DEFAULT_FONT_LEVEL;
 let currentDeckId = null;
 let currentCategory = null; // null = all, or category id
 let settingsReturnTo = null; // 'mode-select' or 'deck-list'
+let appSettingsReturnView = null; // view id to return to from app settings
+let currentDeckSettings = null; // per-deck SM-2 settings for active session
 let studyPhase = null; // 'question' | 'feedback' | null
 let queues = null;
 let currentCard = null;
@@ -73,15 +76,24 @@ let testShuffledAnswers = null;
 let testSelectedIds = new Set();
 let testShuffledMap = new Map(); // index → shuffled answers array
 
+// --- Per-deck settings ---
+
+function getSettingsForDeck(deckId) {
+  const saved = storage.getDeckSettings(deckId);
+  if (saved) {
+    return { ...DEFAULT_SETTINGS, ...saved };
+  }
+  // Fallback: try legacy global settings (migration)
+  const legacy = storage.getSettings();
+  if (legacy) {
+    return { ...DEFAULT_SETTINGS, ...legacy };
+  }
+  return { ...DEFAULT_SETTINGS };
+}
+
 // --- Initialization ---
 
 function init() {
-  // Load settings
-  const saved = storage.getSettings();
-  if (saved) {
-    settings = { ...DEFAULT_SETTINGS, ...saved };
-  }
-
   // Load app settings
   const savedApp = storage.getAppSettings();
   if (savedApp) {
@@ -92,8 +104,10 @@ function init() {
     };
   }
 
-  // Apply theme
+  // Apply theme, color theme, and layout width
   applyTheme(appSettings.theme);
+  applyColorTheme(appSettings.colorTheme);
+  applyLayoutWidth(appSettings.layoutWidth);
 
   // Load font scale
   const savedFont = localStorage.getItem('baza_fontLevel');
@@ -142,6 +156,14 @@ function applyTheme(theme) {
   } else {
     document.documentElement.setAttribute('data-theme', theme);
   }
+}
+
+function applyColorTheme(colorTheme) {
+  document.documentElement.setAttribute('data-color-theme', colorTheme || 'academic-noir');
+}
+
+function applyLayoutWidth(width) {
+  document.documentElement.style.setProperty('--app-max-width', width || '65%');
 }
 
 function handleKeyDown(e) {
@@ -198,7 +220,7 @@ function handleKeyDown(e) {
 
 async function loadBuiltInDecks() {
   const decks = storage.getDecks();
-  const builtInFiles = ['data/poi-egzamin.json', 'data/sample-exam.json', 'data/si-egzamin.json'];
+  const builtInFiles = ['data/poi-egzamin.json', 'data/sample-exam.json', 'data/si-egzamin.json', 'data/randomize-demo.json'];
 
   for (const file of builtInFiles) {
     try {
@@ -226,7 +248,7 @@ function navigateToDeckList() {
   const decks = storage.getDecks();
   const statsMap = {};
   for (const d of decks) {
-    statsMap[d.id] = deck.getDeckStats(d.id);
+    statsMap[d.id] = deck.getDeckStats(d.id, getSettingsForDeck(d.id));
   }
   renderDeckList(decks, statsMap);
   bindDeckListEvents();
@@ -275,6 +297,7 @@ function bindCategorySelectEvents(deckId, categories) {
 
 function navigateToStudy(deckId) {
   currentDeckId = deckId;
+  currentDeckSettings = getSettingsForDeck(deckId);
   studiedCount = 0;
 
   const deckMeta = storage.getDecks().find(d => d.id === deckId);
@@ -302,24 +325,33 @@ function navigateToModeSelect(deckId) {
   const deckName = deckMeta ? deckMeta.name : deckId;
 
   // Build stats for filtered questions if category is selected
+  const deckSettings = getSettingsForDeck(deckId);
   let stats;
   if (currentCategory) {
+    const allCards = storage.getCards(deckId);
     const filteredIds = getFilteredQuestionIds(deckId);
     const filteredSet = new Set(filteredIds);
-    const cards = storage.getCards(deckId).filter(c => filteredSet.has(c.questionId));
+    const cards = allCards.filter(c => filteredSet.has(c.questionId));
     const now = Date.now();
+    const today = new Date(now); today.setHours(0,0,0,0); const todayMs = today.getTime();
     const dueReview = cards.filter(c => isReviewCard(c) && c.dueDate <= now).length;
     const dueLearning = cards.filter(c => (isLearningCard(c) || isRelearningCard(c)) && c.dueDate <= now).length;
     const learningTotal = cards.filter(c => isLearningCard(c) || isRelearningCard(c)).length;
     const totalNew = cards.filter(c => isNewCard(c)).length;
+    const newCardsToday = allCards.filter(c => {
+      if (c.firstStudiedDate == null) return false;
+      const d = new Date(c.firstStudiedDate); d.setHours(0,0,0,0);
+      return d.getTime() === todayMs;
+    }).length;
+    const newAvailable = Math.min(totalNew, Math.max(0, deckSettings.newCardsPerDay - newCardsToday));
     stats = {
       dueToday: dueReview + dueLearning,
       learningTotal,
-      newAvailable: totalNew,
+      newAvailable,
       totalCards: cards.length,
     };
   } else {
-    stats = deck.getDeckStats(deckId);
+    stats = deck.getDeckStats(deckId, deckSettings);
   }
 
   showView('mode-select');
@@ -395,11 +427,14 @@ function startTest(deckId, questionCount) {
 function showTestQuestion() {
   let question = testQuestions[testCurrentIndex];
 
-  // Apply randomization if enabled (only on first visit, not when going back)
-  if (appSettings.randomizeNumbers && hasRandomizer(question.id) && !testShuffledMap.has(testCurrentIndex)) {
-    const variant = randomize(question.id);
+  // Apply randomization (only on first visit, not when going back)
+  // Template questions always randomize; hardcoded only when setting is on
+  const shouldRandomize = hasTemplate(question) || (appSettings.randomizeNumbers && hasRandomizer(question.id));
+  if (shouldRandomize && !testShuffledMap.has(testCurrentIndex)) {
+    const variant = randomize(question.id, question);
     if (variant) {
       question = { ...question, text: variant.text, answers: variant.answers };
+      if (variant.explanation !== undefined) question.explanation = variant.explanation;
       testQuestions[testCurrentIndex] = question;
     }
   }
@@ -591,7 +626,8 @@ function navigateToSettings(deckId, returnTo = 'mode-select') {
   document.getElementById('settings-deck-name').textContent = deckMeta ? deckMeta.name : deckId;
 
   showView('settings');
-  renderSettings(settings, DEFAULT_SETTINGS);
+  const deckSettings = getSettingsForDeck(deckId);
+  renderSettings(deckSettings, DEFAULT_SETTINGS);
   bindSettingsEvents(deckId);
 }
 
@@ -606,13 +642,27 @@ function returnFromSettings() {
 // --- App Settings ---
 
 function navigateToAppSettings() {
+  // Remember current view to return to it later
+  const currentView = document.querySelector('.view.active');
+  appSettingsReturnView = currentView ? currentView.id.replace('view-', '') : 'deck-list';
   showView('app-settings');
   renderAppSettings(appSettings, DEFAULT_APP_SETTINGS);
   bindAppSettingsEvents();
 }
 
+function returnFromAppSettings() {
+  const returnTo = appSettingsReturnView || 'deck-list';
+  appSettingsReturnView = null;
+  // For simple views, just show them back. For deck-list, re-render.
+  if (returnTo === 'deck-list') {
+    navigateToDeckList();
+  } else {
+    showView(returnTo);
+  }
+}
+
 function bindAppSettingsEvents() {
-  // Theme options
+  // Display mode options (light/dark/auto)
   document.querySelectorAll('.theme-option').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.theme-option').forEach(b => b.classList.remove('active'));
@@ -622,6 +672,53 @@ function bindAppSettingsEvents() {
       storage.saveAppSettings(appSettings);
     });
   });
+
+  // Color theme options
+  document.querySelectorAll('.color-theme-option').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.color-theme-option').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      appSettings.colorTheme = btn.dataset.colorTheme;
+      applyColorTheme(appSettings.colorTheme);
+      storage.saveAppSettings(appSettings);
+    });
+  });
+
+  // Layout width options
+  document.querySelectorAll('.layout-width-option').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.layout-width-option').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      appSettings.layoutWidth = btn.dataset.width;
+      applyLayoutWidth(appSettings.layoutWidth);
+      storage.saveAppSettings(appSettings);
+      // Sync custom input
+      const customInput = document.getElementById('custom-width-input');
+      if (customInput) {
+        const numVal = parseInt(btn.dataset.width);
+        customInput.value = isNaN(numVal) ? '' : numVal;
+      }
+    });
+  });
+
+  // Custom width input
+  const customWidthInput = document.getElementById('custom-width-input');
+  if (customWidthInput) {
+    customWidthInput.addEventListener('change', () => {
+      let val = parseInt(customWidthInput.value);
+      if (isNaN(val) || val < 20) val = 20;
+      if (val > 100) val = 100;
+      customWidthInput.value = val;
+      document.querySelectorAll('.layout-width-option').forEach(b => b.classList.remove('active'));
+      // Check if matches a preset
+      document.querySelectorAll('.layout-width-option').forEach(b => {
+        if (b.dataset.width === val + '%') b.classList.add('active');
+      });
+      appSettings.layoutWidth = val + '%';
+      applyLayoutWidth(appSettings.layoutWidth);
+      storage.saveAppSettings(appSettings);
+    });
+  }
 
   // Shuffle toggle
   const shuffleToggle = document.getElementById('toggle-shuffle');
@@ -714,13 +811,12 @@ function startKeyRecording(bindingKey, buttonEl) {
 
 function bindSettingsEvents(deckId) {
   document.getElementById('btn-save-settings').addEventListener('click', () => {
-    saveSettings();
+    saveDeckSettings(deckId);
   });
 
   document.getElementById('btn-restore-defaults').addEventListener('click', () => {
-    settings = { ...DEFAULT_SETTINGS };
-    storage.saveSettings(settings);
-    renderSettings(settings, DEFAULT_SETTINGS);
+    storage.saveDeckSettings(deckId, { ...DEFAULT_SETTINGS });
+    renderSettings(DEFAULT_SETTINGS, DEFAULT_SETTINGS);
     bindSettingsEvents(deckId);
     showNotification('Przywrócono ustawienia domyślne.', 'info');
   });
@@ -748,8 +844,8 @@ function clamp(val, min, max) {
   return Math.max(min, Math.min(max, val));
 }
 
-function saveSettings() {
-  const newCardsPerDay = clamp(parseInt(document.getElementById('set-newCardsPerDay').value) || 20, 1, 100);
+function saveDeckSettings(deckId) {
+  const newCardsPerDay = clamp(parseInt(document.getElementById('set-newCardsPerDay').value) || 20, 1, 9999);
   const maxReviewsPerDay = clamp(parseInt(document.getElementById('set-maxReviewsPerDay').value) || 200, 1, 9999);
   const learningSteps = parseSteps(document.getElementById('set-learningSteps').value);
   const relearningSteps = parseSteps(document.getElementById('set-relearningSteps').value);
@@ -766,8 +862,8 @@ function saveSettings() {
     return;
   }
 
-  settings = {
-    ...settings,
+  const deckSettings = {
+    ...getSettingsForDeck(deckId),
     newCardsPerDay,
     maxReviewsPerDay,
     learningSteps,
@@ -777,7 +873,7 @@ function saveSettings() {
     maximumInterval,
   };
 
-  storage.saveSettings(settings);
+  storage.saveDeckSettings(deckId, deckSettings);
   showNotification('Ustawienia zostały zapisane.', 'success');
   returnFromSettings();
 }
@@ -786,7 +882,7 @@ function saveSettings() {
 
 function startStudySession() {
   const filterIds = getFilteredQuestionIds(currentDeckId);
-  queues = deck.buildQueues(currentDeckId, settings, filterIds);
+  queues = deck.buildQueues(currentDeckId, currentDeckSettings, filterIds);
   sessionTotal = queues.counts.learningDue + queues.counts.reviewDue + queues.counts.newAvailable;
   studiedCount = 0;
   updateProgress(0, sessionTotal);
@@ -796,7 +892,7 @@ function startStudySession() {
 function showNextCard() {
   clearWaitTimer();
   studyPhase = null;
-  const result = deck.getNextCard(queues, settings);
+  const result = deck.getNextCard(queues, currentDeckSettings);
 
   if (!result) {
     navigateToComplete(currentDeckId);
@@ -839,7 +935,7 @@ function showNextCard() {
 
 function tryOtherQueues() {
   // Try review
-  if (queues.review.length > 0 && queues.counts.reviewsToday < settings.maxReviewsPerDay) {
+  if (queues.review.length > 0 && queues.counts.reviewsToday < currentDeckSettings.maxReviewsPerDay) {
     return { card: queues.review.shift(), source: 'review' };
   }
   // Try new
@@ -866,18 +962,21 @@ function showQuestionForCard(card) {
     return;
   }
 
-  // Apply randomization if enabled
-  if (appSettings.randomizeNumbers && hasRandomizer(currentQuestion.id)) {
-    const variant = randomize(currentQuestion.id);
+  // Apply randomization: template questions always, hardcoded only when setting is on
+  const shouldRandomize = hasTemplate(currentQuestion) || (appSettings.randomizeNumbers && hasRandomizer(currentQuestion.id));
+  if (shouldRandomize) {
+    const variant = randomize(currentQuestion.id, currentQuestion);
     if (variant) {
       currentQuestion = { ...currentQuestion, text: variant.text, answers: variant.answers };
+      if (variant.explanation !== undefined) currentQuestion.explanation = variant.explanation;
     }
   }
 
   const isMultiSelect = true;
   const cardNum = studiedCount + 1;
+  const showReroll = shouldRandomize;
 
-  currentShuffledAnswers = renderQuestion(currentQuestion, cardNum, sessionTotal, isMultiSelect, appSettings.shuffleAnswers);
+  currentShuffledAnswers = renderQuestion(currentQuestion, cardNum, sessionTotal, isMultiSelect, appSettings.shuffleAnswers, showReroll);
   selectedAnswerIds = new Set();
 
   const now = Date.now();
@@ -892,6 +991,7 @@ function showQuestionForCard(card) {
 
   studyPhase = 'question';
   bindQuestionEvents(isMultiSelect);
+  bindRerollButton();
 }
 
 // --- Event Binding ---
@@ -903,6 +1003,11 @@ function bindGlobalEvents() {
   // Font size controls
   document.getElementById('btn-font-decrease').addEventListener('click', () => changeFontSize(-1));
   document.getElementById('btn-font-increase').addEventListener('click', () => changeFontSize(1));
+
+  // Home button (title)
+  document.getElementById('btn-go-home').addEventListener('click', () => {
+    navigateToDeckList();
+  });
 
   // App settings button
   document.getElementById('btn-app-settings').addEventListener('click', () => {
@@ -960,7 +1065,7 @@ function bindGlobalEvents() {
     navigateToModeSelect(currentDeckId);
   });
   document.getElementById('btn-back-from-app-settings').addEventListener('click', () => {
-    navigateToDeckList();
+    returnFromAppSettings();
   });
   document.getElementById('btn-back-from-settings').addEventListener('click', () => {
     returnFromSettings();
@@ -1049,7 +1154,7 @@ function bindQuestionEvents(isMultiSelect) {
 
 function showFeedback() {
   studyPhase = 'feedback';
-  const intervals = getButtonIntervals(currentCard, settings);
+  const intervals = getButtonIntervals(currentCard, currentDeckSettings);
 
   renderAnswerFeedback(
     currentQuestion,
@@ -1084,11 +1189,71 @@ function bindEditButton() {
   }
 }
 
+function bindRerollButton() {
+  const rerollBtn = document.getElementById('btn-reroll-question');
+  if (rerollBtn) {
+    rerollBtn.addEventListener('click', () => {
+      handleReroll();
+    });
+  }
+}
+
+function handleReroll() {
+  // Re-fetch the original question from storage to get the raw template
+  const questions = storage.getQuestions(currentDeckId);
+  const original = questions.find(q => q.id === currentQuestion.id);
+  if (!original) return;
+
+  // For hardcoded randomizers, use registry; for templates, use original from storage
+  const variant = randomize(original.id, original);
+  if (variant) {
+    // Build fresh question from original + new randomized values
+    currentQuestion = {
+      ...original,
+      text: variant.text,
+      answers: variant.answers,
+    };
+    if (variant.explanation !== undefined) {
+      currentQuestion.explanation = variant.explanation;
+    }
+  } else {
+    // Fallback: show original unchanged
+    currentQuestion = { ...original };
+  }
+
+  const isMultiSelect = true;
+  const cardNum = studiedCount + 1;
+  const showReroll = hasTemplate(original) || (appSettings.randomizeNumbers && hasRandomizer(original.id));
+
+  // Flash animation to confirm re-roll happened
+  const container = document.getElementById('study-content');
+  container.style.opacity = '0.3';
+  currentShuffledAnswers = renderQuestion(currentQuestion, cardNum, sessionTotal, isMultiSelect, appSettings.shuffleAnswers, showReroll);
+  requestAnimationFrame(() => {
+    container.style.transition = 'opacity 0.2s ease';
+    container.style.opacity = '1';
+    setTimeout(() => { container.style.transition = ''; }, 200);
+  });
+
+  selectedAnswerIds = new Set();
+  studyPhase = 'question';
+  bindQuestionEvents(isMultiSelect);
+  bindRerollButton();
+}
+
 function enterEditMode() {
   editReturnPhase = studyPhase;
   studyPhase = null; // disable keyboard shortcuts while editing
 
-  renderQuestionEditor(currentQuestion);
+  // For template questions, show raw template text in editor (not substituted values)
+  let editorQuestion = currentQuestion;
+  if (hasTemplate(currentQuestion)) {
+    const questions = storage.getQuestions(currentDeckId);
+    const original = questions.find(q => q.id === currentQuestion.id);
+    if (original) editorQuestion = original;
+  }
+
+  renderQuestionEditor(editorQuestion);
 
   // Cancel
   document.getElementById('btn-editor-cancel').addEventListener('click', () => {
@@ -1108,10 +1273,12 @@ function exitEditMode() {
     // Re-render question phase
     const isMultiSelect = true;
     const cardNum = studiedCount + 1;
-    currentShuffledAnswers = renderQuestion(currentQuestion, cardNum, sessionTotal, isMultiSelect, appSettings.shuffleAnswers);
+    const showReroll = hasTemplate(currentQuestion) || (appSettings.randomizeNumbers && hasRandomizer(currentQuestion.id));
+    currentShuffledAnswers = renderQuestion(currentQuestion, cardNum, sessionTotal, isMultiSelect, appSettings.shuffleAnswers, showReroll);
     selectedAnswerIds = new Set();
     studyPhase = 'question';
     bindQuestionEvents(isMultiSelect);
+    bindRerollButton();
   }
   editReturnPhase = null;
 }
@@ -1149,6 +1316,26 @@ function saveQuestionEdit() {
     return;
   }
 
+  // Read randomize data from editor
+  const randomizeToggle = document.getElementById('editor-randomize-toggle');
+  let newRandomize = undefined;
+  if (randomizeToggle && randomizeToggle.checked) {
+    const varRows = document.querySelectorAll('.editor-var-row');
+    if (varRows.length > 0) {
+      newRandomize = {};
+      for (const row of varRows) {
+        const varName = row.querySelector('.editor-var-name').value.trim();
+        const varValues = row.querySelector('.editor-var-values').value.trim();
+        if (!varName || !varValues) continue;
+        const nums = varValues.split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+        if (nums.length >= 2 && /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(varName)) {
+          newRandomize[varName] = nums;
+        }
+      }
+      if (Object.keys(newRandomize).length === 0) newRandomize = undefined;
+    }
+  }
+
   // Update question in storage
   const questions = storage.getQuestions(currentDeckId);
   const qIndex = questions.findIndex(q => q.id === currentQuestion.id);
@@ -1156,6 +1343,11 @@ function saveQuestionEdit() {
     questions[qIndex].text = newText;
     questions[qIndex].answers = updatedAnswers;
     questions[qIndex].explanation = newExplanation || undefined;
+    if (newRandomize) {
+      questions[qIndex].randomize = newRandomize;
+    } else {
+      delete questions[qIndex].randomize;
+    }
     storage.saveQuestions(currentDeckId, questions);
 
     // Update in-memory reference
@@ -1173,7 +1365,7 @@ function saveQuestionEdit() {
 
 function handleRating(rating) {
   // Process the SM-2 algorithm
-  const updatedCard = processRating(currentCard, rating, settings);
+  const updatedCard = processRating(currentCard, rating, currentDeckSettings);
 
   // Save card state
   deck.saveCardState(updatedCard);

@@ -60,8 +60,17 @@ export function saveStats(deckId, stats) {
   setJSON(`stats_${deckId}`, stats);
 }
 
-// --- Settings ---
+// --- Settings (per-deck) ---
 
+export function getDeckSettings(deckId) {
+  return getJSON(`deckSettings_${deckId}`, null);
+}
+
+export function saveDeckSettings(deckId, settings) {
+  setJSON(`deckSettings_${deckId}`, settings);
+}
+
+// Legacy global settings (for migration)
 export function getSettings() {
   return getJSON('settings', null);
 }
@@ -86,6 +95,7 @@ export function clearDeckData(deckId) {
   localStorage.removeItem(PREFIX + `cards_${deckId}`);
   localStorage.removeItem(PREFIX + `questions_${deckId}`);
   localStorage.removeItem(PREFIX + `stats_${deckId}`);
+  localStorage.removeItem(PREFIX + `deckSettings_${deckId}`);
 }
 
 // --- Storage usage ---

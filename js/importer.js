@@ -47,6 +47,22 @@ export function validateDeckJSON(data) {
         errors.push(`${prefix}: brak treści pytania ("text").`);
       }
 
+      // Validate optional randomize field
+      if (q.randomize !== undefined) {
+        if (!q.randomize || typeof q.randomize !== 'object' || Array.isArray(q.randomize)) {
+          errors.push(`${prefix}: "randomize" musi być obiektem.`);
+        } else {
+          for (const [varName, varSpec] of Object.entries(q.randomize)) {
+            if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(varName)) {
+              errors.push(`${prefix}: nazwa zmiennej "${varName}" jest niepoprawna.`);
+            }
+            if (!Array.isArray(varSpec) || varSpec.length < 2 || varSpec.some(v => typeof v !== 'number')) {
+              errors.push(`${prefix}: wartości zmiennej "${varName}" muszą być tablicą co najmniej 2 liczb.`);
+            }
+          }
+        }
+      }
+
       if (!Array.isArray(q.answers) || q.answers.length < 2) {
         errors.push(`${prefix}: musi mieć co najmniej 2 odpowiedzi.`);
       } else {
