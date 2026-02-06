@@ -1403,7 +1403,7 @@ export function renderAppSettings(appSettings, defaults) {
       <div class="settings-section">
         <div class="settings-section-title">Informacje</div>
         <p style="font-size: 0.85rem; line-height: 1.6; color: var(--color-text-secondary); margin-bottom: 12px;">
-          Baza Deluxe — aplikacja do nauki z powtarzaniem rozłożonym w czasie.
+          Bazunia — aplikacja do nauki z powtarzaniem rozłożonym w czasie.
         </p>
         <button class="btn btn-secondary btn-sm" id="btn-open-docs">Dokumentacja</button>
       </div>

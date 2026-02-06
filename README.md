@@ -1,4 +1,4 @@
-# Baza Deluxe
+# Bazunia
 
 Aplikacja webowa do nauki pytań egzaminacyjnych i fiszek z algorytmem powtórek SM-2.
 Stan użytkownika (talie, karty, statystyki, ustawienia, progres) zapisuje w Supabase.
@@ -41,8 +41,8 @@ cp .env.example .env
 `.env`:
 
 ```env
-BAZA_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
-BAZA_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+BAZUNIA_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+BAZUNIA_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
 ```
 
 3. W panelu Supabase włącz provider `Email` oraz opcjonalnie `Google` (`Authentication -> Providers`).

@@ -1,7 +1,7 @@
 // supabase-config.js — runtime configuration for Supabase
 
-export const SUPABASE_URL = window.__BAZA_SUPABASE_URL || '';
-export const SUPABASE_ANON_KEY = window.__BAZA_SUPABASE_ANON_KEY || '';
+export const SUPABASE_URL = window.__BAZUNIA_SUPABASE_URL || window.__BAZA_SUPABASE_URL || '';
+export const SUPABASE_ANON_KEY = window.__BAZUNIA_SUPABASE_ANON_KEY || window.__BAZA_SUPABASE_ANON_KEY || '';
 
 export function isSupabaseConfigValid() {
   return (

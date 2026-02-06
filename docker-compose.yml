@@ -4,6 +4,8 @@ services:
     ports:
       - "8080:80"
     environment:
+      BAZUNIA_SUPABASE_URL: ${BAZUNIA_SUPABASE_URL:-}
+      BAZUNIA_SUPABASE_ANON_KEY: ${BAZUNIA_SUPABASE_ANON_KEY:-}
       BAZA_SUPABASE_URL: ${BAZA_SUPABASE_URL:-}
       BAZA_SUPABASE_ANON_KEY: ${BAZA_SUPABASE_ANON_KEY:-}
     command: >

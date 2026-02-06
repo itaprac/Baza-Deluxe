@@ -2,7 +2,9 @@
 
 import { fetchAllUserStorage, upsertUserStorage, deleteUserStorageKeys } from './supabase.js';
 
-const PREFIX = 'baza_';
+const PREFIX = 'bazunia_';
+const LEGACY_PREFIX = 'baza_';
+const PREFIXES = [PREFIX, LEGACY_PREFIX];
 const LEGACY_MIGRATION_KEY = '__legacyLocalMigratedV1';
 
 const cache = new Map();
@@ -22,24 +24,31 @@ function prefixedKey(key) {
 }
 
 function loadLocalEntries() {
-  const entries = [];
+  const entries = new Map();
 
   for (let i = 0; i < localStorage.length; i++) {
     const fullKey = localStorage.key(i);
-    if (!fullKey || !fullKey.startsWith(PREFIX)) continue;
+    if (!fullKey) continue;
+    const matchedPrefix = PREFIXES.find((prefix) => fullKey.startsWith(prefix));
+    if (!matchedPrefix) continue;
 
-    const key = fullKey.slice(PREFIX.length);
+    const key = fullKey.slice(matchedPrefix.length);
     const raw = localStorage.getItem(fullKey);
     if (!raw) continue;
 
     try {
-      entries.push([key, JSON.parse(raw)]);
+      const value = JSON.parse(raw);
+      const nextRank = matchedPrefix === PREFIX ? 0 : 1;
+      const current = entries.get(key);
+      if (!current || current.rank > nextRank) {
+        entries.set(key, { value, rank: nextRank });
+      }
     } catch {
       // Ignore malformed local values
     }
   }
 
-  return entries;
+  return Array.from(entries.entries()).map(([key, data]) => [key, data.value]);
 }
 
 function writeLocalJSON(key, value) {
@@ -52,7 +61,9 @@ function writeLocalJSON(key, value) {
 }
 
 function removeLocalKey(key) {
-  localStorage.removeItem(prefixedKey(key));
+  PREFIXES.forEach((prefix) => {
+    localStorage.removeItem(`${prefix}${key}`);
+  });
 }
 
 function resetRuntimeState(mode = 'none', userId = null) {

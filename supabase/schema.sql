@@ -1,4 +1,4 @@
--- Supabase schema for Baza Deluxe user data
+-- Supabase schema for Bazunia user data
 
 create table if not exists public.user_storage (
   user_id uuid not null references auth.users(id) on delete cascade,

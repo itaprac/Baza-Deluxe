@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dokumentacja — Baza Deluxe</title>
+  <title>Dokumentacja — Bazunia</title>
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/components.css">
   <script src="/js/runtime-config.js"></script>
@@ -11,7 +11,8 @@
     // Apply saved theme, color theme, and layout width from localStorage
     (function() {
       try {
-        var s = JSON.parse(localStorage.getItem('baza_appSettings'));
+        var raw = localStorage.getItem('bazunia_appSettings') || localStorage.getItem('baza_appSettings');
+        var s = raw ? JSON.parse(raw) : null;
         if (!s) return;
         if (s.colorTheme) document.documentElement.setAttribute('data-color-theme', s.colorTheme);
         if (s.layoutWidth) document.documentElement.style.setProperty('--app-max-width', s.layoutWidth);
@@ -30,7 +31,7 @@
 <body>
   <div class="app-container">
     <header class="app-header">
-      <a href="index.html" class="app-title">Baza Deluxe</a>
+      <a href="index.html" class="app-title">Bazunia</a>
       <div id="header-app-actions">
         <input type="file" id="file-input" class="file-input-hidden" accept=".json">
         <a href="docs.html" class="btn btn-secondary btn-sm">Dokumentacja</a>
@@ -47,7 +48,7 @@
         <nav class="docs-toc" aria-label="Spis treści dokumentacji">
           <div class="docs-toc-title">Spis treści</div>
           <ul>
-            <li><a href="#about">Czym jest Baza Deluxe</a></li>
+            <li><a href="#about">Czym jest Bazunia</a></li>
             <li><a href="#import">Import talii</a></li>
             <li><a href="#modes">Tryby nauki</a></li>
             <li><a href="#sm2">Algorytm SM-2</a></li>
@@ -61,9 +62,9 @@
 
       <!-- Section: About -->
       <section class="docs-section" id="about">
-        <h2 class="docs-section-title">Czym jest Baza Deluxe</h2>
+        <h2 class="docs-section-title">Czym jest Bazunia</h2>
         <p>
-          Baza Deluxe to aplikacja webowa do nauki z wykorzystaniem fiszek i powtarzania rozłożonego w czasie.
+          Bazunia to aplikacja webowa do nauki z wykorzystaniem fiszek i powtarzania rozłożonego w czasie.
           Działa w przeglądarce, z dwoma zakresami talii: <strong>Ogólne</strong> (publiczne) oraz <strong>Moje</strong> (prywatne).
           W trybie gościa dane są lokalne, a po zalogowaniu dane użytkownika synchronizują się przez Supabase.
         </p>
@@ -240,7 +241,7 @@
       <section class="docs-section" id="sm2">
         <h2 class="docs-section-title">Algorytm SM-2</h2>
         <p>
-          Baza Deluxe implementuje algorytm SM-2 w wariancie zbliżonym do Anki.
+          Bazunia implementuje algorytm SM-2 w wariancie zbliżonym do Anki.
           Każda karta przechodzi przez cztery stany:
         </p>
 
@@ -438,7 +439,7 @@
         <h3>Przechowywanie danych</h3>
         <p>
           W trybie gościa dane (talie, karty, postęp, ustawienia) są przechowywane w <code>localStorage</code>
-          przeglądarki z prefiksem <code>baza_</code>. Po zalogowaniu dane są zapisywane per użytkownik w Supabase.
+          przeglądarki z prefiksem <code>bazunia_</code>. Po zalogowaniu dane są zapisywane per użytkownik w Supabase.
           Wyczyszczenie danych przeglądarki usuwa tylko dane trybu gościa.
         </p>
       </section>

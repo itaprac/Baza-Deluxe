@@ -1,4 +1,4 @@
-# Baza Deluxe — Specyfikacja funkcjonalna
+# Bazunia — Specyfikacja funkcjonalna
 
 Aplikacja webowa SPA do nauki z fiszkami (flashcards) z algorytmem powtarzania rozłożonego SM-2. Działa w przeglądarce, dane trzyma w `localStorage`. Bez frameworków, czysty JS (ES6 modules), CSS, HTML. Wymaga serwera HTTP (moduły ES6 nie działają z `file://`).
 
@@ -444,17 +444,17 @@ Używany przy: usuwaniu talii, resetowaniu postępu.
 
 ## 14. Przechowywanie danych
 
-Wszystko w `localStorage` z prefixem `baza_`:
+Wszystko w `localStorage` z prefixem `bazunia_`:
 
 | Klucz | Zawartość |
 |---|---|
-| `baza_decks` | JSON — tablica metadanych talii |
-| `baza_cards_{deckId}` | JSON — tablica kart (stan SRS) |
-| `baza_questions_{deckId}` | JSON — tablica pytań z odpowiedziami |
-| `baza_stats_{deckId}` | JSON — statystyki dzienne (klucz YYYY-MM-DD) |
-| `baza_settings` | JSON — ustawienia algorytmu SM-2 |
-| `baza_appSettings` | JSON — ustawienia aplikacji |
-| `baza_fontLevel` | int — poziom skalowania czcionki |
+| `bazunia_decks` | JSON — tablica metadanych talii |
+| `bazunia_cards_{deckId}` | JSON — tablica kart (stan SRS) |
+| `bazunia_questions_{deckId}` | JSON — tablica pytań z odpowiedziami |
+| `bazunia_stats_{deckId}` | JSON — statystyki dzienne (klucz YYYY-MM-DD) |
+| `bazunia_settings` | JSON — ustawienia algorytmu SM-2 |
+| `bazunia_appSettings` | JSON — ustawienia aplikacji |
+| `bazunia_fontLevel` | int — poziom skalowania czcionki |
 
 Przy braku miejsca w localStorage — błąd z komunikatem.
 
