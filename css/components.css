@@ -200,6 +200,41 @@
 
 /* --- Deck List --- */
 
+.deck-scope-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 14px;
+  background: var(--color-bg-warm);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+}
+
+.deck-scope-tab {
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: var(--font-family);
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.deck-scope-tab:hover {
+  color: var(--color-text);
+}
+
+.deck-scope-tab.active {
+  background: var(--color-card-bg);
+  color: var(--color-text);
+  box-shadow: var(--shadow);
+}
+
 .deck-list {
   display: flex;
   flex-direction: column;
@@ -229,12 +264,35 @@
   margin-bottom: 6px;
 }
 
+.deck-scope-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent-cool);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: var(--color-bg);
+  white-space: nowrap;
+}
+
+.deck-scope-badge.private {
+  color: var(--color-success);
+}
+
 .deck-card-title {
   font-family: var(--font-display);
   font-size: 1.15rem;
   font-weight: 400;
   letter-spacing: 0.01em;
   line-height: 1.3;
+}
+
+.deck-card-readonly-hint {
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+  margin-bottom: 10px;
 }
 
 .deck-card-description {
@@ -313,6 +371,29 @@
   margin-left: auto;
   margin-right: auto;
   line-height: 1.6;
+}
+
+.private-locked-panel {
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 28px;
+  text-align: center;
+  margin-top: 6px;
+}
+
+.private-locked-title {
+  font-family: var(--font-display);
+  font-size: 1.22rem;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+
+.private-locked-text {
+  color: var(--color-text-secondary);
+  max-width: 420px;
+  margin: 0 auto 18px;
 }
 
 /* --- Question Card --- */

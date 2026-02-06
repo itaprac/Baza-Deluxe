@@ -62,10 +62,23 @@ const DEFAULT_APP_SETTINGS = {
   }
 };
 
+const BUILT_IN_DECK_SOURCES = [
+  { id: 'poi-egzamin', file: '/data/poi-egzamin.json' },
+  { id: 'podstawy-it', file: '/data/sample-exam.json' },
+  { id: 'si-egzamin', file: '/data/si-egzamin.json' },
+  { id: 'randomize-demo', file: '/data/randomize-demo.json' },
+  { id: 'ii-egzamin', file: '/data/ii-egzamin.json' },
+  { id: 'ii-egzamin-fiszki', file: '/data/ii-egzamin-fiszki.json' },
+  { id: 'zi2-egzamin', file: '/data/zi2-egzamin.json' },
+];
+const BUILT_IN_DECK_ID_SET = new Set(BUILT_IN_DECK_SOURCES.map((item) => item.id));
+const BUILT_IN_DECK_IDS = [...BUILT_IN_DECK_ID_SET];
+
 let appSettings = { ...DEFAULT_APP_SETTINGS, keybindings: { ...DEFAULT_APP_SETTINGS.keybindings } };
 let fontScale = DEFAULT_FONT_SCALE;
 let currentDeckId = null;
 let currentCategory = null; // null = all, or category id
+let activeDeckScope = 'public'; // 'public' | 'private'
 let settingsReturnTo = null; // 'mode-select' or 'deck-list'
 let appSettingsReturnView = null; // view id to return to from app settings
 let docsReturnView = null;
@@ -96,6 +109,70 @@ let testAnswers = new Map(); // questionId → Set of selected answer ids
 let testShuffledAnswers = null;
 let testSelectedIds = new Set();
 let testShuffledMap = new Map(); // index → shuffled answers array
+
+function isBuiltInDeckId(deckId) {
+  return typeof deckId === 'string' && BUILT_IN_DECK_ID_SET.has(deckId);
+}
+
+function getDeckScope(deckMeta) {
+  if (!deckMeta || typeof deckMeta !== 'object') return 'private';
+  if (deckMeta.scope === 'public' || deckMeta.scope === 'private') {
+    return deckMeta.scope;
+  }
+  return isBuiltInDeckId(deckMeta.id) ? 'public' : 'private';
+}
+
+function isDeckReadOnlyContent(deckMeta) {
+  if (!deckMeta || typeof deckMeta !== 'object') return false;
+  if (typeof deckMeta.readOnlyContent === 'boolean') {
+    return deckMeta.readOnlyContent;
+  }
+  return getDeckScope(deckMeta) === 'public';
+}
+
+function getDeckMeta(deckId) {
+  return storage.getDecks().find((d) => d.id === deckId) || null;
+}
+
+function canEditDeckContent(deckId) {
+  return !isDeckReadOnlyContent(getDeckMeta(deckId));
+}
+
+function isCurrentDeckReadOnlyContent() {
+  if (!currentDeckId) return false;
+  return !canEditDeckContent(currentDeckId);
+}
+
+function migrateDeckMetadata() {
+  const decks = storage.getDecks();
+  if (!Array.isArray(decks) || decks.length === 0) return;
+
+  let changed = false;
+  const migrated = decks.map((deckMeta) => {
+    const isBuiltIn = isBuiltInDeckId(deckMeta.id);
+    const nextScope = isBuiltIn ? 'public' : 'private';
+    const nextSource = isBuiltIn ? 'builtin' : 'user-import';
+    const nextReadOnly = isBuiltIn;
+
+    const needsUpdate =
+      deckMeta.scope !== nextScope ||
+      deckMeta.source !== nextSource ||
+      deckMeta.readOnlyContent !== nextReadOnly;
+
+    if (!needsUpdate) return deckMeta;
+    changed = true;
+    return {
+      ...deckMeta,
+      scope: nextScope,
+      source: nextSource,
+      readOnlyContent: nextReadOnly,
+    };
+  });
+
+  if (changed) {
+    storage.saveDecks(migrated);
+  }
+}
 
 // --- Per-deck settings ---
 
@@ -185,8 +262,13 @@ function handleStartupOpen() {
   } else if (open === 'docs') {
     navigateToDocs();
   } else if (open === 'import') {
-    const fileInput = document.getElementById('file-input');
-    if (fileInput) fileInput.click();
+    if (sessionMode === 'user') {
+      const fileInput = document.getElementById('file-input');
+      if (fileInput) fileInput.click();
+    } else {
+      showNotification('Import prywatnych talii wymaga zalogowania.', 'info');
+      showAuthPanel('Aby importować własne talie, zaloguj się.', 'info');
+    }
   }
 
   const url = new URL(window.location.href);
@@ -284,7 +366,9 @@ async function bootstrapGuestSession() {
   clearWaitTimer();
   sessionMode = 'guest';
   currentUser = null;
+  activeDeckScope = 'public';
   await storage.initGuest();
+  migrateDeckMetadata();
   loadUserPreferences();
   updateHeaderSessionState('guest');
   await loadBuiltInDecks();
@@ -294,8 +378,10 @@ async function bootstrapGuestSession() {
 async function bootstrapUserSession(user) {
   sessionMode = 'user';
   currentUser = user;
+  activeDeckScope = 'public';
   updateHeaderSessionState('user', user.email || 'Zalogowany użytkownik');
   await storage.initForUser(user.id);
+  migrateDeckMetadata();
   loadUserPreferences();
   await loadBuiltInDecks();
   navigateToDeckList();
@@ -391,24 +477,27 @@ function handleKeyDown(e) {
 
 async function loadBuiltInDecks() {
   if (!isSessionReady()) return;
-  const decks = storage.getDecks();
-  const builtInFiles = ['/data/poi-egzamin.json', '/data/sample-exam.json', '/data/si-egzamin.json', '/data/randomize-demo.json', '/data/ii-egzamin.json', '/data/ii-egzamin-fiszki.json', '/data/zi2-egzamin.json'];
-
-  for (const file of builtInFiles) {
+  for (const builtIn of BUILT_IN_DECK_SOURCES) {
     try {
-      const result = await importBuiltIn(file);
-      if (result.valid && !decks.some(d => d.id === result.deck.id)) {
-        navigateToDeckList(); // refresh
-      }
+      await importBuiltIn(builtIn.file, {
+        scope: 'public',
+        source: 'builtin',
+        readOnlyContent: true,
+      });
     } catch {
       // Built-in file not available — that's ok
     }
   }
+  migrateDeckMetadata();
 }
 
 // --- Navigation ---
 
-function navigateToDeckList() {
+function navigateToDeckList(scope = activeDeckScope) {
+  if (scope === 'public' || scope === 'private') {
+    activeDeckScope = scope;
+  }
+
   if (!isSessionReady()) {
     showView('auth');
     return;
@@ -422,12 +511,19 @@ function navigateToDeckList() {
   currentCard = null;
   showView('deck-list');
 
-  const decks = storage.getDecks();
+  const allDecks = storage.getDecks();
+  const decks = allDecks.filter((d) => getDeckScope(d) === activeDeckScope);
+  const showPrivateLocked = activeDeckScope === 'private' && sessionMode === 'guest';
+  const visibleDecks = showPrivateLocked ? [] : decks;
   const statsMap = {};
-  for (const d of decks) {
+  for (const d of visibleDecks) {
     statsMap[d.id] = deck.getDeckStats(d.id, getSettingsForDeck(d.id), appSettings.flaggedInAnki);
   }
-  renderDeckList(decks, statsMap);
+  renderDeckList(visibleDecks, statsMap, {
+    activeScope: activeDeckScope,
+    sessionMode,
+    showPrivateLocked,
+  });
   bindDeckListEvents();
 }
 
@@ -782,7 +878,7 @@ function navigateToBrowse(deckId) {
   const questions = getFilteredQuestions(deckId);
 
   showView('browse');
-  renderBrowse(deckName, questions);
+  renderBrowse(deckName, questions, { canEdit: canEditDeckContent(deckId) });
   bindBrowseEvents();
 }
 
@@ -826,6 +922,11 @@ function bindBrowseEvents() {
 }
 
 function openBrowseEditor(index) {
+  if (isCurrentDeckReadOnlyContent()) {
+    showNotification('Talia ogólna jest tylko do nauki. Edycja jest zablokowana.', 'info');
+    return;
+  }
+
   const questions = getFilteredQuestions(currentDeckId);
   const question = questions[index];
   if (!question) return;
@@ -922,6 +1023,11 @@ function bindBrowseEditorRemoveButtons(editor) {
 }
 
 function saveBrowseEdit(index, editor) {
+  if (isCurrentDeckReadOnlyContent()) {
+    showNotification('Talia ogólna jest tylko do nauki. Edycja jest zablokowana.', 'info');
+    return;
+  }
+
   const newText = editor.querySelector('.editor-question-text').value.trim();
   if (!newText) {
     showNotification('Treść pytania nie może być pusta.', 'error');
@@ -1442,7 +1548,7 @@ function tryOtherQueues() {
     card.firstStudiedDate = card.firstStudiedDate || Date.now();
     card.dueDate = Date.now();
     // Save immediately so NEW→LEARNING transition persists if user exits before rating
-    deck.saveCardState(card);
+    deck.saveCardState(card, currentDeckId);
     return { card, source: 'new' };
   }
   return null;
@@ -1472,7 +1578,16 @@ function showQuestionForCard(card) {
   const showReroll = shouldRandomize;
 
   currentCardFlagged = !!currentCard.flagged;
-  currentShuffledAnswers = renderQuestion(currentQuestion, null, sessionTotal, isMultiSelect, appSettings.shuffleAnswers, showReroll, currentCardFlagged);
+  currentShuffledAnswers = renderQuestion(
+    currentQuestion,
+    null,
+    sessionTotal,
+    isMultiSelect,
+    appSettings.shuffleAnswers,
+    showReroll,
+    currentCardFlagged,
+    canEditDeckContent(currentDeckId)
+  );
   selectedAnswerIds = new Set();
 
   updateStudyCounts(
@@ -1714,23 +1829,39 @@ function bindGlobalEvents() {
       showAuthPanel('Zaloguj się lub kontynuuj jako gość.', 'info');
       return;
     }
+    if (sessionMode !== 'user') {
+      showNotification('Import prywatnych talii wymaga zalogowania.', 'info');
+      showAuthPanel('Aby importować własne talie, zaloguj się.', 'info');
+      return;
+    }
     document.getElementById('file-input').click();
   });
 
   // File input
   document.getElementById('file-input').addEventListener('change', async (e) => {
     if (!isSessionReady()) return;
+    if (sessionMode !== 'user') {
+      e.target.value = '';
+      showNotification('Import prywatnych talii wymaga zalogowania.', 'info');
+      showAuthPanel('Aby importować własne talie, zaloguj się.', 'info');
+      return;
+    }
     const file = e.target.files[0];
     if (!file) return;
     e.target.value = ''; // reset
 
-    const result = await importFromFile(file);
+    const result = await importFromFile(file, {
+      scope: 'private',
+      source: 'user-import',
+      readOnlyContent: false,
+      reservedDeckIds: BUILT_IN_DECK_IDS,
+    });
     if (result.valid) {
       showNotification(
         `Zaimportowano "${result.deck.name}": ${result.added} nowych, ${result.updated} istniejących, ${result.total} łącznie.`,
         'success'
       );
-      navigateToDeckList();
+      navigateToDeckList('private');
     } else {
       showNotification(`Błąd importu: ${result.errors[0]}`, 'error');
     }
@@ -1781,6 +1912,22 @@ function bindGlobalEvents() {
 }
 
 function bindDeckListEvents() {
+  document.querySelectorAll('.deck-scope-tab').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const scope = btn.dataset.scope;
+      if (scope === 'public' || scope === 'private') {
+        navigateToDeckList(scope);
+      }
+    });
+  });
+
+  const privateLoginBtn = document.getElementById('btn-login-private-view');
+  if (privateLoginBtn) {
+    privateLoginBtn.addEventListener('click', () => {
+      showAuthPanel('Aby zobaczyć i importować własne talie, zaloguj się.', 'info');
+    });
+  }
+
   // Study buttons → go to category select (if categories) or mode select
   document.querySelectorAll('.btn-study').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1804,6 +1951,12 @@ function bindDeckListEvents() {
   // Delete buttons
   document.querySelectorAll('.btn-delete-deck').forEach(btn => {
     btn.addEventListener('click', async () => {
+      const deckMeta = getDeckMeta(btn.dataset.deckId);
+      if (isDeckReadOnlyContent(deckMeta)) {
+        showNotification('Talii ogólnej nie można usuwać.', 'info');
+        return;
+      }
+
       const confirmed = await showConfirm(
         'Usuń talię',
         `Czy na pewno chcesz usunąć "${btn.dataset.deckName}"? Cały postęp nauki zostanie utracony.`
@@ -1820,6 +1973,11 @@ function bindDeckListEvents() {
   const emptyImportBtn = document.getElementById('btn-import-empty');
   if (emptyImportBtn) {
     emptyImportBtn.addEventListener('click', () => {
+      if (sessionMode !== 'user') {
+        showNotification('Import prywatnych talii wymaga zalogowania.', 'info');
+        showAuthPanel('Aby importować własne talie, zaloguj się.', 'info');
+        return;
+      }
       document.getElementById('file-input').click();
     });
   }
@@ -1873,7 +2031,8 @@ function showFeedback() {
     currentQuestion.explanation || null,
     intervals,
     appSettings.keybindings,
-    currentCardFlagged
+    currentCardFlagged,
+    canEditDeckContent(currentDeckId)
   );
 
   // Bind rating buttons
@@ -1939,7 +2098,16 @@ function handleReroll() {
   // Flash animation to confirm re-roll happened
   const container = document.getElementById('study-content');
   container.style.opacity = '0.3';
-  currentShuffledAnswers = renderQuestion(currentQuestion, null, sessionTotal, isMultiSelect, appSettings.shuffleAnswers, showReroll, currentCardFlagged);
+  currentShuffledAnswers = renderQuestion(
+    currentQuestion,
+    null,
+    sessionTotal,
+    isMultiSelect,
+    appSettings.shuffleAnswers,
+    showReroll,
+    currentCardFlagged,
+    canEditDeckContent(currentDeckId)
+  );
   requestAnimationFrame(() => {
     container.style.transition = 'opacity 0.2s ease';
     container.style.opacity = '1';
@@ -1954,6 +2122,11 @@ function handleReroll() {
 }
 
 function enterEditMode() {
+  if (isCurrentDeckReadOnlyContent()) {
+    showNotification('Talia ogólna jest tylko do nauki. Edycja jest zablokowana.', 'info');
+    return;
+  }
+
   editReturnPhase = studyPhase;
   studyPhase = null; // disable keyboard shortcuts while editing
 
@@ -1985,7 +2158,16 @@ function exitEditMode() {
     // Re-render question phase
     const isMultiSelect = true;
     const showReroll = hasTemplate(currentQuestion) || (appSettings.randomizeNumbers && hasRandomizer(currentQuestion.id));
-    currentShuffledAnswers = renderQuestion(currentQuestion, null, sessionTotal, isMultiSelect, appSettings.shuffleAnswers, showReroll, currentCardFlagged);
+    currentShuffledAnswers = renderQuestion(
+      currentQuestion,
+      null,
+      sessionTotal,
+      isMultiSelect,
+      appSettings.shuffleAnswers,
+      showReroll,
+      currentCardFlagged,
+      canEditDeckContent(currentDeckId)
+    );
     selectedAnswerIds = new Set();
     studyPhase = 'question';
     bindQuestionEvents(isMultiSelect);
@@ -1996,6 +2178,11 @@ function exitEditMode() {
 }
 
 function saveQuestionEdit() {
+  if (isCurrentDeckReadOnlyContent()) {
+    showNotification('Talia ogólna jest tylko do nauki. Edycja jest zablokowana.', 'info');
+    return;
+  }
+
   const newText = document.getElementById('editor-question-text').value.trim();
   if (!newText) {
     showNotification('Treść pytania nie może być pusta.', 'error');
@@ -2186,7 +2373,7 @@ function handleRating(rating) {
   const updatedCard = processRating(currentCard, rating, currentDeckSettings);
 
   // Save card state
-  deck.saveCardState(updatedCard);
+  deck.saveCardState(updatedCard, currentDeckId);
 
   // Record stats
   deck.recordStat(currentDeckId, rating, currentSource);

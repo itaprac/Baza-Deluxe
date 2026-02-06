@@ -4,32 +4,74 @@ import { shuffle, renderLatex, isFlashcard } from './utils.js';
 
 // --- Deck List View ---
 
-export function renderDeckList(decks, statsMap) {
+export function renderDeckList(decks, statsMap, options = {}) {
   const container = document.getElementById('deck-list-container');
+  const activeScope = options.activeScope === 'private' ? 'private' : 'public';
+  const sessionMode = options.sessionMode === 'user' ? 'user' : 'guest';
+  const showPrivateLocked = !!options.showPrivateLocked;
 
-  if (decks.length === 0) {
+  const tabsHtml = `
+    <div class="deck-scope-tabs">
+      <button class="deck-scope-tab ${activeScope === 'public' ? 'active' : ''}" data-scope="public">Ogólne</button>
+      <button class="deck-scope-tab ${activeScope === 'private' ? 'active' : ''}" data-scope="private">Moje</button>
+    </div>
+  `;
+
+  if (showPrivateLocked) {
     container.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">&#128218;</div>
-        <div class="empty-state-title">Brak talii</div>
-        <div class="empty-state-text">
-          Importuj plik JSON z pytaniami, aby rozpocząć naukę.
+      ${tabsHtml}
+      <div class="private-locked-panel">
+        <div class="private-locked-title">Moje talie są dostępne po zalogowaniu</div>
+        <div class="private-locked-text">
+          Zaloguj się, aby importować i przeglądać własne talie.
         </div>
-        <button class="btn btn-primary" id="btn-import-empty">Importuj talię</button>
+        <button class="btn btn-primary" id="btn-login-private-view">Zaloguj się</button>
       </div>
     `;
     return;
   }
 
-  container.innerHTML = decks.map(deck => {
+  if (decks.length === 0) {
+    const emptyTitle = activeScope === 'public' ? 'Brak talii ogólnych' : 'Brak własnych talii';
+    const emptyText = activeScope === 'public'
+      ? 'Talie ogólne nie są jeszcze dostępne.'
+      : 'Zaimportuj plik JSON z pytaniami, aby utworzyć własną talię.';
+    const importButton = activeScope === 'private' && sessionMode === 'user'
+      ? '<button class="btn btn-primary" id="btn-import-empty">Importuj talię</button>'
+      : '';
+
+    container.innerHTML = `
+      ${tabsHtml}
+      <div class="empty-state">
+        <div class="empty-state-icon">&#128218;</div>
+        <div class="empty-state-title">${emptyTitle}</div>
+        <div class="empty-state-text">
+          ${emptyText}
+        </div>
+        ${importButton}
+      </div>
+    `;
+    return;
+  }
+
+  const cardsHtml = decks.map(deck => {
     const stats = statsMap[deck.id] || { dueReview: 0, dueLearning: 0, newAvailable: 0, totalCards: 0 };
-    const hasDue = stats.dueReview > 0 || stats.dueLearning > 0 || stats.newAvailable > 0;
+    const readOnlyContent = deck.readOnlyContent === true;
+    const deckKindBadge = readOnlyContent
+      ? '<span class="deck-scope-badge">Ogólna</span>'
+      : '<span class="deck-scope-badge private">Prywatna</span>';
+    const readOnlyHint = readOnlyContent
+      ? '<div class="deck-card-readonly-hint">Treść talii tylko do odczytu.</div>'
+      : '';
+
     return `
-      <div class="deck-card" data-deck-id="${deck.id}">
+      <div class="deck-card" data-deck-id="${deck.id}" data-read-only="${readOnlyContent ? '1' : '0'}">
         <div class="deck-card-header">
           <div class="deck-card-title">${escapeHtml(deck.name)}</div>
+          ${deckKindBadge}
         </div>
         ${deck.description ? `<div class="deck-card-description">${escapeHtml(deck.description)}</div>` : ''}
+        ${readOnlyHint}
         <div class="deck-card-stats">
           <div class="deck-stat new">
             <span class="stat-value">${stats.newAvailable}</span>
@@ -51,18 +93,31 @@ export function renderDeckList(decks, statsMap) {
           <button class="btn btn-secondary btn-sm btn-deck-settings" data-deck-id="${deck.id}">
             Ustawienia
           </button>
-          <button class="btn btn-secondary btn-sm btn-delete-deck" data-deck-id="${deck.id}" data-deck-name="${escapeHtml(deck.name)}">
-            Usuń
-          </button>
+          ${readOnlyContent ? '' : `
+            <button class="btn btn-secondary btn-sm btn-delete-deck" data-deck-id="${deck.id}" data-deck-name="${escapeHtml(deck.name)}">
+              Usuń
+            </button>
+          `}
         </div>
       </div>
     `;
   }).join('');
+
+  container.innerHTML = `${tabsHtml}${cardsHtml}`;
 }
 
 // --- Question Rendering ---
 
-export function renderQuestion(question, cardNumber, totalForSession, isMultiSelect, shouldShuffle = true, showReroll = false, flagged = false) {
+export function renderQuestion(
+  question,
+  cardNumber,
+  totalForSession,
+  isMultiSelect,
+  shouldShuffle = true,
+  showReroll = false,
+  flagged = false,
+  canEdit = true
+) {
   const flashcard = isFlashcard(question);
   const shuffledAnswers = flashcard ? [] : (shouldShuffle ? shuffle(question.answers) : [...question.answers]);
   const hint = flashcard
@@ -75,6 +130,9 @@ export function renderQuestion(question, cardNumber, totalForSession, isMultiSel
     : '';
 
   const flagBtn = `<button class="btn-flag-question${flagged ? ' flagged' : ''}" id="btn-flag-question" title="Oznacz pytanie (F)">${flagged ? '&#x1F6A9;' : '&#x2691;'}</button>`;
+  const editBtn = canEdit
+    ? '<button class="btn-edit-question" id="btn-edit-question" title="Edytuj pytanie">&#9998;</button>'
+    : '';
 
   const answersHtml = flashcard ? '' : `
       <div class="answers-list" id="answers-list">
@@ -93,7 +151,7 @@ export function renderQuestion(question, cardNumber, totalForSession, isMultiSel
         <div class="question-card-topbar-actions">
           ${flagBtn}
           ${rerollBtn}
-          <button class="btn-edit-question" id="btn-edit-question" title="Edytuj pytanie">&#9998;</button>
+          ${editBtn}
         </div>
       </div>
       <div class="question-text">${renderLatex(escapeHtml(question.text))}</div>
@@ -112,7 +170,16 @@ export function renderQuestion(question, cardNumber, totalForSession, isMultiSel
 
 // --- Answer Feedback Rendering ---
 
-export function renderAnswerFeedback(question, shuffledAnswers, selectedIds, explanation, intervals, keybindings = null, flagged = false) {
+export function renderAnswerFeedback(
+  question,
+  shuffledAnswers,
+  selectedIds,
+  explanation,
+  intervals,
+  keybindings = null,
+  flagged = false,
+  canEdit = true
+) {
   const flashcard = isFlashcard(question);
 
   let answersHtml = '';
@@ -190,6 +257,9 @@ export function renderAnswerFeedback(question, shuffledAnswers, selectedIds, exp
   `;
 
   const feedbackFlagBtn = `<button class="btn-flag-question${flagged ? ' flagged' : ''}" id="btn-flag-question" title="Oznacz pytanie (F)">${flagged ? '&#x1F6A9;' : '&#x2691;'}</button>`;
+  const feedbackEditBtn = canEdit
+    ? '<button class="btn-edit-question" id="btn-edit-question" title="Edytuj pytanie">&#9998;</button>'
+    : '';
 
   document.getElementById('study-content').innerHTML = `
     <div class="question-card${flashcard ? ' flashcard' : ''}">
@@ -197,7 +267,7 @@ export function renderAnswerFeedback(question, shuffledAnswers, selectedIds, exp
         <div></div>
         <div class="question-card-topbar-actions">
           ${feedbackFlagBtn}
-          <button class="btn-edit-question" id="btn-edit-question" title="Edytuj pytanie">&#9998;</button>
+          ${feedbackEditBtn}
         </div>
       </div>
       <div class="question-text">${renderLatex(escapeHtml(question.text))}</div>
@@ -567,7 +637,8 @@ export function renderTestResult(deckName, results) {
 
 // --- Browse ---
 
-export function renderBrowse(deckName, questions) {
+export function renderBrowse(deckName, questions, options = {}) {
+  const canEdit = options.canEdit !== false;
   document.getElementById('browse-deck-name').textContent = deckName;
 
   const searchHtml = `
@@ -595,11 +666,15 @@ export function renderBrowse(deckName, questions) {
       ? `<div class="browse-item-explanation"><strong>Wyjaśnienie:</strong> ${renderLatex(escapeHtml(q.explanation))}</div>`
       : '';
 
+    const editBtn = canEdit
+      ? `<button class="btn-edit-question browse-edit-btn" data-question-index="${i}" title="Edytuj pytanie">&#9998;</button>`
+      : '';
+
     return `
       <div class="browse-item" data-search-text="${escapeHtml(q.text.toLowerCase())}" data-question-index="${i}">
         <div class="browse-item-header">
           <div class="browse-item-number">${flashcard ? 'Fiszka' : 'Pytanie'} ${i + 1}</div>
-          <button class="btn-edit-question browse-edit-btn" data-question-index="${i}" title="Edytuj pytanie">&#9998;</button>
+          ${editBtn}
         </div>
         <div class="browse-item-question">${renderLatex(escapeHtml(q.text))}</div>
         ${answersHtml ? `<div class="browse-item-answers">${answersHtml}</div>` : ''}

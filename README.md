@@ -3,6 +3,13 @@
 Aplikacja webowa do nauki pytań egzaminacyjnych i fiszek z algorytmem powtórek SM-2.
 Stan użytkownika (talie, karty, statystyki, ustawienia, progres) zapisuje w Supabase.
 
+## Publiczne vs prywatne talie
+
+- `Ogólne` — talie wbudowane z katalogu `data/`, widoczne dla każdego (także gościa), tylko do nauki/przeglądu.
+- `Moje` — talie prywatne użytkownika, widoczne po zalogowaniu.
+- Import własnej talii jest dostępny wyłącznie po zalogowaniu i trafia do zakładki `Moje`.
+- W taliach `Ogólne` nie można usuwać talii ani edytować pytań, ale można uczyć się, robić testy i używać własnych ustawień SRS.
+
 ## Wymagania
 
 - Docker + Docker Compose (np. Docker Desktop)
@@ -109,7 +116,7 @@ supabase/
 
 ## Import własnej talii
 
-W aplikacji użyj przycisku `Importuj talię` i wskaż plik JSON.
+W aplikacji (po zalogowaniu) użyj przycisku `Importuj talię` i wskaż plik JSON.
 Minimalny format:
 
 ```json

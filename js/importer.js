@@ -3,11 +3,31 @@
 import { createCard } from './card.js';
 import * as storage from './storage.js';
 
+const DEFAULT_IMPORT_OPTIONS = {
+  scope: 'private',
+  source: 'user-import',
+  readOnlyContent: false,
+  reservedDeckIds: [],
+};
+
+function normalizeImportOptions(options = {}) {
+  const merged = { ...DEFAULT_IMPORT_OPTIONS, ...(options || {}) };
+  return {
+    scope: merged.scope === 'public' ? 'public' : 'private',
+    source: merged.source === 'builtin' ? 'builtin' : 'user-import',
+    readOnlyContent: !!merged.readOnlyContent,
+    reservedDeckIds: Array.isArray(merged.reservedDeckIds)
+      ? [...new Set(merged.reservedDeckIds.filter((id) => typeof id === 'string' && id.trim().length > 0))]
+      : [],
+  };
+}
+
 /**
  * Validate a parsed JSON object against the deck schema.
  * Returns { valid: boolean, errors: string[] }
  */
-export function validateDeckJSON(data) {
+export function validateDeckJSON(data, options = {}) {
+  const importOptions = normalizeImportOptions(options);
   const errors = [];
 
   if (!data || typeof data !== 'object') {
@@ -22,6 +42,11 @@ export function validateDeckJSON(data) {
       errors.push('Brak lub nieprawidłowe "deck.id".');
     } else if (!/^[a-z0-9_-]+$/i.test(data.deck.id)) {
       errors.push('"deck.id" może zawierać tylko litery, cyfry, myślniki i podkreślenia.');
+    } else if (
+      importOptions.scope === 'private' &&
+      importOptions.reservedDeckIds.some((id) => id.toLowerCase() === data.deck.id.toLowerCase())
+    ) {
+      errors.push(`"${data.deck.id}" to identyfikator zarezerwowany dla talii ogólnych.`);
     }
     if (!data.deck.name || typeof data.deck.name !== 'string') {
       errors.push('Brak lub nieprawidłowe "deck.name".');
@@ -137,18 +162,19 @@ export function validateDeckJSON(data) {
  * Import a deck from a File object (from <input type="file">).
  * Returns a Promise resolving to { deck, questions, errors } or { valid: false, errors }.
  */
-export function importFromFile(file) {
+export function importFromFile(file, options = {}) {
+  const importOptions = normalizeImportOptions(options);
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = () => {
       try {
         const data = JSON.parse(reader.result);
-        const validation = validateDeckJSON(data);
+        const validation = validateDeckJSON(data, importOptions);
         if (!validation.valid) {
           resolve({ valid: false, errors: validation.errors });
           return;
         }
-        const result = registerImport(data);
+        const result = registerImport(data, importOptions);
         resolve({ valid: true, ...result });
       } catch (e) {
         resolve({ valid: false, errors: [`Błąd parsowania JSON: ${e.message}`] });
@@ -164,16 +190,23 @@ export function importFromFile(file) {
 /**
  * Import a built-in deck from a URL (fetch).
  */
-export async function importBuiltIn(url) {
+export async function importBuiltIn(url, options = {}) {
+  const importOptions = normalizeImportOptions({
+    scope: 'public',
+    source: 'builtin',
+    readOnlyContent: true,
+    ...options,
+  });
+
   try {
     const response = await fetch(url);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
-    const validation = validateDeckJSON(data);
+    const validation = validateDeckJSON(data, importOptions);
     if (!validation.valid) {
       return { valid: false, errors: validation.errors };
     }
-    return { valid: true, ...registerImport(data) };
+    return { valid: true, ...registerImport(data, importOptions) };
   } catch (e) {
     return { valid: false, errors: [`Błąd ładowania: ${e.message}`] };
   }
@@ -183,7 +216,8 @@ export async function importBuiltIn(url) {
  * Register an imported deck: save metadata, questions, and create/merge cards.
  * Returns { deck, added, updated, total }
  */
-function registerImport(data) {
+function registerImport(data, options = {}) {
+  const importOptions = normalizeImportOptions(options);
   const deckMeta = {
     id: data.deck.id,
     name: data.deck.name,
@@ -191,6 +225,9 @@ function registerImport(data) {
     questionCount: data.questions.length,
     importedAt: Date.now(),
     version: data.deck.version || 1,
+    scope: importOptions.scope,
+    source: importOptions.source,
+    readOnlyContent: importOptions.readOnlyContent,
   };
 
   // Preserve categories if present

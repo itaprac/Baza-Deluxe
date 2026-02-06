@@ -5,13 +5,29 @@ import { startOfDay, formatDate, DAY_MS, MINUTE_MS } from './utils.js';
 import { DEFAULT_SETTINGS } from './sm2.js';
 import * as storage from './storage.js';
 
+function ensureDeckIdOnCards(deckId, cards) {
+  let changed = false;
+  const normalized = cards.map((card) => {
+    if (card.deckId === deckId) return card;
+    changed = true;
+    return { ...card, deckId };
+  });
+  return { normalized, changed };
+}
+
 /**
  * Build study queues for a deck. Returns { learning, review, newCards, counts }.
  */
 export function buildQueues(deckId, settings = DEFAULT_SETTINGS, questionIdFilter = null, includeFlagged = false) {
   const now = Date.now();
   const today = startOfDay(now);
-  let cards = storage.getCards(deckId);
+  const { normalized, changed } = ensureDeckIdOnCards(deckId, storage.getCards(deckId));
+  let cards = normalized;
+
+  // Repair legacy cards without deckId to keep progress persistence reliable.
+  if (changed) {
+    storage.saveCards(deckId, cards);
+  }
 
   if (questionIdFilter) {
     const filterSet = new Set(questionIdFilter);
@@ -138,13 +154,19 @@ export function requeueCard(card, queues) {
 /**
  * Save card state back to storage after rating.
  */
-export function saveCardState(card) {
-  const cards = storage.getCards(card.deckId);
+export function saveCardState(card, fallbackDeckId = null) {
+  const targetDeckId = card.deckId || fallbackDeckId;
+  if (!targetDeckId) {
+    return;
+  }
+
+  const nextCard = card.deckId === targetDeckId ? card : { ...card, deckId: targetDeckId };
+  const cards = storage.getCards(targetDeckId);
   const idx = cards.findIndex(c => c.questionId === card.questionId);
   if (idx >= 0) {
-    cards[idx] = card;
+    cards[idx] = nextCard;
   }
-  storage.saveCards(card.deckId, cards);
+  storage.saveCards(targetDeckId, cards);
 }
 
 /**

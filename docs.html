@@ -64,8 +64,8 @@
         <h2 class="docs-section-title">Czym jest Baza Deluxe</h2>
         <p>
           Baza Deluxe to aplikacja webowa do nauki z wykorzystaniem fiszek i powtarzania rozłożonego w czasie.
-          Działa całkowicie w przeglądarce — dane są przechowywane lokalnie w <code>localStorage</code>,
-          bez konta i bez wysyłania danych na zewnętrzny backend.
+          Działa w przeglądarce, z dwoma zakresami talii: <strong>Ogólne</strong> (publiczne) oraz <strong>Moje</strong> (prywatne).
+          W trybie gościa dane są lokalne, a po zalogowaniu dane użytkownika synchronizują się przez Supabase.
         </p>
         <p>
           Aplikacja obsługuje talie pytań wielokrotnego wyboru z wieloma poprawnymi odpowiedziami,
@@ -78,16 +78,18 @@
       <section class="docs-section" id="import">
         <h2 class="docs-section-title">Import talii</h2>
         <p>
-          Talie importuje się przez pliki JSON. Ponowny import tej samej talii
-          (ten sam <code>deck.id</code>) aktualizuje pytania i dodaje nowe, zachowując postęp nauki kart.
+          Import prywatnych talii działa po zalogowaniu i zapisuje je w zakładce <strong>Moje</strong>.
+          Ponowny import tej samej talii (ten sam <code>deck.id</code>) aktualizuje pytania i dodaje nowe,
+          zachowując postęp nauki kart.
         </p>
 
-        <h3>Import w 4 krokach</h3>
+        <h3>Import w 5 krokach</h3>
         <ol>
-          <li>Na stronie głównej kliknij <strong>Importuj talię</strong>.</li>
+          <li>Zaloguj się i przejdź do zakładki <strong>Moje</strong>.</li>
+          <li>Kliknij <strong>Importuj talię</strong>.</li>
           <li>Wskaż plik <code>.json</code> z talią.</li>
           <li>Po poprawnym imporcie zobaczysz komunikat typu: <code>Zaimportowano "Nazwa talii": ...</code>.</li>
-          <li>Talia pojawi się na liście i będzie gotowa do nauki.</li>
+          <li>Talia pojawi się na liście <strong>Moje</strong> i będzie gotowa do nauki.</li>
         </ol>
 
         <h3>Format JSON (zgodny z aplikacją)</h3>
@@ -123,6 +125,7 @@
         <ul>
           <li><code>deck.id</code> i <code>deck.name</code> są wymagane.</li>
           <li><code>deck.id</code> może zawierać tylko litery, cyfry, myślniki i podkreślenia.</li>
+          <li><code>deck.id</code> nie może kolidować z identyfikatorami talii ogólnych (wbudowanych).</li>
           <li><code>questions</code> musi być niepustą tablicą.</li>
           <li>Każde pytanie musi mieć unikalne <code>id</code> i pole <code>text</code>.</li>
           <li>Jeśli pytanie ma odpowiedzi, musi mieć <code>0</code> (fiszka) albo <code>2+</code> odpowiedzi.
@@ -158,19 +161,23 @@
         <h3>Wbudowane talie (katalog data/)</h3>
         <p>
           Pliki JSON umieszczone w katalogu <code>data/</code> obok <code>index.html</code> są automatycznie
-          ładowane przy starcie aplikacji. Ścieżki wbudowanych talii są zdefiniowane w kodzie aplikacji
-          (tablica <code>builtInFiles</code> w <code>app.js</code>).
+          ładowane przy starcie aplikacji jako talie <strong>Ogólne</strong> (publiczne). Ścieżki i identyfikatory
+          wbudowanych talii są zdefiniowane w kodzie aplikacji (tablica <code>BUILT_IN_DECK_SOURCES</code> w <code>app.js</code>).
+        </p>
+        <p>
+          Talie ogólne są tylko do nauki: można uruchamiać Anki/Test/Przeglądanie oraz ustawiać własne parametry SRS,
+          ale nie można usuwać talii ani edytować ich treści.
         </p>
         <p>
           Aby dodać własną wbudowaną talię:
         </p>
         <ul>
           <li>Umieść plik JSON w katalogu <code>data/</code> (np. <code>data/moja-talia.json</code>)</li>
-          <li>Dodaj ścieżkę do tablicy <code>builtInFiles</code> w pliku <code>js/app.js</code></li>
+          <li>Dodaj wpis (id + ścieżka) do tablicy <code>BUILT_IN_DECK_SOURCES</code> w pliku <code>js/app.js</code></li>
           <li>Talia załaduje się automatycznie przy pierwszym uruchomieniu aplikacji</li>
         </ul>
         <p>
-          Jeśli talia o tym samym <code>deck.id</code> już istnieje w localStorage, ponowny import zaktualizuje
+          Jeśli talia o tym samym <code>deck.id</code> już istnieje, ponowny import zaktualizuje
           pytania i doda nowe, zachowując postęp nauki.
         </p>
       </section>
@@ -413,9 +420,9 @@
 
         <h3>Przechowywanie danych</h3>
         <p>
-          Wszystkie dane (talie, karty, postęp, ustawienia) są przechowywane w <code>localStorage</code> przeglądarki
-          z prefiksem <code>baza_</code>. Dane nie są wysyłane na żaden serwer. Wyczyszczenie danych przeglądarki
-          spowoduje utratę postępu.
+          W trybie gościa dane (talie, karty, postęp, ustawienia) są przechowywane w <code>localStorage</code>
+          przeglądarki z prefiksem <code>baza_</code>. Po zalogowaniu dane są zapisywane per użytkownik w Supabase.
+          Wyczyszczenie danych przeglądarki usuwa tylko dane trybu gościa.
         </p>
       </section>
 
