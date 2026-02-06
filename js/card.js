@@ -30,6 +30,7 @@ export function createCard(questionId, deckId) {
     reviewCount: 0,
     lastReviewDate: null,
     firstStudiedDate: null,
+    flagged: false,
   };
 }
 
@@ -51,6 +52,10 @@ export function isReview(card) {
 
 export function isInLearningPhase(card) {
   return card.state === CARD_STATES.LEARNING || card.state === CARD_STATES.RELEARNING;
+}
+
+export function isFlagged(card) {
+  return !!card.flagged;
 }
 
 export function isDue(card, now = Date.now()) {

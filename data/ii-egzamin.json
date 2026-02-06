@@ -1,0 +1,3049 @@
+{
+  "deck": {
+    "id": "ii-egzamin",
+    "name": "Infrastruktura IT - II Egzamin",
+    "description": "Pytania z egzaminu z Infrastruktury IT - czesc II (104 pytania, 13 kategorii).",
+    "version": 1,
+    "categories": [
+      {
+        "id": "cat-01",
+        "name": "1. Sieci strukturalne / czesc fizyczna",
+        "questionCount": 15
+      },
+      {
+        "id": "cat-02",
+        "name": "2. Infrastruktura IT - podstawy",
+        "questionCount": 9
+      },
+      {
+        "id": "cat-03",
+        "name": "3. DNS",
+        "questionCount": 9
+      },
+      {
+        "id": "cat-04",
+        "name": "4. Anonimowosc w sieci",
+        "questionCount": 5
+      },
+      {
+        "id": "cat-05",
+        "name": "5. WWW / HTTP",
+        "questionCount": 12
+      },
+      {
+        "id": "cat-06",
+        "name": "6. Wirtualizacja / kontenery / chmura",
+        "questionCount": 9
+      },
+      {
+        "id": "cat-07",
+        "name": "7. Serwerownia",
+        "questionCount": 8
+      },
+      {
+        "id": "cat-08",
+        "name": "8. Zasilanie",
+        "questionCount": 5
+      },
+      {
+        "id": "cat-09",
+        "name": "9. Dostepnosc i redundancja",
+        "questionCount": 6
+      },
+      {
+        "id": "cat-10",
+        "name": "10. Monitoring",
+        "questionCount": 4
+      },
+      {
+        "id": "cat-11",
+        "name": "11. Kopie zapasowe i storage",
+        "questionCount": 7
+      },
+      {
+        "id": "cat-12",
+        "name": "12. Bezpieczenstwo",
+        "questionCount": 9
+      },
+      {
+        "id": "cat-13",
+        "name": "13. ITIL 4",
+        "questionCount": 6
+      }
+    ]
+  },
+  "questions": [
+    {
+      "id": "q001",
+      "text": "Czym jest siec strukturalna?",
+      "category": "cat-01",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Ustandaryzowany system okablowania budynkowego, niezalezny od aplikacji i producenta",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Siec bezprzewodowa oparta na standardzie Wi-Fi 6",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Polaczenie punkt-punkt miedzy dwoma budynkami",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "System okablowania dedykowany wylacznie dla jednego producenta urzadzen",
+          "correct": false
+        }
+      ],
+      "explanation": "Siec strukturalna to ustandaryzowany system okablowania budynkowego, niezalezny od aplikacji i producenta. Sklada sie z okablowania poziomego, pionowego (backbone), punktow rozdzielczych i gniazd abonenckich."
+    },
+    {
+      "id": "q002",
+      "text": "Ktore elementy wchodza w sklad systemu okablowania strukturalnego?",
+      "category": "cat-01",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Okablowanie poziome (od punktu rozdzielczego do gniazda uzytkownika)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Panele krosowe (patch panels) i kable krosowe (patch cords)",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Punkty rozdzielcze MDF i IDF",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "Access pointy i kontrolery bezprzewodowe",
+          "correct": false
+        },
+        {
+          "id": "e",
+          "text": "Firewalle i serwery proxy",
+          "correct": false
+        }
+      ],
+      "explanation": "System okablowania strukturalnego sklada sie z: okablowania poziomego (od punktu rozdzielczego do gniazda), okablowania pionowego/backbone (laczacego pietra), punktow rozdzielczych (MDF, IDF), gniazd abonenckich, paneli krosowych i kabli krosowych."
+    },
+    {
+      "id": "q003",
+      "text": "Jaka jest maksymalna dlugosc kabla stalego w okablowaniu poziomym (miedz)?",
+      "category": "cat-01",
+      "answers": [
+        {
+          "id": "a",
+          "text": "90 metrow",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "100 metrow",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "50 metrow",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "150 metrow",
+          "correct": false
+        }
+      ],
+      "explanation": "Maksymalna dlugosc kabla stalego (permanent link) wynosi 90 metrow. Lacznie z kablami krosowymi (patch cords) calosc kanalu nie moze przekroczyc 100 metrow."
+    },
+    {
+      "id": "q004",
+      "text": "Co to jest MDF?",
+      "category": "cat-01",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Main Distribution Frame - glowny punkt rozdzielczy sieci",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Multiple Data Flow - protokol transmisji danych",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Media Distribution Facility - serwerownia multimedialna",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Master DNS Forwarder - glowny serwer DNS",
+          "correct": false
+        }
+      ],
+      "explanation": "MDF (Main Distribution Frame) to glowny punkt rozdzielczy sieci - centralne miejsce, gdzie zbiegaja sie wszystkie polaczenia backbone z budynku. Tu znajduja sie glowne przelaczniki, routery i polaczenie z Internetem."
+    },
+    {
+      "id": "q005",
+      "text": "Co to jest IDF i jaka pelni funkcje?",
+      "category": "cat-01",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Intermediate Distribution Frame - posredni punkt rozdzielczy, zazwyczaj jeden na pietro",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Internet Data Firewall - zapora sieciowa na wejsciu do Internetu",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Internal DNS Forwarder - wewnetrzny serwer DNS",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Integrated Data Fabric - zintegrowana warstwa danych",
+          "correct": false
+        }
+      ],
+      "explanation": "IDF (Intermediate Distribution Frame) to posredni punkt rozdzielczy, zazwyczaj jeden na pietro. Laczy sie z MDF przez okablowanie backbone i rozprowadza polaczenia do gniazd uzytkownikow."
+    },
+    {
+      "id": "q006",
+      "text": "Jaka jest calkowita maksymalna dlugosc kanalu miedzianego w sieci strukturalnej?",
+      "category": "cat-01",
+      "answers": [
+        {
+          "id": "a",
+          "text": "100 metrow (90m kabel staly + 10m patch cords)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "90 metrow (tylko kabel staly)",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "200 metrow z regeneratorem sygnalu",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "50 metrow dla kategorii 5e",
+          "correct": false
+        }
+      ],
+      "explanation": "Maksymalna dlugosc kanalu miedzianego wynosi 100 metrow: 90 metrow kabla stalego (permanent link) + 10 metrow kabli krosowych (patch cords) po stronie uzytkownika i w szafie rack."
+    },
+    {
+      "id": "q007",
+      "text": "Ktory typ skretki ma kazda pare w osobnym ekranie plus wspolna folie?",
+      "category": "cat-01",
+      "answers": [
+        {
+          "id": "a",
+          "text": "STP (Shielded Twisted Pair)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "UTP (Unshielded Twisted Pair)",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "FTP (Foiled Twisted Pair)",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "SFTP (Screened Foiled Twisted Pair)",
+          "correct": false
+        }
+      ],
+      "explanation": "STP (Shielded Twisted Pair) - kazda para ma osobny ekran + calosc w folii, najlepsza ochrona, ale najdrozsza i wymaga starannego uziemienia. UTP - nieekranowana. FTP - wszystkie pary owinite wspolna folia aluminiowa."
+    },
+    {
+      "id": "q008",
+      "text": "Ile wynosi 1U (jednostka) w szafie rack?",
+      "category": "cat-01",
+      "answers": [
+        {
+          "id": "a",
+          "text": "1,75 cala (44,45 mm)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "2 cale (50,8 mm)",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "1 cal (25,4 mm)",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "3,5 cala (88,9 mm)",
+          "correct": false
+        }
+      ],
+      "explanation": "1U (Unit) to standardowa jednostka wysokosci w szafach teleinformatycznych rowna 1,75 cala (44,45 mm). Typowe szafy rack maja wysokosc 42U lub 47U."
+    },
+    {
+      "id": "q009",
+      "text": "Co to jest NEXT w kontekscie okablowania sieciowego?",
+      "category": "cat-01",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Near-End Crosstalk - przesluch zblizny mierzony na tym samym koncu kabla co nadajnik",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Network Extension Technology - technologia rozszerzania sieci",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Node Exchange Transfer - protokol wymiany danych miedzy wezlami",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Far-End Crosstalk - przesluch zdalny mierzony na przeciwnym koncu kabla",
+          "correct": false
+        }
+      ],
+      "explanation": "NEXT (Near-End Crosstalk) to przesluch zblizny - zaklocenie powstajace gdy sygnal z jednej pary kabla indukuje sie na sasiedniej parze na tym samym koncu kabla. Wyzsza wartosc w dB = lepsza izolacja."
+    },
+    {
+      "id": "q010",
+      "text": "Czym rozni sie FEXT od NEXT?",
+      "category": "cat-01",
+      "answers": [
+        {
+          "id": "a",
+          "text": "FEXT jest mierzony na przeciwnym koncu kabla niz zrodlo zaklocenia, NEXT na tym samym koncu",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "FEXT dotyczy kabli swiatlowodowych, NEXT kabli miedzianych",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "FEXT jest bardziej problematyczny niz NEXT",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "FEXT mierzy sie w Hz, NEXT w dB",
+          "correct": false
+        }
+      ],
+      "explanation": "FEXT (Far-End Crosstalk) to przesluch zdalny - zaklocenie mierzone na przeciwnym koncu kabla niz zrodlo sygnalu zaklocajacego. Jest mniej problematyczny niz NEXT, bo sygnal zaklocajacy ulega tlumieniu na dlugosci kabla."
+    },
+    {
+      "id": "q011",
+      "text": "Co oznacza skrot EMC?",
+      "category": "cat-01",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Electromagnetic Compatibility - kompatybilnosc elektromagnetyczna",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Ethernet Media Converter - konwerter mediow sieciowych",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Extended Management Console - rozszerzona konsola zarzadzania",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Error Message Code - kod komunikatu o bledzie",
+          "correct": false
+        }
+      ],
+      "explanation": "EMC (Electromagnetic Compatibility) to zdolnosc urzadzenia do poprawnej pracy w srodowisku elektromagnetycznym bez powodowania zaklocen dla innych urzadzen. W sieciach obejmuje ekranowanie kabli, uziemienie i separacje od zrodel zaklocen."
+    },
+    {
+      "id": "q012",
+      "text": "Co to jest PS NEXT?",
+      "category": "cat-01",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Power Sum NEXT - suma zaklocen NEXT ze wszystkich par kabla na jedna pare",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Primary Server NEXT - przesluch na glownym serwerze",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Post-Signal NEXT - przesluch po przetworzeniu sygnalu",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "NEXT mierzony przy pelnej mocy nadajnika",
+          "correct": false
+        }
+      ],
+      "explanation": "PS NEXT (Power Sum NEXT) to sumaryczny przesluch zblizny - suma zaklocen NEXT ze wszystkich par kabla oddzialujacych na jedna pare. Jest bardziej rygorystyczna miara niz pojedynczy NEXT, bo w praktyce wszystkie pary transmituja jednoczesnie."
+    },
+    {
+      "id": "q013",
+      "text": "Jak oblicza sie ACR (Attenuation to Crosstalk Ratio)?",
+      "category": "cat-01",
+      "answers": [
+        {
+          "id": "a",
+          "text": "ACR = NEXT - Attenuation (tlumienie)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "ACR = FEXT + NEXT",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "ACR = Attenuation / NEXT",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "ACR = Bandwidth * NEXT",
+          "correct": false
+        }
+      ],
+      "explanation": "ACR (Attenuation to Crosstalk Ratio) = NEXT - Attenuation. Okresla margines szumu - ile sygnal uzyteczny jest silniejszy od zaklocen. Im wyzszy ACR, tym lepsza jakosc transmisji."
+    },
+    {
+      "id": "q014",
+      "text": "Ktora topologia sieci jest obecnie najczesciej stosowana w sieciach LAN?",
+      "category": "cat-01",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Gwiazda (star)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Magistrala (bus)",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Pierscien (ring)",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Siatka pelna (full mesh)",
+          "correct": false
+        }
+      ],
+      "explanation": "Topologia gwiazdy jest najczesciej stosowana - wszystkie urzadzenia podlaczone do centralnego wezla (switch). Oferuje latwa diagnostyke, izolacje awarii i latwe dodawanie nowych urzadzen."
+    },
+    {
+      "id": "q015",
+      "text": "Jaka jest glowna wada topologii gwiazdy?",
+      "category": "cat-01",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Pojedynczy punkt awarii w centralnym wezle (switch)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Brak mozliwosci dodawania nowych urzadzen",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Bardzo duze zuzycie kabli w porownaniu z magistrala",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Brak mozliwosci scentralizowanego zarzadzania",
+          "correct": false
+        }
+      ],
+      "explanation": "Glowna wada topologii gwiazdy to pojedynczy punkt awarii w centrum (switch). Problem ten rozwiazuje sie przez redundancje - zapasowe przelaczniki i polaczenia."
+    },
+    {
+      "id": "q016",
+      "text": "Co obejmuje infrastruktura IT organizacji?",
+      "category": "cat-02",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Sprzet - serwery, stacje robocze, urzadzenia sieciowe",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Oprogramowanie - systemy operacyjne, aplikacje",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Sieci - LAN, WAN, polaczenie z Internetem",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "Wylacznie urzadzenia mobilne pracownikow",
+          "correct": false
+        },
+        {
+          "id": "e",
+          "text": "Jedynie licencje na oprogramowanie biurowe",
+          "correct": false
+        }
+      ],
+      "explanation": "Infrastruktura IT to zbior wszystkich elementow technicznych: sprzet (serwery, stacje robocze, urzadzenia sieciowe), oprogramowanie, sieci (LAN, WAN, Internet), centra danych, systemy zasilania i chlodzenia oraz procesy zarzadzania."
+    },
+    {
+      "id": "q017",
+      "text": "Co oznacza skrot BYOD?",
+      "category": "cat-02",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Bring Your Own Device - uzywanie prywatnych urzadzen do celow sluzbowych",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Build Your Own Database - budowa wlasnej bazy danych",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Backup Your Own Data - samodzielne tworzenie kopii zapasowych",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Bridge Your Own Domain - laczenie wlasnych domen",
+          "correct": false
+        }
+      ],
+      "explanation": "BYOD (Bring Your Own Device) to polityka pozwalajaca pracownikom uzywac prywatnych urzadzen do celow sluzbowych. Wyzwania: bezpieczenstwo danych, zarzadzanie roznorodnymi urzadzeniami (MDM), zgodnosc z politykami."
+    },
+    {
+      "id": "q018",
+      "text": "Ktory model uslug chmurowych oferuje gotowe oprogramowanie przez przegladarke?",
+      "category": "cat-02",
+      "answers": [
+        {
+          "id": "a",
+          "text": "SaaS (Software as a Service)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "IaaS (Infrastructure as a Service)",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "PaaS (Platform as a Service)",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "FaaS (Function as a Service)",
+          "correct": false
+        }
+      ],
+      "explanation": "SaaS (Software as a Service) to model dostarczania oprogramowania przez Internet jako uslugi. Uzytkownik korzysta przez przegladarke, placac subskrypcje. Przyklady: Microsoft 365, Google Workspace, Salesforce."
+    },
+    {
+      "id": "q019",
+      "text": "Na czym polega architektura Zero Trust?",
+      "category": "cat-02",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Kazdy dostep wymaga uwierzytelnienia, niezaleznie od lokalizacji - nigdy nie ufaj, zawsze weryfikuj",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Caly ruch wewnetrzny jest zaufany, kontrola tylko na brzegu sieci",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Uzytkownicy w sieci firmowej maja pelny dostep bez dodatkowej weryfikacji",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Szyfrowanie tylko ruchu wychodzacego z organizacji",
+          "correct": false
+        }
+      ],
+      "explanation": "Zero Trust to model bezpieczenstwa: nigdy nie ufaj, zawsze weryfikuj. Kazdy dostep wymaga uwierzytelnienia i autoryzacji. Kluczowe: mikrosegmentacja, MFA, least privilege, ciagle monitorowanie."
+    },
+    {
+      "id": "q020",
+      "text": "Czym jest DevOps?",
+      "category": "cat-02",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Podejscie laczace Development z Operations, celem automatyzacja i CI/CD",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Typ serwera przeznaczony do rozwoju oprogramowania",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Jezyk programowania do automatyzacji infrastruktury",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Narzedzie do monitoringu serwerow",
+          "correct": false
+        }
+      ],
+      "explanation": "DevOps to podejscie laczace rozwoj oprogramowania (Development) z operacjami IT (Operations). Celem jest skrocenie cyklu rozwoju i czestsze wdrozenia. Opiera sie na automatyzacji (CI/CD), wspolpracy zespolow i monitoringu."
+    },
+    {
+      "id": "q021",
+      "text": "Ktory typ serwera zapewnia najwyzsza gestosc obliczeniowa?",
+      "category": "cat-02",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Blade - cienkie moduly wsuwane do wspolnej obudowy (chassis)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Tower - stojacy, jak duzy komputer PC",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Rack 1U - montowany w szafie 19 cali",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Desktop - serwer na biurku",
+          "correct": false
+        }
+      ],
+      "explanation": "Serwery blade to cienkie moduly wsuwane do wspolnej obudowy (chassis), dziela zasilanie i chlodzenie - zapewniaja najwyzsza gestosc obliczeniowa. Tower sa latwe w obsludze ale zajmuja duzo miejsca. Rack to standard w data centers."
+    },
+    {
+      "id": "q022",
+      "text": "Co umozliwia technologia hot-swap?",
+      "category": "cat-02",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Wymiane komponentu (dysku, zasilacza) bez wylaczania serwera",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Automatyczne przenoszenie maszyn wirtualnych miedzy serwerami",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Szybkie przelaczanie miedzy sieciami LAN i WAN",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Zdalne zarzadzanie serwerem przez przegladarke",
+          "correct": false
+        }
+      ],
+      "explanation": "Hot-swap to mozliwosc wymiany komponentu (dysku, zasilacza, wentylatora) bez wylaczania serwera i przerywania pracy. Kluczowe dla wysokiej dostepnosci."
+    },
+    {
+      "id": "q023",
+      "text": "Licencja przypisana do osoby, ktora moze uzywac oprogramowania na wielu urzadzeniach, to model:",
+      "category": "cat-02",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Per User",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Per Device",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Per Server",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Per Core",
+          "correct": false
+        }
+      ],
+      "explanation": "Per User - licencja przypisana do osoby, moze uzywac na wielu urzadzeniach. Per Device - na urzadzenie, wielu uzytkownikow. Per Server - na serwer, czesto z dodatkowymi CAL."
+    },
+    {
+      "id": "q024",
+      "text": "Co obejmuje TCO (Total Cost of Ownership)?",
+      "category": "cat-02",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Koszty zakupu sprzetu i licencji",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Koszty operacyjne - energia, chlodzenie, administracja",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Koszty wdrozenia - instalacja, konfiguracja, szkolenia",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "Wylacznie koszt poczatkowego zakupu",
+          "correct": false
+        },
+        {
+          "id": "e",
+          "text": "Tylko koszty subskrypcji chmurowych",
+          "correct": false
+        }
+      ],
+      "explanation": "TCO (Total Cost of Ownership) to calkowity koszt posiadania przez caly cykl zycia: zakup (sprzet, licencje), wdrozenie (instalacja, szkolenia), operacyjne (energia, administracja), utrzymanie (serwis, aktualizacje) i utylizacja."
+    },
+    {
+      "id": "q025",
+      "text": "Jaka jest glowna funkcja systemu DNS?",
+      "category": "cat-03",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Tlumaczenie nazw domenowych na adresy IP i odwrotnie",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Szyfrowanie ruchu sieciowego miedzy serwerami",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Przydzielanie adresow IP urzadzeniom w sieci lokalnej",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Filtrowanie ruchu sieciowego i blokowanie zagrozten",
+          "correct": false
+        }
+      ],
+      "explanation": "DNS (Domain Name System) to hierarchiczny, rozproszony system nazewnictwa. Glowna funkcja to tlumaczenie nazw domenowych (np. google.com) na adresy IP i odwrotnie - dziala jak ksiazka telefoniczna Internetu."
+    },
+    {
+      "id": "q026",
+      "text": "Jaka jest prawidlowa kolejnosc hierarchii DNS (od gory)?",
+      "category": "cat-03",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Root (.) -> TLD (.com, .pl) -> domeny drugiego poziomu -> subdomeny",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "TLD -> Root -> subdomeny -> domeny drugiego poziomu",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Subdomeny -> domeny drugiego poziomu -> TLD -> Root",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Root -> subdomeny -> TLD -> domeny drugiego poziomu",
+          "correct": false
+        }
+      ],
+      "explanation": "Hierarchia DNS ma strukture odwroconego drzewa: Root (.) -> TLD (.com, .pl) -> domeny drugiego poziomu (google.com) -> subdomeny (mail.google.com). Kazdy poziom deleguje odpowiedzialnosc za poddomeny."
+    },
+    {
+      "id": "q027",
+      "text": "Co oznacza FQDN?",
+      "category": "cat-03",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Fully Qualified Domain Name - pelna nazwa domenowa zakonczna kropka (root)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Fast Query DNS Network - szybka siec zapytan DNS",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Firewall Qualified Data Node - certyfikowany wezel zapory sieciowej",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Forward Query Domain Notation - notacja zapytan przekierowanych",
+          "correct": false
+        }
+      ],
+      "explanation": "FQDN (Fully Qualified Domain Name) to pelna, jednoznaczna nazwa domenowa okreslajaca dokladna lokalizacje w hierarchii DNS, zakonczona kropka. Przyklad: www.example.com. (kropka na koncu oznacza root)."
+    },
+    {
+      "id": "q028",
+      "text": "Ktory typ TLD jest przypisany do konkretnych krajow?",
+      "category": "cat-03",
+      "answers": [
+        {
+          "id": "a",
+          "text": "ccTLD (country code) - np. .pl, .de, .uk",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "gTLD (generic) - np. .com, .org, .net",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "sTLD (sponsored) - np. .edu, .gov",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "iTLD (international) - np. .int, .un",
+          "correct": false
+        }
+      ],
+      "explanation": "TLD (Top Level Domain) dzieli sie na: gTLD (generic) - .com, .org, .net; ccTLD (country code) - .pl, .de, .uk, przypisane do krajow; sTLD (sponsored) - .edu, .gov, dla okreslonych spolecznosci."
+    },
+    {
+      "id": "q029",
+      "text": "Ktory typ serwera DNS przechowuje oryginalne dane strefy i jest dla niej autorytatywny?",
+      "category": "cat-03",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Master (Primary)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Slave (Secondary)",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Cache",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Forwarder",
+          "correct": false
+        }
+      ],
+      "explanation": "Master (Primary) to serwer autorytatywny dla strefy, zawiera oryginalne dane. Slave (Secondary) to kopia master. Cache przechowuje odpowiedzi tymczasowo. Forwarder przekierowuje zapytania dalej."
+    },
+    {
+      "id": "q030",
+      "text": "Czym rozni sie zapytanie DNS rekurencyjne od iteracyjnego?",
+      "category": "cat-03",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Rekurencyjne: serwer sam szuka pelnej odpowiedzi; Iteracyjne: serwer zwraca najlepsza znana odpowiedz lub wskazuje kolejny serwer",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Rekurencyjne jest szybsze, iteracyjne wolniejsze",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Rekurencyjne uzywa UDP, iteracyjne TCP",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Rekurencyjne dziala tylko w sieci lokalnej, iteracyjne w Internecie",
+          "correct": false
+        }
+      ],
+      "explanation": "Zapytanie rekurencyjne: klient zada pelnej odpowiedzi, serwer DNS sam kontaktuje inne serwery. Iteracyjne: serwer zwraca najlepsza znana odpowiedz lub wskazuje kolejny serwer do zapytania."
+    },
+    {
+      "id": "q031",
+      "text": "Ktory rekord DNS jest obowiazkowy na poczatku kazdej strefy?",
+      "category": "cat-03",
+      "answers": [
+        {
+          "id": "a",
+          "text": "SOA (Start of Authority)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "NS (Name Server)",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "A (Address)",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "MX (Mail Exchanger)",
+          "correct": false
+        }
+      ],
+      "explanation": "SOA (Start of Authority) to obowiazkowy rekord na poczatku kazdej strefy DNS. Zawiera: serwer glowny strefy, email administratora, numer seryjny, czasy odswiezania i minimalny TTL."
+    },
+    {
+      "id": "q032",
+      "text": "Ktory rekord DNS mapuje nazwe domenowa na adres IPv6?",
+      "category": "cat-03",
+      "answers": [
+        {
+          "id": "a",
+          "text": "AAAA (Quad-A)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "A (Address)",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "CNAME (Canonical Name)",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "PTR (Pointer)",
+          "correct": false
+        }
+      ],
+      "explanation": "A (Address) mapuje nazwe na IPv4 (32-bitowy). AAAA (Quad-A) mapuje nazwe na IPv6 (128-bitowy). NS wskazuje serwery DNS autorytatywne dla domeny."
+    },
+    {
+      "id": "q033",
+      "text": "Ktory rekord DNS okresla serwery pocztowe dla domeny?",
+      "category": "cat-03",
+      "answers": [
+        {
+          "id": "a",
+          "text": "MX (Mail Exchanger)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "CNAME (Canonical Name)",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "NS (Name Server)",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "TXT (Text)",
+          "correct": false
+        }
+      ],
+      "explanation": "MX (Mail Exchanger) okresla serwery pocztowe dla domeny z priorytetami (nizsza liczba = wyzszy priorytet). CNAME tworzy alias wskazujacy na inna nazwe domenowa."
+    },
+    {
+      "id": "q034",
+      "text": "Ktora anonimowa siec jest najbardziej odporna na analize ruchu dzieki rozproszeniu zaszyfrowanych danych miedzy wezlami?",
+      "category": "cat-04",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Freenet",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Tor",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "I2P",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "ZeroNet",
+          "correct": false
+        }
+      ],
+      "explanation": "Freenet to zdecentralizowana siec P2P zapewniajaca anonimowosc i odpornosc na cenzure. Dane sa szyfrowane i rozproszone miedzy wezlami - nikt nie wie, co przechowuje. Wolniejsza niz Tor, ale bardziej odporna na analize ruchu."
+    },
+    {
+      "id": "q035",
+      "text": "Ktora siec uzywa technologii Bitcoin i BitTorrent do decentralizacji?",
+      "category": "cat-04",
+      "answers": [
+        {
+          "id": "a",
+          "text": "ZeroNet",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Freenet",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Tor",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "I2P",
+          "correct": false
+        }
+      ],
+      "explanation": "ZeroNet uzywa technologii Bitcoin (kryptografia kluczy publicznych) i BitTorrent (dystrybucja P2P). Strony podpisane kluczem prywatnym wlasciciela, rozproszone miedzy uzytkownikami. Dziala offline."
+    },
+    {
+      "id": "q036",
+      "text": "Ile wezlow (relay) uzywa Tor do trasowania ruchu?",
+      "category": "cat-04",
+      "answers": [
+        {
+          "id": "a",
+          "text": "3 losowe wezly",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "1 centralny wezel",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "5 stalych wezlow",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Liczba zalezy od dlugosci trasy",
+          "correct": false
+        }
+      ],
+      "explanation": "Tor trasuje ruch przez 3 losowe wezly (relay). Kazdy wezel zna tylko poprzedni i nastepny hop, nie cala trase. Dane sa szyfrowane warstwowo (jak cebula) - kazdy wezel zdejmuje jedna warstwe."
+    },
+    {
+      "id": "q037",
+      "text": "Czym rozni sie garlic routing (I2P) od onion routing (Tor)?",
+      "category": "cat-04",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Garlic routing pakuje wiele wiadomosci razem; onion routing przesyla je pojedynczo w obwodzie",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Garlic routing jest wolniejszy, onion routing szybszy",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Garlic routing uzywa TCP, onion routing uzywa UDP",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Nie ma miedzy nimi roznicy - to synonimy",
+          "correct": false
+        }
+      ],
+      "explanation": "Onion routing (Tor): jedno polaczenie = jeden obwod przez 3 wezly. Garlic routing (I2P): wiele wiadomosci pakowanych razem, I2P uzywa jednokierunkowych tuneli (osobne dla wysylania i odbierania)."
+    },
+    {
+      "id": "q038",
+      "text": "I2P jest optymalizowane przede wszystkim pod:",
+      "category": "cat-04",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Uslugi wewnetrzne sieci (eepsites, komunikatory, torrenty)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Anonimowe przegladanie zwyklego Internetu",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Szybkie pobieranie plikow z serwerow HTTP",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Szyfrowanie poczty elektronicznej",
+          "correct": false
+        }
+      ],
+      "explanation": "I2P (Invisible Internet Project) to anonimowa siec nakladkowa optymalizowana pod uslugi wewnetrzne (eepsites, komunikatory, torrenty), nie wychodzenie do zwyklego Internetu. Kazdy wezel jest jednoczesnie routerem."
+    },
+    {
+      "id": "q039",
+      "text": "Kto wynalazl World Wide Web i w ktorym roku?",
+      "category": "cat-05",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Tim Berners-Lee, 1989 (CERN)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Vint Cerf, 1983 (Stanford)",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Linus Torvalds, 1991 (Helsinki)",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Marc Andreessen, 1993 (NCSA)",
+          "correct": false
+        }
+      ],
+      "explanation": "Tim Berners-Lee to brytyjski informatyk, tworca World Wide Web (1989, CERN). Wynalazl HTTP, HTML, URL/URI i stworzyl pierwszy serwer oraz przegladarke WWW. W 1994 zalozyl W3C."
+    },
+    {
+      "id": "q040",
+      "text": "Na ktorym porcie domyslnie dziala HTTP?",
+      "category": "cat-05",
+      "answers": [
+        {
+          "id": "a",
+          "text": "80",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "443",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "8080",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "22",
+          "correct": false
+        }
+      ],
+      "explanation": "HTTP uzywa domyslnie portu 80/TCP. HTTPS uzywa portu 443/TCP (lub UDP dla HTTP/3). Port 8080 jest czesto uzywany jako alternatywny port HTTP. Port 22 to SSH."
+    },
+    {
+      "id": "q041",
+      "text": "Ktora wersja HTTP wprowadzila multipleksowanie i jest protokolem binarnym?",
+      "category": "cat-05",
+      "answers": [
+        {
+          "id": "a",
+          "text": "HTTP/2",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "HTTP/1.0",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "HTTP/1.1",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "HTTP/3",
+          "correct": false
+        }
+      ],
+      "explanation": "HTTP/2: binarny, multipleksowanie (wiele zadan na jednym polaczeniu), kompresja naglowkow HPACK, server push. HTTP/3 oparty na QUIC/UDP. HTTP/1.1 wprowadzil keep-alive."
+    },
+    {
+      "id": "q042",
+      "text": "Ktora wersja HTTP jest oparta na protokole QUIC/UDP?",
+      "category": "cat-05",
+      "answers": [
+        {
+          "id": "a",
+          "text": "HTTP/3",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "HTTP/2",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "HTTP/1.1",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "HTTP/1.0",
+          "correct": false
+        }
+      ],
+      "explanation": "HTTP/3 jest oparty na QUIC/UDP zamiast TCP, ma wbudowany TLS 1.3, szybsze polaczenia i lepsza obsluge utraty pakietow. Wszystkie wczesniejsze wersje HTTP uzywaly TCP."
+    },
+    {
+      "id": "q043",
+      "text": "Dlaczego HTTP jest protokolem bezstanowym?",
+      "category": "cat-05",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Kazde zadanie jest niezalezne - serwer nie pamieta poprzednich interakcji",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "HTTP nie uzywa szyfrowania, wiec nie moze przechowywac stanu",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "HTTP dziala na UDP, ktore jest bezstanowe",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "HTTP moze obslugiwac tylko jedno zadanie na raz",
+          "correct": false
+        }
+      ],
+      "explanation": "HTTP jest bezstanowy - kazde zadanie jest niezalezne, serwer nie pamieta poprzednich interakcji. Zalety: prostosc, skalowalnosc. Stan utrzymuje sie przez cookies, sesje, tokeny JWT."
+    },
+    {
+      "id": "q044",
+      "text": "Ktory mechanizm utrzymywania stanu przechowuje podpisane dane w naglowku Authorization i jest bezstanowy po stronie serwera?",
+      "category": "cat-05",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Tokeny JWT",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Cookies",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Sesje po stronie serwera",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "URL rewriting",
+          "correct": false
+        }
+      ],
+      "explanation": "Tokeny JWT przechowuja podpisane dane w naglowku Authorization i sa bezstanowe po stronie serwera. Cookies sa przechowywane w przegladarce. Sesje utrzymuja stan na serwerze z identyfikatorem w cookie."
+    },
+    {
+      "id": "q045",
+      "text": "Co oznacza RTT (Round Trip Time)?",
+      "category": "cat-05",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Czas potrzebny na wyslanie pakietu i otrzymanie odpowiedzi",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Calkowity czas renderowania strony w przegladarce",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Czas odpowiedzi serwera na zapytanie SQL",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Czas potrzebny na nawiazanie polaczenia TCP",
+          "correct": false
+        }
+      ],
+      "explanation": "RTT (Round Trip Time) to czas potrzebny na wyslanie pakietu i otrzymanie odpowiedzi. HTTP/3 minimalizuje RTT przez QUIC (0-RTT dla znanych serwerow)."
+    },
+    {
+      "id": "q046",
+      "text": "Kody odpowiedzi HTTP z zakresu 4xx oznaczaja:",
+      "category": "cat-05",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Bledy klienta (np. 404 Not Found, 401 Unauthorized)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Bledy serwera (np. 500 Internal Error)",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Przekierowania (np. 301 Permanent Redirect)",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Sukces operacji (np. 200 OK)",
+          "correct": false
+        }
+      ],
+      "explanation": "Kody HTTP: 1xx - informacyjne, 2xx - sukces (200 OK), 3xx - przekierowania (301, 302), 4xx - bledy klienta (400, 401, 403, 404), 5xx - bledy serwera (500, 502, 503)."
+    },
+    {
+      "id": "q047",
+      "text": "Czym roznia sie polaczenia HTTP rownolegle od trwalych (keep-alive)?",
+      "category": "cat-05",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Rownolegle: wiele polaczen TCP jednoczesnie; Keep-alive: jedno polaczenie dla wielu zadan sekwencyjnych",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Rownolegle dzialaja na UDP, keep-alive na TCP",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Keep-alive jest wolniejsze niz polaczenia rownolegle",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Nie ma miedzy nimi roznicy - to synonimy",
+          "correct": false
+        }
+      ],
+      "explanation": "Polaczenia rownolegle - przegladarka otwiera wiele polaczen TCP (6-8). Keep-alive (HTTP/1.1) - jedno polaczenie TCP dla wielu zadan sekwencyjnych. HTTP/2 laczy zalety obu przez multipleksowanie."
+    },
+    {
+      "id": "q048",
+      "text": "Co zapewnia HTTPS w odroznieniu od HTTP?",
+      "category": "cat-05",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Poufnosc - dane sa szyfrowane, nie mozna ich podsluchac",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Integralnosc - wykrywanie modyfikacji w transmisji",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Autentycznosc - certyfikat potwierdza tozsamosc serwera",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "Szybsze ladowanie stron dzieki kompresji HTTP",
+          "correct": false
+        },
+        {
+          "id": "e",
+          "text": "Automatyczne blokowanie zlosliwego oprogramowania",
+          "correct": false
+        }
+      ],
+      "explanation": "HTTPS (HTTP Secure) to HTTP z szyfrowaniem TLS/SSL. Zapewnia: poufnosc (szyfrowanie), integralnosc (wykrywanie modyfikacji), autentycznosc (certyfikat potwierdza tozsamosc serwera)."
+    },
+    {
+      "id": "q049",
+      "text": "W handshake TLS, do czego sluzy szyfrowanie asymetryczne?",
+      "category": "cat-05",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Do bezpiecznej wymiany klucza sesji",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Do szyfrowania calego ruchu po nawiazaniu polaczenia",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Do kompresji danych przed wyslaniem",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Do weryfikacji integralnosci przesylanych plikow",
+          "correct": false
+        }
+      ],
+      "explanation": "Szyfrowanie asymetryczne (RSA, ECDH) uzywane podczas handshake'a do bezpiecznej wymiany klucza sesji. Szyfrowanie symetryczne (AES, ChaCha20) uzywane potem do szyfrowania wlasciwych danych - jest szybsze."
+    },
+    {
+      "id": "q050",
+      "text": "Ktory typ szyfrowania jest uzywany do szyfrowania wlasciwych danych po nawiazaniu polaczenia TLS?",
+      "category": "cat-05",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Symetryczne (AES, ChaCha20)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Asymetryczne (RSA, ECDH)",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Hashowanie (SHA-256)",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Kodowanie (Base64)",
+          "correct": false
+        }
+      ],
+      "explanation": "TLS laczy oba typy: asymetryczne (wolne) do ustalenia klucza sesji w handshake, symetryczne (szybkie) do szyfrowania wlasciwych danych. AES i ChaCha20 to popularne szyfry symetryczne."
+    },
+    {
+      "id": "q051",
+      "text": "Czym rozni sie wirtualizacja od konteneryzacji?",
+      "category": "cat-06",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Wirtualizacja: kazda VM ma wlasny OS; Konteneryzacja: kontenery wspoldziela jadro systemu hosta",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Wirtualizacja jest lzejsza od konteneryzacji",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Konteneryzacja zapewnia wieksza izolacje niz wirtualizacja",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Wirtualizacja wymaga kontenerow Docker do dzialania",
+          "correct": false
+        }
+      ],
+      "explanation": "Wirtualizacja - kazda VM ma wlasny system operacyjny, hypervisor zarzadza dostepem. Wieksza izolacja, wieksze zuzycie zasobow. Konteneryzacja - wspoldzielone jadro, izolacja przez namespaces i cgroups, lzejsza."
+    },
+    {
+      "id": "q052",
+      "text": "Czym rozni sie wirtualizacja od emulacji?",
+      "category": "cat-06",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Wirtualizacja wykonuje natywny kod na tym samym procesorze; emulacja symuluje inna architekture",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Emulacja jest szybsza od wirtualizacji",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Wirtualizacja wymaga specjalnego sprzetu, emulacja nie",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Nie ma miedzy nimi roznicy",
+          "correct": false
+        }
+      ],
+      "explanation": "Wirtualizacja wykonuje natywny kod na tym samym typie procesora - wysoka wydajnosc. Emulacja symuluje inna architekture sprzetowa, tlumaczac instrukcje w locie - znacznie wolniejsza, ale umozliwia uruchamianie software z innych platform."
+    },
+    {
+      "id": "q053",
+      "text": "Ktory typ hypervisora dziala bezposrednio na sprzecie, bez systemu operacyjnego hosta?",
+      "category": "cat-06",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Typ 1 (bare-metal) - np. VMware ESXi, Hyper-V",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Typ 2 (hosted) - np. VirtualBox, VMware Workstation",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Typ 3 (container-based) - np. Docker",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Typ 0 (firmware) - np. BIOS/UEFI",
+          "correct": false
+        }
+      ],
+      "explanation": "Hypervisor typu 1 (bare-metal) dziala bezposrednio na sprzecie. Przyklady: VMware ESXi, Hyper-V, Xen. Typ 2 (hosted) dziala jako aplikacja na systemie operacyjnym. Przyklady: VirtualBox, VMware Workstation."
+    },
+    {
+      "id": "q054",
+      "text": "Jak nazywaja sie rozszerzenia procesorow Intel i AMD do wspomagania wirtualizacji?",
+      "category": "cat-06",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Intel VT-x i AMD-V",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Intel SSE i AMD 3DNow!",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Intel Turbo Boost i AMD Precision Boost",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Intel HT i AMD SMT",
+          "correct": false
+        }
+      ],
+      "explanation": "VT-x (Intel) i AMD-V to rozszerzenia procesorow umozliwiajace efektywna wirtualizacje. Dodaja specjalne tryby pracy procesora (VMX root/non-root) i instrukcje do przelaczania kontekstu VM."
+    },
+    {
+      "id": "q055",
+      "text": "Ktore z ponizszych to publiczne registry obrazow Docker?",
+      "category": "cat-06",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Docker Hub",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "GitHub Actions",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Kubernetes",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Jenkins",
+          "correct": false
+        }
+      ],
+      "explanation": "Docker Hub to domyslne publiczne registry obrazow kontenerow. Prywatne registry: AWS ECR, Google GCR, Azure ACR, Harbor. Przechowuja wewnetrzne obrazy, kontroluja dostep, skanuja bezpieczenstwo."
+    },
+    {
+      "id": "q056",
+      "text": "Ktore z ponizszych NIE jest charakterystyka chmury obliczeniowej wg NIST?",
+      "category": "cat-06",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Dedykowany sprzet dla kazdego klienta",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Samoobsluga na zadanie",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Szybka elastycznosc skalowania",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Pooling zasobow",
+          "correct": false
+        }
+      ],
+      "explanation": "Chmura obliczeniowa wg NIST: samoobsluga na zadanie, szeroki dostep sieciowy, pooling zasobow (wspoldzielenie), szybka elastycznosc, mierzalna usluga. Dedykowany sprzet to cecha on-premises, nie chmury."
+    },
+    {
+      "id": "q057",
+      "text": "W ktorym modelu uslug chmurowych uzytkownik zarzadza tylko kodem aplikacji?",
+      "category": "cat-06",
+      "answers": [
+        {
+          "id": "a",
+          "text": "PaaS (Platform as a Service)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "IaaS (Infrastructure as a Service)",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "On-premises",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Kolokacja",
+          "correct": false
+        }
+      ],
+      "explanation": "PaaS - dostawca daje srodowisko uruchomieniowe, uzytkownik wgrywa kod. IaaS - uzytkownik zarzadza OS i aplikacjami. SaaS - gotowa aplikacja. FaaS - platnosc za wykonanie funkcji."
+    },
+    {
+      "id": "q058",
+      "text": "Ktory rodzaj chmury laczy zasoby chmury publicznej i prywatnej?",
+      "category": "cat-06",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Chmura hybrydowa",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Chmura publiczna",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Chmura spolecznosciowa",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Chmura prywatna",
+          "correct": false
+        }
+      ],
+      "explanation": "Chmura hybrydowa laczy publiczna i prywatna - dane wrazliwe lokalnie, burst do publicznej. Spolecznosciowa jest wspoldzielona przez organizacje o podobnych wymaganiach (np. sektor finansowy)."
+    },
+    {
+      "id": "q059",
+      "text": "Co to jest edge computing?",
+      "category": "cat-06",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Przetwarzanie danych blisko zrodla ich powstania, zmniejszajace opoznienia",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Typ chmury publicznej zoptymalizowanej pod przegladarki",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Technika kompresji danych w sieci WAN",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Protokol routingu w sieciach brzegowych",
+          "correct": false
+        }
+      ],
+      "explanation": "Edge computing to przetwarzanie danych blisko zrodla ich powstania (na brzegu sieci). Zmniejsza opoznienia, odciaza lacza. Zastosowania: IoT, autonomiczne pojazdy, AR/VR, CDN, smart city."
+    },
+    {
+      "id": "q060",
+      "text": "Jaka jest standardowa szerokosc szafy rack?",
+      "category": "cat-07",
+      "answers": [
+        {
+          "id": "a",
+          "text": "19 cali (482,6 mm)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "21 cali (533,4 mm)",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "24 cale (609,6 mm)",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "16 cali (406,4 mm)",
+          "correct": false
+        }
+      ],
+      "explanation": "Rack to standardowa szafa teleinformatyczna o szerokosci 19 cali (482,6 mm). Wysokosc mierzy sie w jednostkach U. Typowe wysokosci: 42U, 47U."
+    },
+    {
+      "id": "q061",
+      "text": "Ktore z ponizszych to element pasywny w szafie rack?",
+      "category": "cat-07",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Panel krosowy (patch panel)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Organizer kabli",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Zaslepki (zakrywanie wolnych miejsc)",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "Switch (przelacznik sieciowy)",
+          "correct": false
+        },
+        {
+          "id": "e",
+          "text": "Serwer rack 1U",
+          "correct": false
+        }
+      ],
+      "explanation": "Elementy pasywne nie wymagaja zasilania: panele krosowe, organizery kabli, polki, zaslepki, PDU (listwa zasilajaca). Elementy aktywne (wymagaja zasilania): serwery, switche, routery, firewalle."
+    },
+    {
+      "id": "q062",
+      "text": "Ktore urzadzenie dziala na warstwie 2 modelu OSI i przylacza ramki na podstawie adresow MAC?",
+      "category": "cat-07",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Switch (przelacznik)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Hub (koncentrator)",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Router",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Modem",
+          "correct": false
+        }
+      ],
+      "explanation": "Hub (warstwa 1) - rozglasza na wszystkie porty. Switch (warstwa 2) - uczy sie adresow MAC, przylacza ramki do wlasciwego portu. Router (warstwa 3) - routuje pakiety miedzy sieciami na podstawie IP."
+    },
+    {
+      "id": "q063",
+      "text": "Czym charakteryzuja sie przelaczniki szkieletowe (core switches)?",
+      "category": "cat-07",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Bardzo wysoka przepustowosc (10-400 Gbps na port), redundancja, niskie opoznienia",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Niski koszt i podstawowa funkcjonalnosc, idealne dla malych biur",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Wbudowany modem i funkcje routera Wi-Fi",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Obsluga wylacznie polaczen swiatlowodowych",
+          "correct": false
+        }
+      ],
+      "explanation": "Przelaczniki szkieletowe (core) to wysokowydajne przelaczniki w centrum sieci. Cechy: bardzo wysoka przepustowosc, redundancja (podwojne zasilanie), niskie opoznienia, zaawansowany routing."
+    },
+    {
+      "id": "q064",
+      "text": "Ktore metody laczenia przelacznikow sa poprawne?",
+      "category": "cat-07",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Agregacja (LACP/EtherChannel) - wiele portow w jeden logiczny kanal",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Stacking - laczenie wielu przelacznikow w jeden logiczny switch",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Redundancja - wiele polaczen z STP zapobiegajacym petlom",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "Bluetooth - bezprzewodowe laczenie przelacznikow",
+          "correct": false
+        },
+        {
+          "id": "e",
+          "text": "USB - laczenie przelacznikow kablem USB",
+          "correct": false
+        }
+      ],
+      "explanation": "Agregacja (LACP/EtherChannel) laczy wiele portow fizycznych w jeden logiczny kanal o wiekszej przepustowosci. Stacking laczy wiele przelacznikow w jeden logiczny switch. Port-to-port to proste polaczenie jednym kablem."
+    },
+    {
+      "id": "q065",
+      "text": "Co powoduje polaczenie przelacznikow w ring (pierscien) bez protokolu STP?",
+      "category": "cat-07",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Broadcast storm - ramki rozgloszeniowe kraza w nieskonczonosc, siec pada w sekundy",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Zwiekszenie przepustowosci sieci",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Automatyczne rownowaznie obciazenia",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Lepsza redundancja bez dodatkowej konfiguracji",
+          "correct": false
+        }
+      ],
+      "explanation": "Polaczenie w ring bez STP tworzy petle przelaczania. Ramki broadcast kraza w nieskonczonosc, mnozac sie. Tablice MAC sie zapelniaja. Siec staje sie calkowicie nieuzywalna w sekundy."
+    },
+    {
+      "id": "q066",
+      "text": "Co robi protokol STP (Spanning Tree Protocol)?",
+      "category": "cat-07",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Zapobiega petlom w sieci przez logiczne blokowanie redundantnych polaczen",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Szyfruje ruch miedzy przelacznikami",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Przydziela adresy IP urzadzeniom w sieci",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Monitoruje obciazenie portow i rownowarzy ruch",
+          "correct": false
+        }
+      ],
+      "explanation": "STP zapobiega petlom przez logiczne blokowanie redundantnych polaczen, tworzac drzewo rozpinajace. RSTP (Rapid STP) - szybsza konwergencja. MSTP - osobne drzewa dla roznych grup VLAN."
+    },
+    {
+      "id": "q067",
+      "text": "Ktory wariant STP oferuje osobne drzewa rozpinajace dla roznych grup VLAN?",
+      "category": "cat-07",
+      "answers": [
+        {
+          "id": "a",
+          "text": "MSTP (Multiple Spanning Tree Protocol)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "RSTP (Rapid Spanning Tree Protocol)",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "STP (oryginalne Spanning Tree Protocol)",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "PVST (Per-VLAN Spanning Tree)",
+          "correct": false
+        }
+      ],
+      "explanation": "MSTP (Multiple STP) - osobne drzewa dla roznych grup VLAN, lepsze wykorzystanie laczy. RSTP - szybsza konwergencja (sekundy vs minuty w oryginalnym STP)."
+    },
+    {
+      "id": "q068",
+      "text": "Jak zapobiegac wyladowaniom elektrostatycznym (ESD) w serwerowni?",
+      "category": "cat-08",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Opaski antystatyczne i maty ESD",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Odpowiednie uziemienie stanowisk pracy",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Kontrola wilgotnosci (40-60%)",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "Obnizenie wilgotnosci ponizej 20%",
+          "correct": false
+        },
+        {
+          "id": "e",
+          "text": "Uzywanie syntetycznych materialow na podlodze",
+          "correct": false
+        }
+      ],
+      "explanation": "ESD (Electrostatic Discharge) moze uszkodzic elektronike. Zapobieganie: opaski antystatyczne, maty ESD, uziemienie, kontrola wilgotnosci (40-60%), antystatyczne opakowania, unikanie materialow syntetycznych."
+    },
+    {
+      "id": "q069",
+      "text": "Ktore zaklocenie zasilania oznacza calkowity brak pradu?",
+      "category": "cat-08",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Blackout (zanik)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Brownout (zapad napiecia)",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Surge (przepiecie)",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Noise (szum elektryczny)",
+          "correct": false
+        }
+      ],
+      "explanation": "Zaklocenia zasilania: blackout - calkowity brak zasilania, brownout/sag - chwilowy spadek napiecia, surge/spike - krotkotrwaly wzrost napiecia, noise - zaklecenia wysokoczestotliwosciowe."
+    },
+    {
+      "id": "q070",
+      "text": "Ktore urzadzenie chroni przed porazeniem pradem w wyniku uplywnosci?",
+      "category": "cat-08",
+      "answers": [
+        {
+          "id": "a",
+          "text": "RCD (roznicowka / wylacznik roznicowopradowy)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "UPS (zasilacz awaryjny)",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Stabilizator napiecia",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Filtr przeciwprzepieciowy",
+          "correct": false
+        }
+      ],
+      "explanation": "RCD (roznicowka) chroni przed porazeniem. UPS zapewnia zasilanie awaryjne. Stabilizatory reguluja napiecie. Filtry przeciwprzepieciowe chronia przed przepieciami."
+    },
+    {
+      "id": "q071",
+      "text": "Ktory typ UPS-a zapewnia zero czasu przelaczania na baterie?",
+      "category": "cat-08",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Online (double-conversion) - zawsze przetwarza prad przez inwerter",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Offline (standby) - przelacza po wykryciu awarii",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Line-interactive - automatycznie reguluje napiecie (AVR)",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Wszystkie typy UPS maja zerowy czas przelaczania",
+          "correct": false
+        }
+      ],
+      "explanation": "UPS Online (double-conversion) zawsze przetwarza prad przez inwerter, zero czasu przelaczania. Offline przelacza na baterie po kilku ms. Line-interactive reguluje napiecie przez AVR."
+    },
+    {
+      "id": "q072",
+      "text": "Ktore stwierdzenia o PUE (Power Usage Effectiveness) sa prawdziwe?",
+      "category": "cat-08",
+      "answers": [
+        {
+          "id": "a",
+          "text": "PUE 1.2 oznacza bardzo wydajne data center",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "PUE oblicza sie jako calkowita energia DC / energia IT",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Im nizsze PUE, tym lepsza efektywnosc energetyczna",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "PUE 2.5 to dobry wynik dla nowoczesnego data center",
+          "correct": false
+        },
+        {
+          "id": "e",
+          "text": "Idealna wartosc PUE wynosi 0.5",
+          "correct": false
+        }
+      ],
+      "explanation": "PUE (Power Usage Effectiveness) = calkowita energia / energia IT. PUE 1.0 - teoretyczne minimum. PUE 1.2 - bardzo wydajne. PUE 1.5 - dobre. PUE 2.0 - nieefektywne (tyle samo na chlodzenie co na IT)."
+    },
+    {
+      "id": "q073",
+      "text": "Co oznacza redundancja 2N?",
+      "category": "cat-09",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Pelna duplikacja wszystkich komponentow - dwa niezalezne systemy",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Jeden dodatkowy komponent ponad minimum",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Trzy kopie kazdego komponentu",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Brak redundancji - dokladie tyle komponentow ile potrzeba",
+          "correct": false
+        }
+      ],
+      "explanation": "N+1: jeden dodatkowy komponent. 2N: pelna duplikacja (dwa niezalezne systemy, kazdy obsluguje 100% obciazenia). 2N+1: pelna duplikacja plus jeden dodatkowy."
+    },
+    {
+      "id": "q074",
+      "text": "Ile minut przestoju rocznie dopuszcza SLA z dostepnoscia 99.99% (four nines)?",
+      "category": "cat-09",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Okolo 52,6 minuty",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Okolo 8,76 godziny",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Okolo 5,26 minuty",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Okolo 3,65 dnia",
+          "correct": false
+        }
+      ],
+      "explanation": "SLA: 99% = 3,65 dnia/rok, 99.9% = 8,76h/rok, 99.99% (four nines) = 52,6 min/rok, 99.999% (five nines) = 5,26 min/rok. Wyzszy poziom = wieksza redundancja i koszty."
+    },
+    {
+      "id": "q075",
+      "text": "Czym rozni sie Fault Tolerant od High Availability?",
+      "category": "cat-09",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Fault Tolerant dziala BEZ PRZERWY mimo awarii; High Availability dopuszcza chwile przestoju przy przelaczeniu",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "High Availability jest drozsze od Fault Tolerant",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Fault Tolerant wymaga tylko jednego serwera",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Nie ma miedzy nimi roznicy - to synonimy",
+          "correct": false
+        }
+      ],
+      "explanation": "Fault Tolerant - system kontynuuje prace BEZ PRZERWY mimo awarii komponentu (pelna redundancja aktywna). High Availability - szybkie przelaczenie na zapasowy system (sekundy-minuty przestoju). FT drozsze."
+    },
+    {
+      "id": "q076",
+      "text": "Ktore stwierdzenia o poziomach RAID sa prawdziwe?",
+      "category": "cat-09",
+      "answers": [
+        {
+          "id": "a",
+          "text": "RAID 0 nie oferuje redundancji - awaria jednego dysku oznacza utrate danych",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "RAID 6 przetrwa jednoczesna awarie 2 dyskow dzieki podwojnej parzystosci",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "RAID 1 to pelne lustrzane odbicie (mirror) - 50% pojemnosci",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "RAID 5 wymaga minimum 2 dyskow",
+          "correct": false
+        },
+        {
+          "id": "e",
+          "text": "RAID 0 zapewnia pelna redundancje danych",
+          "correct": false
+        }
+      ],
+      "explanation": "RAID 0: stripe, brak redundancji. RAID 1: mirror. RAID 5: pojedyncza parzytosc, 1 awaria. RAID 6: podwojna parzytosc, 2 awarie. RAID 10: mirror+stripe, min 4 dyski."
+    },
+    {
+      "id": "q077",
+      "text": "Dlaczego RAID 10 jest bezpieczniejszy niz RAID 01?",
+      "category": "cat-09",
+      "answers": [
+        {
+          "id": "a",
+          "text": "RAID 10 najpierw mirroruje pary, potem stripe - awaria jednego dysku nie degraduje calego stripe",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "RAID 10 uzywa szyfrowania danych",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "RAID 01 nie oferuje zadnej redundancji",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "RAID 10 wymaga mniej dyskow",
+          "correct": false
+        }
+      ],
+      "explanation": "RAID 10 (1+0): mirror par, potem stripe - przetrwa awarie jednego dysku w kazdej parze. RAID 01 (0+1): stripe, potem mirror - awaria jednego dysku degraduje caly stripe."
+    },
+    {
+      "id": "q078",
+      "text": "Ktora metoda load balancingu kieruje ruch do serwera z najmniejsza liczba polaczen?",
+      "category": "cat-09",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Least Connections",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Round Robin",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "IP Hash",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Weighted",
+          "correct": false
+        }
+      ],
+      "explanation": "Round Robin - kolejno do kazdego serwera. Least Connections - do serwera z najmniejsza liczba polaczen. IP Hash - zawsze ten sam serwer dla danego IP. Adaptive - na podstawie rzeczywistego obciazenia."
+    },
+    {
+      "id": "q079",
+      "text": "Ktory typ monitoringu wymaga instalacji oprogramowania na monitorowanym systemie?",
+      "category": "cat-10",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Agent-based (z nadzorem)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Agentless (bez nadzoru)",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Monitoring pasywny",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Monitoring analityczny",
+          "correct": false
+        }
+      ],
+      "explanation": "Agent-based: program zainstalowany na hoscie, wysoka szczegolowsc. Agentless: dane zbierane zdalnie przez SNMP, WMI, SSH - latwiejsze wdrozenie, mniejszy wplyw, mniej szczegolowe dane."
+    },
+    {
+      "id": "q080",
+      "text": "Ktory typ monitoringu wykrywa trendy i ostrzega ZANIM problem wystapi?",
+      "category": "cat-10",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Proaktywny",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Reaktywny",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Pasywny",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Statyczny",
+          "correct": false
+        }
+      ],
+      "explanation": "Reaktywny - alarmowanie po wystapeniu problemu. Proaktywny - wykrywanie trendow i ostrzeganie zanim problem wystapi. Analityczny - uczenie maszynowe do wykrywania anomalii."
+    },
+    {
+      "id": "q081",
+      "text": "Ktora operacja SNMP umozliwia urzadzeniu wysylanie asynchronicznych alertow do managera?",
+      "category": "cat-10",
+      "answers": [
+        {
+          "id": "a",
+          "text": "TRAP",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "GET",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "SET",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "WALK",
+          "correct": false
+        }
+      ],
+      "explanation": "SNMP operacje: GET - odczyt wartosci, SET - zapis wartosci, TRAP - alert asynchroniczny wysylany przez agenta do managera. SNMPv3 dodaje autentykacje i szyfrowanie."
+    },
+    {
+      "id": "q082",
+      "text": "W stacku Prometheus, ktory komponent eksportuje metryki systemowe Linuxa (CPU, RAM, dysk)?",
+      "category": "cat-10",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Node Exporter",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Grafana",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Alertmanager",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "PromQL",
+          "correct": false
+        }
+      ],
+      "explanation": "Prometheus scrapuje metryki HTTP. Node Exporter eksportuje metryki systemowe (CPU, RAM, dysk, siec). Alertmanager obsluguje alerty. Grafana wizualizuje dane. PromQL to jezyk zapytan."
+    },
+    {
+      "id": "q083",
+      "text": "Co oznacza zasada backupu 3-2-1?",
+      "category": "cat-11",
+      "answers": [
+        {
+          "id": "a",
+          "text": "3 kopie danych (oryginal + 2 backupy)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "2 rozne typy nosnikow (np. dysk + tasma)",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "1 kopia offsite (poza glowna lokalizacja)",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "3 pelne backupy dziennie",
+          "correct": false
+        },
+        {
+          "id": "e",
+          "text": "2 serwery lustrzane w tej samej serwerowni",
+          "correct": false
+        }
+      ],
+      "explanation": "Zasada 3-2-1: 3 kopie danych (oryginal + 2 backupy), 2 rozne typy nosnikow (np. dysk + tasma), 1 kopia offsite. Rozszerzenie 3-2-1-1-0: + air-gapped + 0 bledow weryfikacji."
+    },
+    {
+      "id": "q084",
+      "text": "Co oznacza RPO (Recovery Point Objective)?",
+      "category": "cat-11",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Maksymalna akceptowalna utrata danych mierzona w czasie",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Maksymalny czas przywracania systemu po awarii",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Calkowity koszt odzyskiwania danych",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Liczba kopii zapasowych potrzebnych do odtworzenia",
+          "correct": false
+        }
+      ],
+      "explanation": "RPO - maksymalna utrata danych (np. RPO 1h = backup co godzine). RTO - maksymalny czas przywracania. Nizsze wartosci = wieksze koszty infrastruktury backupu."
+    },
+    {
+      "id": "q085",
+      "text": "Backup roznicowy (differential) kopiuje zmiany od:",
+      "category": "cat-11",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Ostatniego PELNEGO backupu",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Ostatniego backupu dowolnego typu",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Poczatku tygodnia",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Poprzedniego dnia",
+          "correct": false
+        }
+      ],
+      "explanation": "Przyrostowy (incremental) - zmiany od OSTATNIEGO backupu (dowolnego). Roznicowy (differential) - zmiany od OSTATNIEGO PELNEGO. Przywracanie roznicowego wymaga tylko pelnego + ostatniego roznicowego."
+    },
+    {
+      "id": "q086",
+      "text": "Deduplikacja source-side oznacza:",
+      "category": "cat-11",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Eliminacja duplikatow na kliencie PRZED wyslaniem danych - oszczedza pasmo",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Eliminacja duplikatow na serwerze backupu po otrzymaniu danych",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Deduplikacja w czasie zapisu na dysk",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Deduplikacja po zakonczeniu calego procesu backupu",
+          "correct": false
+        }
+      ],
+      "explanation": "Source-side: deduplikacja na kliencie przed wyslaniem (oszczedza pasmo). Target-side: na serwerze backupu. Inline: w czasie backupu. Post-process: po zapisie, w tle."
+    },
+    {
+      "id": "q087",
+      "text": "Czym rozni sie snapshot od backupu?",
+      "category": "cat-11",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Snapshot to lokalna migawka (szybka, mala), backup to pelna kopia w innej lokalizacji",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Snapshot zastepuje backup - nie ma potrzeby robienia obu",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Backup jest szybszy od snapshota",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Snapshot kopiuje wszystkie dane, backup tylko zmiany",
+          "correct": false
+        }
+      ],
+      "explanation": "Snapshot to migawka stanu systemu plikow (Copy-on-Write). Szybki, maly, lokalny - chroni przed przypadkowym usunieciem. Backup to pelna kopia w innej lokalizacji - chroni przed awaria sprzetu. Snapshot NIE zastepuje backupu."
+    },
+    {
+      "id": "q088",
+      "text": "Ktory system storage oferuje dostep blokowy przez dedykowana siec (Fibre Channel, iSCSI)?",
+      "category": "cat-11",
+      "answers": [
+        {
+          "id": "a",
+          "text": "SAN (Storage Area Network)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "NAS (Network Attached Storage)",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "DAS (Direct Attached Storage)",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Object Storage",
+          "correct": false
+        }
+      ],
+      "explanation": "SAN: dedykowana siec, dostep blokowy (Fibre Channel, iSCSI), dyski widoczne jako lokalne - dla baz danych i wirtualizacji. NAS: siec IP, dostep plikowy (NFS, SMB/CIFS) - dla wspoldzielenia plikow."
+    },
+    {
+      "id": "q089",
+      "text": "Ktory parametr dysku SSD okresla ile razy mozna zapisac cala pojemnosc dziennie przez okres gwarancji?",
+      "category": "cat-11",
+      "answers": [
+        {
+          "id": "a",
+          "text": "DWPD (Drive Writes Per Day)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "IOPS (Input/Output Operations Per Second)",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "MTBF (Mean Time Between Failures)",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "TBW (Total Bytes Written)",
+          "correct": false
+        }
+      ],
+      "explanation": "IOPS: operacje odczytu/zapisu na sekunde. MTBF: sredni czas miedzy awariami. DWPD: ile razy mozna zapisac cala pojemnosc dziennie (SSD). TBW: calkowita ilosc danych do zapisania na SSD."
+    },
+    {
+      "id": "q090",
+      "text": "Na czym polega asymetria w cyberbezpieczenstwie?",
+      "category": "cat-12",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Atakujacy musi znalezc jedna luke, obronca musi chronic wszystko",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Atakujacy potrzebuje wiecej zasobow niz obronca",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Obrona jest latwiejsza i tansza niz atak",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Obie strony maja rowne szanse i zasoby",
+          "correct": false
+        }
+      ],
+      "explanation": "Asymetria: atakujacy szuka jednej luki, obronca chroni wszystko. Atakujacy wybiera czas i metode, obronca musi byc czujny 24/7. Atak moze byc tani i zautomatyzowany, obrona wymaga specjalistow."
+    },
+    {
+      "id": "q091",
+      "text": "Zasada minimalnych uprawnien (least privilege) oznacza:",
+      "category": "cat-12",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Uzytkownik lub proces ma TYLKO te uprawnienia, ktore sa niezbedne do wykonania zadania",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Wszyscy uzytkownicy maja minimalne uprawnienia, nawet administratorzy",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Kazdy uzytkownik musi miec co najmniej jedno uprawnienie administracyjne",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Uprawnienia sa przyznawane raz i nie sa zmieniane",
+          "correct": false
+        }
+      ],
+      "explanation": "Zasada minimalnych uprawnien: uzytkownik ma TYLKO niezbedne uprawnienia. Ogranicza skutki wlamania, pomylek i malware. Wymaga regularnego przegladu i odbierania niepotrzebnych uprawnien."
+    },
+    {
+      "id": "q092",
+      "text": "Zasada 'default deny' oznacza:",
+      "category": "cat-12",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Wszystko, co nie jest jawnie dozwolone, jest zabronione",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Wszystko jest dozwolone, chyba ze zakazane",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Dostep jest domyslnie przyznawany na 24 godziny",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Nowe konta sa domyslnie zablokowane na 30 dni",
+          "correct": false
+        }
+      ],
+      "explanation": "Default deny: co nie jest jawnie dozwolone, jest zabronione. Przeciwienstwo to default allow. Default deny jest bezpieczniejsze - nowe uslugi/porty sa domyslnie zablokowane."
+    },
+    {
+      "id": "q093",
+      "text": "Ktore stwierdzenia o spojnosci w bezpieczenstwie sa prawdziwe?",
+      "category": "cat-12",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Spojnosc pozioma - jednakowy poziom zabezpieczen dla zasobow o podobnej krytycznosci",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Spojnosc pionowa - zabezpieczenia na wszystkich warstwach (siec, system, aplikacja, dane)",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Atakujacy szuka najslabszego ogniwa, wiec wszystkie warstwy musza byc chronione",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "Spojnosc oznacza stosowanie jednego typu zabezpieczenia wszedzie",
+          "correct": false
+        },
+        {
+          "id": "e",
+          "text": "Wystarczy chronic tylko warstwe sieciowa, reszta jest bezpieczna",
+          "correct": false
+        }
+      ],
+      "explanation": "Spojnosc pozioma - jednakowy poziom zabezpieczen dla zasobow o podobnej krytycznosci. Spojnosc pionowa - zabezpieczenia na wszystkich warstwach. Atakujacy szuka najslabszego ogniwa."
+    },
+    {
+      "id": "q094",
+      "text": "Firewall L7 (aplikacyjny/WAF) potrafi:",
+      "category": "cat-12",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Analizowac zawartosc warstwy aplikacji i blokowac ataki jak SQL injection czy XSS",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Tylko filtrowac ruch na podstawie adresow IP",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Tylko sledzic stan polaczen TCP",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Wylacznie blokowac ruch na podstawie portow TCP/UDP",
+          "correct": false
+        }
+      ],
+      "explanation": "Firewall L3: adresy IP. L4: porty TCP/UDP, stan polaczenia (stateful). L7 (aplikacyjny/WAF): analizuje zawartosc warstwy aplikacji, rozumie protokoly, blokuje SQL injection, XSS."
+    },
+    {
+      "id": "q095",
+      "text": "Filtracja stanowa (stateful) rozni sie od bezstanowej tym, ze:",
+      "category": "cat-12",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Sledzi stan polaczen TCP i automatycznie przepuszcza pakiety nalezace do dozwolonych polaczen",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Analizuje kazdy pakiet niezaleznie, bez kontekstu polaczenia",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Wymaga wiecej regul niz filtracja bezstanowa",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Dziala tylko na warstwie 7 modelu OSI",
+          "correct": false
+        }
+      ],
+      "explanation": "Bezstanowa (stateless): kazdy pakiet analizowany niezaleznie. Stanowa (stateful): sledzi stan polaczen TCP, automatycznie przepuszcza pakiety nalezace do dozwolonych polaczen. Bezpieczniejsza."
+    },
+    {
+      "id": "q096",
+      "text": "Czym rozni sie IDS od IPS?",
+      "category": "cat-12",
+      "answers": [
+        {
+          "id": "a",
+          "text": "IDS wykrywa i alarmuje (pasywnie); IPS wykrywa i blokuje (inline)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "IDS blokuje ruch, IPS tylko alarmuje",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "IDS dziala na warstwie 3, IPS na warstwie 7",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "IDS jest druzszy i bardziej zaawansowany niz IPS",
+          "correct": false
+        }
+      ],
+      "explanation": "IDS (Intrusion Detection System) - wykrywa ataki i alarmuje, ale NIE blokuje. Dziala pasywnie. IPS (Intrusion Prevention System) - wykrywa I blokuje w czasie rzeczywistym. Dziala inline."
+    },
+    {
+      "id": "q097",
+      "text": "Ktory system wykrywania wlaman monitoruje sieci bezprzewodowe i wykrywa rogue AP?",
+      "category": "cat-12",
+      "answers": [
+        {
+          "id": "a",
+          "text": "WIPS (Wireless IPS)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "NIDS (Network IDS)",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "HIDS (Host IDS)",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "WAF (Web Application Firewall)",
+          "correct": false
+        }
+      ],
+      "explanation": "NIDS: monitoruje ruch sieciowy. HIDS: dziala na hoscie, monitoruje logi i pliki. WIPS: wykrywa zagrozenia w sieciach bezprzewodowych (rogue AP, evil twin, ataki na WPA)."
+    },
+    {
+      "id": "q098",
+      "text": "Ktory typ VPN laczy dwie sieci (np. biura firmy) i jest zawsze aktywny?",
+      "category": "cat-12",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Site-to-site VPN",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Remote access (client-to-site) VPN",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Host-to-host VPN",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "SSL VPN",
+          "correct": false
+        }
+      ],
+      "explanation": "VPN typy: Site-to-site - laczy dwie sieci, zawsze aktywny. Remote access - uzytkownicy zdalni lacza sie do sieci firmowej. Host-to-host - bezposrednie polaczenie miedzy dwoma komputerami."
+    },
+    {
+      "id": "q099",
+      "text": "Ile praktyk definiuje ITIL 4 i w ilu kategoriach?",
+      "category": "cat-13",
+      "answers": [
+        {
+          "id": "a",
+          "text": "14 praktyk ogolnych (np. ciagle doskonalenie, zarzadzanie ryzykiem)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "17 praktyk zarzadzania uslugami (np. incydenty, problemy, zmiany)",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "3 praktyki zarzadzania technologia (wdrozenie, infrastruktura, platformy)",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "26 procesow pogrupowanych w 5 faz cyklu zycia",
+          "correct": false
+        },
+        {
+          "id": "e",
+          "text": "8 praktyk podzielonych na strategiczne i operacyjne",
+          "correct": false
+        }
+      ],
+      "explanation": "ITIL 4 definiuje 34 praktyki: ogolne (14) - np. ciagle doskonalenie, zarzadzanie ryzykiem; zarzadzanie uslugami (17) - np. incydenty, problemy, zmiana; zarzadzanie technologia (3)."
+    },
+    {
+      "id": "q100",
+      "text": "Czym jest Service Desk wedlug ITIL?",
+      "category": "cat-13",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Pojedynczy punkt kontaktu (SPOC) miedzy dostawca uslug a uzytkownikami",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Narzedzie do automatycznego rozwiazywania incydentow",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Baza danych konfiguracji (CMDB)",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "System monitoringu uslug IT",
+          "correct": false
+        }
+      ],
+      "explanation": "Service Desk to pojedynczy punkt kontaktu (SPOC). Funkcje: przyjmowanie zgloszen, pierwsza linia wsparcia, eskalacja, komunikacja z uzytkownikami. Moze byc lokalny, centralny, wirtualny lub follow-the-sun."
+    },
+    {
+      "id": "q101",
+      "text": "Celem zarzadzania incydentami w ITIL jest:",
+      "category": "cat-13",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Przywrocenie normalnej pracy uslugi jak najszybciej, minimalizujac wplyw na biznes",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Znalezienie przyczyny zrodlowej problemu",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Zaplanowanie i wdrozenie zmian w infrastrukturze",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Monitorowanie poziomu SLA",
+          "correct": false
+        }
+      ],
+      "explanation": "Zarzadzanie incydentami przywraca normalna prace jak najszybciej (nawet obejsciem). Incydent = nieplanowana przerwa lub degradacja uslugi. Nie szuka przyczyny zrodlowej - to zadanie Problem Management."
+    },
+    {
+      "id": "q102",
+      "text": "Czym rozni sie incydent od problemu w ITIL?",
+      "category": "cat-13",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Incydent to skutek (szybkie przywrocenie); Problem to przyczyna (trwale rozwiazanie)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Incydent jest powazniejszy od problemu",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Problem wymaga natychmiastowej reakcji, incydent moze poczekac",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Incydent dotyczy sprzetu, problem dotyczy oprogramowania",
+          "correct": false
+        }
+      ],
+      "explanation": "Incydent - zdarzenie zaklocajace usluge, cel: szybkie przywrocenie. Problem - nieznana przyczyna incydentow, cel: znalezienie root cause. Moze byc wiele incydentow z jednego problemu."
+    },
+    {
+      "id": "q103",
+      "text": "Ktory typ zmiany w ITIL jest preautoryzowany i ma niskie ryzyko?",
+      "category": "cat-13",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Zmiana standardowa",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Zmiana normalna",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Zmiana awaryjna",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Zmiana krytyczna",
+          "correct": false
+        }
+      ],
+      "explanation": "Typy zmian: standardowe (preautoryzowane, niskie ryzyko), normalne (wymagaja oceny i zatwierdzenia przez CAB), awaryjne (pilne, uproszczona procedura). Proces: RFC -> ocena -> zatwierdzenie -> wdrozenie."
+    },
+    {
+      "id": "q104",
+      "text": "Na jakim cyklu opiera sie ciagle doskonalenie (Continual Improvement) w ITIL?",
+      "category": "cat-13",
+      "answers": [
+        {
+          "id": "a",
+          "text": "PDCA (Plan-Do-Check-Act)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "SDLC (Software Development Life Cycle)",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "OODA (Observe-Orient-Decide-Act)",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "DMAIC (Define-Measure-Analyze-Improve-Control)",
+          "correct": false
+        }
+      ],
+      "explanation": "Ciagle doskonalenie opiera sie na cyklu PDCA (Plan-Do-Check-Act) lub modelu CSI (7 krokow). Identyfikuje mozliwosci poprawy na podstawie pomiarow, opinii klientow, analizy trendow, benchmarkingu i audytow."
+    }
+  ]
+}

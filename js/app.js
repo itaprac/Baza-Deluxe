@@ -1,7 +1,7 @@
 // app.js — Application entry point, router, study session loop
 
 import { DEFAULT_SETTINGS, processRating, getButtonIntervals } from './sm2.js';
-import { RATINGS, isNew as isNewCard, isReview as isReviewCard, isLearning as isLearningCard, isRelearning as isRelearningCard } from './card.js';
+import { RATINGS, isNew as isNewCard, isReview as isReviewCard, isLearning as isLearningCard, isRelearning as isRelearningCard, isFlagged } from './card.js';
 import * as deck from './deck.js';
 import * as storage from './storage.js';
 import { importFromFile, importBuiltIn } from './importer.js';
@@ -17,6 +17,8 @@ import {
   renderTestQuestion,
   renderTestResult,
   renderBrowse,
+  renderBrowseEditor,
+  renderFlaggedBrowse,
   renderAppSettings,
   renderQuestionEditor,
   formatKeyName,
@@ -26,13 +28,13 @@ import {
   showNotification,
   showConfirm,
 } from './ui.js';
-import { shuffle } from './utils.js';
+import { shuffle, isFlashcard } from './utils.js';
 import { hasRandomizer, hasTemplate, randomize } from './randomizers.js';
 
 // --- App State ---
 
-const FONT_SCALES = [0.85, 0.925, 1.0, 1.1, 1.25, 1.4];
-const DEFAULT_FONT_LEVEL = 2;
+const FONT_SCALE_STEP = 0.1;
+const DEFAULT_FONT_SCALE = 1.0;
 
 const DEFAULT_APP_SETTINGS = {
   theme: 'auto',
@@ -41,6 +43,7 @@ const DEFAULT_APP_SETTINGS = {
   shuffleAnswers: true,
   questionOrder: 'shuffled', // 'shuffled' or 'ordered'
   randomizeNumbers: false,
+  flaggedInAnki: false, // include flagged cards in Anki study mode
   keybindings: {
     showAnswer: [' ', 'Enter'],
     again: ['1'],
@@ -51,13 +54,15 @@ const DEFAULT_APP_SETTINGS = {
 };
 
 let appSettings = { ...DEFAULT_APP_SETTINGS, keybindings: { ...DEFAULT_APP_SETTINGS.keybindings } };
-let fontLevel = DEFAULT_FONT_LEVEL;
+let fontScale = DEFAULT_FONT_SCALE;
 let currentDeckId = null;
 let currentCategory = null; // null = all, or category id
 let settingsReturnTo = null; // 'mode-select' or 'deck-list'
 let appSettingsReturnView = null; // view id to return to from app settings
 let currentDeckSettings = null; // per-deck SM-2 settings for active session
 let studyPhase = null; // 'question' | 'feedback' | null
+let currentCardFlagged = false;
+let studyingFlagged = false;
 let queues = null;
 let currentCard = null;
 let currentSource = null;
@@ -110,14 +115,31 @@ function init() {
   applyLayoutWidth(appSettings.layoutWidth);
 
   // Load font scale
-  const savedFont = localStorage.getItem('baza_fontLevel');
+  const savedFont = localStorage.getItem('baza_fontScale');
   if (savedFont !== null) {
-    fontLevel = Math.max(0, Math.min(FONT_SCALES.length - 1, parseInt(savedFont) || DEFAULT_FONT_LEVEL));
+    const parsed = parseFloat(savedFont);
+    if (!isNaN(parsed) && parsed > 0) fontScale = parsed;
   }
   applyFontScale();
 
   // Bind events
   bindGlobalEvents();
+
+  // Browser back button support
+  history.pushState(null, '', '');
+  window.addEventListener('popstate', () => {
+    const activeView = document.querySelector('.view.active');
+    if (!activeView || activeView.id === 'view-deck-list') {
+      return; // allow leaving the app from the main screen
+    }
+    // Maintain the history buffer so next back press also works
+    history.pushState(null, '', '');
+    // Trigger the in-app back button for the current view
+    const backBtn = activeView.querySelector('.btn-back');
+    if (backBtn) {
+      backBtn.click();
+    }
+  });
 
   // Try loading built-in decks
   loadBuiltInDecks();
@@ -127,13 +149,15 @@ function init() {
 }
 
 function applyFontScale() {
-  document.documentElement.style.setProperty('--font-scale', FONT_SCALES[fontLevel]);
+  document.documentElement.style.setProperty('--font-scale', fontScale);
 }
 
 function changeFontSize(delta) {
-  fontLevel = Math.max(0, Math.min(FONT_SCALES.length - 1, fontLevel + delta));
+  const newScale = Math.round((fontScale + delta * FONT_SCALE_STEP) * 1000) / 1000;
+  if (newScale <= 0) return;
+  fontScale = newScale;
   applyFontScale();
-  localStorage.setItem('baza_fontLevel', fontLevel);
+  localStorage.setItem('baza_fontScale', fontScale);
 }
 
 let mediaQueryCleanup = null;
@@ -175,6 +199,12 @@ function handleKeyDown(e) {
 
   // Study mode shortcuts
   if (activeView.id === 'view-study' && studyPhase) {
+    // Flag shortcut works in both question and feedback phases
+    if (e.key === 'f' || e.key === 'F') {
+      e.preventDefault();
+      handleFlagToggle();
+      return;
+    }
     const kb = appSettings.keybindings;
     if (studyPhase === 'question') {
       const num = parseInt(e.key);
@@ -220,7 +250,7 @@ function handleKeyDown(e) {
 
 async function loadBuiltInDecks() {
   const decks = storage.getDecks();
-  const builtInFiles = ['data/poi-egzamin.json', 'data/sample-exam.json', 'data/si-egzamin.json', 'data/randomize-demo.json'];
+  const builtInFiles = ['data/poi-egzamin.json', 'data/sample-exam.json', 'data/si-egzamin.json', 'data/randomize-demo.json', 'data/ii-egzamin.json', 'data/ii-egzamin-fiszki.json', 'data/zi2-egzamin.json'];
 
   for (const file of builtInFiles) {
     try {
@@ -239,6 +269,7 @@ async function loadBuiltInDecks() {
 function navigateToDeckList() {
   clearWaitTimer();
   studyPhase = null;
+  studyingFlagged = false;
   currentDeckId = null;
   currentCategory = null;
   queues = null;
@@ -248,7 +279,7 @@ function navigateToDeckList() {
   const decks = storage.getDecks();
   const statsMap = {};
   for (const d of decks) {
-    statsMap[d.id] = deck.getDeckStats(d.id, getSettingsForDeck(d.id));
+    statsMap[d.id] = deck.getDeckStats(d.id, getSettingsForDeck(d.id), appSettings.flaggedInAnki);
   }
   renderDeckList(decks, statsMap);
   bindDeckListEvents();
@@ -280,7 +311,7 @@ function navigateToCategorySelect(deckId) {
   }
 
   showView('category-select');
-  const statsMap = deck.getDeckCategoryStats(deckId, deckMeta.categories);
+  const statsMap = deck.getDeckCategoryStats(deckId, deckMeta.categories, appSettings.flaggedInAnki);
   renderCategorySelect(deckName, deckMeta.categories, statsMap);
   bindCategorySelectEvents(deckId, deckMeta.categories);
 }
@@ -295,10 +326,26 @@ function bindCategorySelectEvents(deckId, categories) {
   });
 }
 
-function navigateToStudy(deckId) {
+function navigateToStudy(deckId, flaggedOnly = false) {
+  // Resume existing session if returning to the same deck
+  if (currentDeckId === deckId && queues && studyingFlagged === flaggedOnly) {
+    currentDeckSettings = getSettingsForDeck(deckId);
+    const deckMeta = storage.getDecks().find(d => d.id === deckId);
+    document.getElementById('study-deck-name').textContent = deckMeta ? deckMeta.name : deckId;
+    showView('study');
+    updateProgress(studiedCount, sessionTotal);
+    if (currentCard) {
+      showQuestionForCard(currentCard);
+    } else {
+      showNextCard();
+    }
+    return;
+  }
+
   currentDeckId = deckId;
   currentDeckSettings = getSettingsForDeck(deckId);
   studiedCount = 0;
+  studyingFlagged = flaggedOnly;
 
   const deckMeta = storage.getDecks().find(d => d.id === deckId);
   document.getElementById('study-deck-name').textContent = deckMeta ? deckMeta.name : deckId;
@@ -331,7 +378,9 @@ function navigateToModeSelect(deckId) {
     const allCards = storage.getCards(deckId);
     const filteredIds = getFilteredQuestionIds(deckId);
     const filteredSet = new Set(filteredIds);
-    const cards = allCards.filter(c => filteredSet.has(c.questionId));
+    const catCards = allCards.filter(c => filteredSet.has(c.questionId));
+    const flaggedCount = catCards.filter(c => isFlagged(c)).length;
+    const cards = appSettings.flaggedInAnki ? catCards : catCards.filter(c => !isFlagged(c));
     const now = Date.now();
     const today = new Date(now); today.setHours(0,0,0,0); const todayMs = today.getTime();
     const dueReview = cards.filter(c => isReviewCard(c) && c.dueDate <= now).length;
@@ -346,12 +395,15 @@ function navigateToModeSelect(deckId) {
     const newAvailable = Math.min(totalNew, Math.max(0, deckSettings.newCardsPerDay - newCardsToday));
     stats = {
       dueToday: dueReview + dueLearning,
+      dueReview,
+      dueLearning,
       learningTotal,
       newAvailable,
       totalCards: cards.length,
+      flagged: flaggedCount,
     };
   } else {
-    stats = deck.getDeckStats(deckId, deckSettings);
+    stats = deck.getDeckStats(deckId, deckSettings, appSettings.flaggedInAnki);
   }
 
   showView('mode-select');
@@ -369,10 +421,11 @@ function bindModeSelectEvents(deckId, stats) {
         navigateToTestConfig(deckId);
       } else if (mode === 'browse') {
         navigateToBrowse(deckId);
+      } else if (mode === 'flagged') {
+        navigateToFlaggedBrowse(deckId);
       }
     });
   });
-
 }
 
 // --- Test Mode ---
@@ -381,7 +434,7 @@ function navigateToTestConfig(deckId) {
   currentDeckId = deckId;
   const deckMeta = storage.getDecks().find(d => d.id === deckId);
   const deckName = deckMeta ? deckMeta.name : deckId;
-  const questions = getFilteredQuestions(deckId);
+  const questions = getFilteredQuestions(deckId).filter(q => !isFlashcard(q));
 
   document.getElementById('test-deck-name').textContent = deckName;
   document.getElementById('test-counter').textContent = '';
@@ -409,7 +462,7 @@ function bindTestConfigEvents(deckId, totalQuestions) {
 
 function startTest(deckId, questionCount) {
   currentDeckId = deckId;
-  const allQuestions = getFilteredQuestions(deckId);
+  const allQuestions = getFilteredQuestions(deckId).filter(q => !isFlashcard(q));
   if (appSettings.questionOrder === 'ordered') {
     // Sort by originalIndex (if present) for ordered mode
     const sorted = [...allQuestions].sort((a, b) => (a.originalIndex ?? 0) - (b.originalIndex ?? 0));
@@ -615,6 +668,218 @@ function bindBrowseEvents() {
       }
     });
   }
+
+  // Edit buttons in browse items
+  document.querySelectorAll('.browse-edit-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const index = parseInt(btn.dataset.questionIndex);
+      openBrowseEditor(index);
+    });
+  });
+}
+
+function openBrowseEditor(index) {
+  const questions = getFilteredQuestions(currentDeckId);
+  const question = questions[index];
+  if (!question) return;
+
+  const browseItem = document.querySelector(`.browse-item[data-question-index="${index}"]`);
+  if (!browseItem) return;
+
+  browseItem.innerHTML = renderBrowseEditor(question, index);
+
+  // Bind randomize toggle
+  const editor = browseItem.querySelector('.browse-editor');
+  const toggle = editor.querySelector('.editor-randomize-toggle');
+  const body = editor.querySelector('.editor-randomize-body');
+  if (toggle && body) {
+    toggle.addEventListener('change', () => {
+      body.style.display = toggle.checked ? '' : 'none';
+    });
+  }
+
+  // Bind add variable/derived/constraint buttons
+  bindBrowseEditorAddButtons(editor);
+  bindBrowseEditorRemoveButtons(editor);
+
+  // Cancel
+  editor.querySelector('.btn-browse-editor-cancel').addEventListener('click', () => {
+    navigateToBrowse(currentDeckId);
+  });
+
+  // Save
+  editor.querySelector('.btn-browse-editor-save').addEventListener('click', () => {
+    saveBrowseEdit(index, editor);
+  });
+}
+
+function bindBrowseEditorAddButtons(editor) {
+  const addVarBtn = editor.querySelector('.btn-add-var');
+  if (addVarBtn) {
+    addVarBtn.addEventListener('click', () => {
+      const list = editor.querySelector('.editor-vars-list');
+      const row = document.createElement('div');
+      row.className = 'editor-var-row';
+      row.innerHTML = `
+        <input type="text" class="editor-var-name" value="" placeholder="nazwa">
+        <input type="text" class="editor-var-values" value="" placeholder="min, max lub v1, v2, v3...">
+        <button class="btn-remove-var" title="Usuń zmienną">&times;</button>
+      `;
+      list.appendChild(row);
+      bindBrowseEditorRemoveButtons(editor);
+    });
+  }
+
+  const addDerivedBtn = editor.querySelector('.btn-add-derived');
+  if (addDerivedBtn) {
+    addDerivedBtn.addEventListener('click', () => {
+      const list = editor.querySelector('.editor-derived-list');
+      const row = document.createElement('div');
+      row.className = 'editor-derived-row';
+      row.innerHTML = `
+        <input type="text" class="editor-derived-name" value="" placeholder="nazwa">
+        <input type="text" class="editor-derived-expr" value="" placeholder="wyrażenie, np. a + b">
+        <button class="btn-remove-derived" title="Usuń">&times;</button>
+      `;
+      list.appendChild(row);
+      bindBrowseEditorRemoveButtons(editor);
+    });
+  }
+
+  const addConstraintBtn = editor.querySelector('.btn-add-constraint');
+  if (addConstraintBtn) {
+    addConstraintBtn.addEventListener('click', () => {
+      const list = editor.querySelector('.editor-constraints-list');
+      const row = document.createElement('div');
+      row.className = 'editor-constraint-row';
+      row.innerHTML = `
+        <input type="text" class="editor-constraint-expr" value="" placeholder="warunek, np. a != b">
+        <button class="btn-remove-constraint" title="Usuń">&times;</button>
+      `;
+      list.appendChild(row);
+      bindBrowseEditorRemoveButtons(editor);
+    });
+  }
+}
+
+function bindBrowseEditorRemoveButtons(editor) {
+  const selector = '.btn-remove-var, .btn-remove-derived, .btn-remove-constraint';
+  editor.querySelectorAll(selector).forEach(btn => {
+    btn.replaceWith(btn.cloneNode(true));
+  });
+  editor.querySelectorAll(selector).forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.parentElement.remove();
+    });
+  });
+}
+
+function saveBrowseEdit(index, editor) {
+  const newText = editor.querySelector('.editor-question-text').value.trim();
+  if (!newText) {
+    showNotification('Treść pytania nie może być pusta.', 'error');
+    return;
+  }
+
+  const newExplanation = editor.querySelector('.editor-explanation').value.trim();
+
+  const answerRows = editor.querySelectorAll('.editor-answer-row');
+  const updatedAnswers = [];
+  let hasCorrect = false;
+
+  if (answerRows.length > 0) {
+    for (const row of answerRows) {
+      const id = row.dataset.answerId;
+      const text = row.querySelector('.editor-answer-text').value.trim();
+      const correct = row.querySelector('.editor-answer-correct').checked;
+
+      if (!text) {
+        showNotification('Odpowiedź nie może być pusta.', 'error');
+        return;
+      }
+
+      if (correct) hasCorrect = true;
+      updatedAnswers.push({ id, text, correct });
+    }
+
+    if (!hasCorrect) {
+      showNotification('Co najmniej jedna odpowiedź musi być poprawna.', 'error');
+      return;
+    }
+  }
+
+  // Read randomize data
+  const randomizeToggle = editor.querySelector('.editor-randomize-toggle');
+  let newRandomize = undefined;
+  if (randomizeToggle && randomizeToggle.checked) {
+    newRandomize = {};
+
+    const varRows = editor.querySelectorAll('.editor-var-row');
+    for (const row of varRows) {
+      const varName = row.querySelector('.editor-var-name').value.trim();
+      const varValues = row.querySelector('.editor-var-values').value.trim();
+      if (!varName || !varValues) continue;
+      if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(varName)) continue;
+      const parts = varValues.split(',').map(s => s.trim());
+      const nums = parts.map(s => parseFloat(s)).filter(n => !isNaN(n));
+      if (nums.length === parts.length && nums.length >= 2) {
+        newRandomize[varName] = nums;
+      } else if (parts.length >= 2) {
+        newRandomize[varName] = parts;
+      }
+    }
+
+    const derivedRows = editor.querySelectorAll('.editor-derived-row');
+    if (derivedRows.length > 0) {
+      const derived = {};
+      for (const row of derivedRows) {
+        const name = row.querySelector('.editor-derived-name').value.trim();
+        const expr = row.querySelector('.editor-derived-expr').value.trim();
+        if (!name || !expr) continue;
+        if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)) {
+          derived[name] = expr;
+        }
+      }
+      if (Object.keys(derived).length > 0) newRandomize.$derived = derived;
+    }
+
+    const constraintRows = editor.querySelectorAll('.editor-constraint-row');
+    if (constraintRows.length > 0) {
+      const constraints = [];
+      for (const row of constraintRows) {
+        const expr = row.querySelector('.editor-constraint-expr').value.trim();
+        if (expr) constraints.push(expr);
+      }
+      if (constraints.length > 0) newRandomize.$constraints = constraints;
+    }
+
+    const hasVars = Object.keys(newRandomize).some(k => !k.startsWith('$'));
+    if (!hasVars && !newRandomize.$derived) newRandomize = undefined;
+  }
+
+  // Save to storage
+  const questions = getFilteredQuestions(currentDeckId);
+  const question = questions[index];
+  const allQuestions = storage.getQuestions(currentDeckId);
+  const qIndex = allQuestions.findIndex(q => q.id === question.id);
+
+  if (qIndex !== -1) {
+    allQuestions[qIndex].text = newText;
+    if (updatedAnswers.length > 0) {
+      allQuestions[qIndex].answers = updatedAnswers;
+    }
+    allQuestions[qIndex].explanation = newExplanation || undefined;
+    if (newRandomize) {
+      allQuestions[qIndex].randomize = newRandomize;
+    } else {
+      delete allQuestions[qIndex].randomize;
+    }
+    storage.saveQuestions(currentDeckId, allQuestions);
+  }
+
+  showNotification('Pytanie zostało zaktualizowane.', 'success');
+  navigateToBrowse(currentDeckId);
 }
 
 // --- Settings ---
@@ -743,6 +1008,15 @@ function bindAppSettingsEvents() {
   if (randomizeToggle) {
     randomizeToggle.addEventListener('change', () => {
       appSettings.randomizeNumbers = randomizeToggle.checked;
+      storage.saveAppSettings(appSettings);
+    });
+  }
+
+  // Flagged in Anki toggle
+  const flaggedAnkiToggle = document.getElementById('toggle-flagged-anki');
+  if (flaggedAnkiToggle) {
+    flaggedAnkiToggle.addEventListener('change', () => {
+      appSettings.flaggedInAnki = flaggedAnkiToggle.checked;
       storage.saveAppSettings(appSettings);
     });
   }
@@ -881,8 +1155,14 @@ function saveDeckSettings(deckId) {
 // --- Study Session ---
 
 function startStudySession() {
-  const filterIds = getFilteredQuestionIds(currentDeckId);
-  queues = deck.buildQueues(currentDeckId, currentDeckSettings, filterIds);
+  let filterIds = getFilteredQuestionIds(currentDeckId);
+  if (studyingFlagged) {
+    // Study only flagged cards
+    filterIds = deck.getFlaggedQuestionIds(currentDeckId, filterIds);
+    queues = deck.buildQueues(currentDeckId, currentDeckSettings, filterIds, true);
+  } else {
+    queues = deck.buildQueues(currentDeckId, currentDeckSettings, filterIds, appSettings.flaggedInAnki);
+  }
   sessionTotal = queues.counts.learningDue + queues.counts.reviewDue + queues.counts.newAvailable;
   studiedCount = 0;
   updateProgress(0, sessionTotal);
@@ -973,17 +1253,14 @@ function showQuestionForCard(card) {
   }
 
   const isMultiSelect = true;
-  const cardNum = studiedCount + 1;
   const showReroll = shouldRandomize;
 
-  currentShuffledAnswers = renderQuestion(currentQuestion, cardNum, sessionTotal, isMultiSelect, appSettings.shuffleAnswers, showReroll);
+  currentCardFlagged = !!currentCard.flagged;
+  currentShuffledAnswers = renderQuestion(currentQuestion, null, sessionTotal, isMultiSelect, appSettings.shuffleAnswers, showReroll, currentCardFlagged);
   selectedAnswerIds = new Set();
 
-  const now = Date.now();
-  const learningDueCount = queues.learning.filter(c => c.dueDate <= now).length
-    + (currentSource === 'learning' ? 1 : 0);
   updateStudyCounts(
-    learningDueCount,
+    queues.learning.length + (currentSource === 'learning' ? 1 : 0),
     queues.review.length + (currentSource === 'review' ? 1 : 0),
     queues.newCards.length + (currentSource === 'new' ? 1 : 0),
     currentSource
@@ -992,6 +1269,7 @@ function showQuestionForCard(card) {
   studyPhase = 'question';
   bindQuestionEvents(isMultiSelect);
   bindRerollButton();
+  bindFlagButton();
 }
 
 // --- Event Binding ---
@@ -1039,10 +1317,16 @@ function bindGlobalEvents() {
 
   // Back buttons
   document.getElementById('btn-back-to-decks').addEventListener('click', () => {
-    navigateToDeckList();
+    clearWaitTimer();
+    navigateToModeSelect(currentDeckId);
   });
   document.getElementById('btn-back-from-complete').addEventListener('click', () => {
-    navigateToDeckList();
+    const deckMeta = currentDeckId ? storage.getDecks().find(d => d.id === currentDeckId) : null;
+    if (deckMeta && deckMeta.categories) {
+      navigateToCategorySelect(currentDeckId);
+    } else {
+      navigateToDeckList();
+    }
   });
   document.getElementById('btn-back-from-categories').addEventListener('click', () => {
     navigateToDeckList();
@@ -1121,29 +1405,31 @@ function bindQuestionEvents(isMultiSelect) {
   const answersList = document.getElementById('answers-list');
   const checkBtn = document.getElementById('btn-check-answer');
 
-  answersList.addEventListener('click', (e) => {
-    const option = e.target.closest('.answer-option');
-    if (!option) return;
+  if (answersList) {
+    answersList.addEventListener('click', (e) => {
+      const option = e.target.closest('.answer-option');
+      if (!option) return;
 
-    const answerId = option.dataset.answerId;
+      const answerId = option.dataset.answerId;
 
-    if (isMultiSelect) {
-      if (selectedAnswerIds.has(answerId)) {
-        selectedAnswerIds.delete(answerId);
-        option.classList.remove('selected');
+      if (isMultiSelect) {
+        if (selectedAnswerIds.has(answerId)) {
+          selectedAnswerIds.delete(answerId);
+          option.classList.remove('selected');
+        } else {
+          selectedAnswerIds.add(answerId);
+          option.classList.add('selected');
+        }
       } else {
+        selectedAnswerIds.clear();
+        answersList.querySelectorAll('.answer-option').forEach(o => o.classList.remove('selected'));
         selectedAnswerIds.add(answerId);
         option.classList.add('selected');
       }
-    } else {
-      selectedAnswerIds.clear();
-      answersList.querySelectorAll('.answer-option').forEach(o => o.classList.remove('selected'));
-      selectedAnswerIds.add(answerId);
-      option.classList.add('selected');
-    }
 
-    checkBtn.textContent = selectedAnswerIds.size > 0 ? 'Sprawdź odpowiedź' : 'Pokaż odpowiedź';
-  });
+      checkBtn.textContent = selectedAnswerIds.size > 0 ? 'Sprawdź odpowiedź' : 'Pokaż odpowiedź';
+    });
+  }
 
   checkBtn.addEventListener('click', () => {
     showFeedback();
@@ -1162,7 +1448,8 @@ function showFeedback() {
     selectedAnswerIds,
     currentQuestion.explanation || null,
     intervals,
-    appSettings.keybindings
+    appSettings.keybindings,
+    currentCardFlagged
   );
 
   // Bind rating buttons
@@ -1174,6 +1461,7 @@ function showFeedback() {
   });
 
   bindEditButton();
+  bindFlagButton();
 }
 
 // --- Question Editor ---
@@ -1222,13 +1510,12 @@ function handleReroll() {
   }
 
   const isMultiSelect = true;
-  const cardNum = studiedCount + 1;
   const showReroll = hasTemplate(original) || (appSettings.randomizeNumbers && hasRandomizer(original.id));
 
   // Flash animation to confirm re-roll happened
   const container = document.getElementById('study-content');
   container.style.opacity = '0.3';
-  currentShuffledAnswers = renderQuestion(currentQuestion, cardNum, sessionTotal, isMultiSelect, appSettings.shuffleAnswers, showReroll);
+  currentShuffledAnswers = renderQuestion(currentQuestion, null, sessionTotal, isMultiSelect, appSettings.shuffleAnswers, showReroll, currentCardFlagged);
   requestAnimationFrame(() => {
     container.style.transition = 'opacity 0.2s ease';
     container.style.opacity = '1';
@@ -1239,6 +1526,7 @@ function handleReroll() {
   studyPhase = 'question';
   bindQuestionEvents(isMultiSelect);
   bindRerollButton();
+  bindFlagButton();
 }
 
 function enterEditMode() {
@@ -1272,13 +1560,13 @@ function exitEditMode() {
   } else {
     // Re-render question phase
     const isMultiSelect = true;
-    const cardNum = studiedCount + 1;
     const showReroll = hasTemplate(currentQuestion) || (appSettings.randomizeNumbers && hasRandomizer(currentQuestion.id));
-    currentShuffledAnswers = renderQuestion(currentQuestion, cardNum, sessionTotal, isMultiSelect, appSettings.shuffleAnswers, showReroll);
+    currentShuffledAnswers = renderQuestion(currentQuestion, null, sessionTotal, isMultiSelect, appSettings.shuffleAnswers, showReroll, currentCardFlagged);
     selectedAnswerIds = new Set();
     studyPhase = 'question';
     bindQuestionEvents(isMultiSelect);
     bindRerollButton();
+    bindFlagButton();
   }
   editReturnPhase = null;
 }
@@ -1292,28 +1580,30 @@ function saveQuestionEdit() {
 
   const newExplanation = document.getElementById('editor-explanation').value.trim();
 
-  // Read answers
+  // Read answers (flashcards have no answer rows)
   const answerRows = document.querySelectorAll('.editor-answer-row');
   const updatedAnswers = [];
   let hasCorrect = false;
 
-  for (const row of answerRows) {
-    const id = row.dataset.answerId;
-    const text = row.querySelector('.editor-answer-text').value.trim();
-    const correct = row.querySelector('.editor-answer-correct').checked;
+  if (answerRows.length > 0) {
+    for (const row of answerRows) {
+      const id = row.dataset.answerId;
+      const text = row.querySelector('.editor-answer-text').value.trim();
+      const correct = row.querySelector('.editor-answer-correct').checked;
 
-    if (!text) {
-      showNotification('Odpowiedź nie może być pusta.', 'error');
-      return;
+      if (!text) {
+        showNotification('Odpowiedź nie może być pusta.', 'error');
+        return;
+      }
+
+      if (correct) hasCorrect = true;
+      updatedAnswers.push({ id, text, correct });
     }
 
-    if (correct) hasCorrect = true;
-    updatedAnswers.push({ id, text, correct });
-  }
-
-  if (!hasCorrect) {
-    showNotification('Co najmniej jedna odpowiedź musi być poprawna.', 'error');
-    return;
+    if (!hasCorrect) {
+      showNotification('Co najmniej jedna odpowiedź musi być poprawna.', 'error');
+      return;
+    }
   }
 
   // Read randomize data from editor
@@ -1376,7 +1666,9 @@ function saveQuestionEdit() {
   const qIndex = questions.findIndex(q => q.id === currentQuestion.id);
   if (qIndex !== -1) {
     questions[qIndex].text = newText;
-    questions[qIndex].answers = updatedAnswers;
+    if (updatedAnswers.length > 0) {
+      questions[qIndex].answers = updatedAnswers;
+    }
     questions[qIndex].explanation = newExplanation || undefined;
     if (newRandomize) {
       questions[qIndex].randomize = newRandomize;
@@ -1388,14 +1680,81 @@ function saveQuestionEdit() {
     // Update in-memory reference
     currentQuestion = questions[qIndex];
     // Update shuffled answers to reflect any text/correct changes
-    currentShuffledAnswers = currentShuffledAnswers.map(sa => {
-      const updated = updatedAnswers.find(a => a.id === sa.id);
-      return updated || sa;
-    });
+    if (updatedAnswers.length > 0) {
+      currentShuffledAnswers = currentShuffledAnswers.map(sa => {
+        const updated = updatedAnswers.find(a => a.id === sa.id);
+        return updated || sa;
+      });
+    }
   }
 
   showNotification('Pytanie zostało zaktualizowane.', 'success');
   exitEditMode();
+}
+
+// --- Flag Button ---
+
+function bindFlagButton() {
+  const flagBtn = document.getElementById('btn-flag-question');
+  if (flagBtn) {
+    flagBtn.addEventListener('click', () => {
+      handleFlagToggle();
+    });
+  }
+}
+
+function handleFlagToggle() {
+  if (!currentCard || !currentDeckId) return;
+  currentCardFlagged = !currentCardFlagged;
+  currentCard.flagged = currentCardFlagged;
+  deck.setCardFlagged(currentDeckId, currentCard.questionId, currentCardFlagged);
+
+  // Update button visually
+  const flagBtn = document.getElementById('btn-flag-question');
+  if (flagBtn) {
+    flagBtn.classList.toggle('flagged', currentCardFlagged);
+    flagBtn.innerHTML = currentCardFlagged ? '&#x1F6A9;' : '&#x2691;';
+  }
+
+  showNotification(
+    currentCardFlagged ? 'Pytanie oznaczone.' : 'Oznaczenie usunięte.',
+    'info'
+  );
+}
+
+// --- Flagged Browse ---
+
+function navigateToFlaggedBrowse(deckId) {
+  currentDeckId = deckId;
+  const deckMeta = storage.getDecks().find(d => d.id === deckId);
+  const deckName = deckMeta ? deckMeta.name : deckId;
+  const flaggedIds = deck.getFlaggedQuestionIds(deckId, getFilteredQuestionIds(deckId));
+  const allQuestions = storage.getQuestions(deckId);
+  const flaggedSet = new Set(flaggedIds);
+  const flaggedQuestions = allQuestions.filter(q => flaggedSet.has(q.id));
+
+  showView('browse');
+  renderFlaggedBrowse(deckName, flaggedQuestions);
+  bindFlaggedBrowseEvents(deckId);
+}
+
+function bindFlaggedBrowseEvents(deckId) {
+  const studyBtn = document.getElementById('btn-study-flagged');
+  if (studyBtn) {
+    studyBtn.addEventListener('click', () => {
+      navigateToStudy(deckId, true);
+    });
+  }
+
+  document.querySelectorAll('.btn-unflag').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const questionId = btn.dataset.questionId;
+      deck.setCardFlagged(deckId, questionId, false);
+      showNotification('Oznaczenie usunięte.', 'info');
+      // Re-render the flagged browse view
+      navigateToFlaggedBrowse(deckId);
+    });
+  });
 }
 
 function handleRating(rating) {
@@ -1427,7 +1786,12 @@ function bindCompleteEvents() {
   const btn = document.getElementById('btn-back-to-decks-complete');
   if (btn) {
     btn.addEventListener('click', () => {
-      navigateToDeckList();
+      const deckMeta = currentDeckId ? storage.getDecks().find(d => d.id === currentDeckId) : null;
+      if (deckMeta && deckMeta.categories) {
+        navigateToCategorySelect(currentDeckId);
+      } else {
+        navigateToDeckList();
+      }
     });
   }
 }

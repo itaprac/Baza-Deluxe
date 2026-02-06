@@ -1,14 +1,14 @@
 // deck.js — Deck management, queue building, session orchestration
 
-import { CARD_STATES, isNew, isDue, isLearning, isRelearning, isReview, createCard } from './card.js';
-import { startOfDay, formatDate, DAY_MS } from './utils.js';
+import { CARD_STATES, isNew, isDue, isLearning, isRelearning, isReview, isFlagged, createCard } from './card.js';
+import { startOfDay, formatDate, DAY_MS, MINUTE_MS } from './utils.js';
 import { DEFAULT_SETTINGS } from './sm2.js';
 import * as storage from './storage.js';
 
 /**
  * Build study queues for a deck. Returns { learning, review, newCards, counts }.
  */
-export function buildQueues(deckId, settings = DEFAULT_SETTINGS, questionIdFilter = null) {
+export function buildQueues(deckId, settings = DEFAULT_SETTINGS, questionIdFilter = null, includeFlagged = false) {
   const now = Date.now();
   const today = startOfDay(now);
   let cards = storage.getCards(deckId);
@@ -16,6 +16,11 @@ export function buildQueues(deckId, settings = DEFAULT_SETTINGS, questionIdFilte
   if (questionIdFilter) {
     const filterSet = new Set(questionIdFilter);
     cards = cards.filter(c => filterSet.has(c.questionId));
+  }
+
+  // Exclude flagged cards from study queues (unless explicitly studying flagged)
+  if (!includeFlagged) {
+    cards = cards.filter(c => !isFlagged(c));
   }
 
   // Learning/Relearning cards (all — including not-yet-due so sessions resume properly)
@@ -96,7 +101,15 @@ export function getNextCard(queues, settings = DEFAULT_SETTINGS) {
 
   // 4. Check if there are learning cards due soon (within session)
   if (queues.learning.length > 0) {
-    // Return the next learning card with its due time
+    const timeUntilDue = queues.learning[0].dueDate - now;
+    const learnAheadMs = (settings.learnAheadLimit || 20) * MINUTE_MS;
+
+    // Learn ahead: show the card early if within the limit (like Anki)
+    if (timeUntilDue <= learnAheadMs) {
+      return { card: queues.learning.shift(), source: 'learning' };
+    }
+
+    // Beyond learn-ahead limit — wait
     return { card: queues.learning[0], source: 'learning_wait', waitUntil: queues.learning[0].dueDate };
   }
 
@@ -107,6 +120,7 @@ export function getNextCard(queues, settings = DEFAULT_SETTINGS) {
  * After processing a rating, put the card back into the appropriate queue if still due.
  */
 export function requeueCard(card, queues) {
+  if (isFlagged(card)) return;
   const now = Date.now();
 
   if (card.state === CARD_STATES.LEARNING || card.state === CARD_STATES.RELEARNING) {
@@ -168,10 +182,12 @@ export function recordStat(deckId, rating, cardSource) {
 /**
  * Get summary stats for a deck (for the deck list screen).
  */
-export function getDeckStats(deckId, settings = DEFAULT_SETTINGS) {
+export function getDeckStats(deckId, settings = DEFAULT_SETTINGS, includeFlagged = false) {
   const now = Date.now();
   const today = startOfDay(now);
-  const cards = storage.getCards(deckId);
+  const allCards = storage.getCards(deckId);
+  const flaggedCount = allCards.filter(c => isFlagged(c)).length;
+  const cards = includeFlagged ? allCards : allCards.filter(c => !isFlagged(c));
 
   const dueReview = cards.filter(c => isReview(c) && c.dueDate <= now).length;
   const dueLearning = cards.filter(c => (isLearning(c) || isRelearning(c)) && c.dueDate <= now).length;
@@ -191,6 +207,7 @@ export function getDeckStats(deckId, settings = DEFAULT_SETTINGS) {
     totalNew,
     totalCards: cards.length,
     learned: cards.filter(c => isReview(c)).length,
+    flagged: flaggedCount,
   };
 }
 
@@ -214,7 +231,7 @@ export function getTodayStats(deckId) {
 /**
  * Get per-category stats for decks with categories.
  */
-export function getDeckCategoryStats(deckId, categories) {
+export function getDeckCategoryStats(deckId, categories, includeFlagged = false) {
   const now = Date.now();
   const cards = storage.getCards(deckId);
   const questions = storage.getQuestions(deckId);
@@ -231,6 +248,7 @@ export function getDeckCategoryStats(deckId, categories) {
   }
 
   for (const card of cards) {
+    if (!includeFlagged && isFlagged(card)) continue;
     const catId = qCatMap.get(card.questionId);
     if (!catId || !statsMap[catId]) continue;
 
@@ -264,7 +282,49 @@ export function removeDeck(deckId) {
  */
 export function resetProgress(deckId) {
   const cards = storage.getCards(deckId);
-  const resetCards = cards.map(c => createCard(c.questionId, c.deckId));
+  const resetCards = cards.map(c => {
+    const fresh = createCard(c.questionId, c.deckId);
+    fresh.flagged = !!c.flagged; // preserve flagged status
+    return fresh;
+  });
   storage.saveCards(deckId, resetCards);
   storage.saveStats(deckId, {});
+}
+
+/**
+ * Set or clear the flagged status on a card.
+ */
+export function setCardFlagged(deckId, questionId, flagged) {
+  const cards = storage.getCards(deckId);
+  const idx = cards.findIndex(c => c.questionId === questionId);
+  if (idx >= 0) {
+    cards[idx].flagged = flagged;
+    storage.saveCards(deckId, cards);
+    return cards[idx];
+  }
+  return null;
+}
+
+/**
+ * Get count of flagged cards in a deck (optionally filtered by question IDs).
+ */
+export function getFlaggedCount(deckId, questionIdFilter = null) {
+  let cards = storage.getCards(deckId);
+  if (questionIdFilter) {
+    const filterSet = new Set(questionIdFilter);
+    cards = cards.filter(c => filterSet.has(c.questionId));
+  }
+  return cards.filter(c => isFlagged(c)).length;
+}
+
+/**
+ * Get question IDs of all flagged cards in a deck.
+ */
+export function getFlaggedQuestionIds(deckId, questionIdFilter = null) {
+  let cards = storage.getCards(deckId);
+  if (questionIdFilter) {
+    const filterSet = new Set(questionIdFilter);
+    cards = cards.filter(c => filterSet.has(c.questionId));
+  }
+  return cards.filter(c => isFlagged(c)).map(c => c.questionId);
 }

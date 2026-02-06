@@ -1,78 +1,110 @@
 # Baza Deluxe
 
-Aplikacja webowa do nauki z fiszkami (flashcards) z algorytmem powtarzania rozłożonego SM-2. Działa w przeglądarce, dane trzyma w `localStorage`.
+Aplikacja webowa do nauki pytań egzaminacyjnych i fiszek z algorytmem powtórek SM-2.
+Działa w przeglądarce, a stan nauki zapisuje lokalnie w `localStorage`.
 
 ## Wymagania
 
-- Przeglądarka z obsługą ES6 modules (Chrome, Firefox, Safari, Edge)
-- Lokalny serwer HTTP (aplikacja korzysta z ES6 modules, które nie działają z protokołu `file://`)
+- Docker + Docker Compose (np. Docker Desktop)
+- Wolny port `8080`
 
-## Uruchomienie
+## Szybki start (Docker Compose)
 
-Wejdź do katalogu projektu i uruchom dowolny serwer HTTP:
+W katalogu projektu uruchom:
 
-**Python 3:**
 ```bash
-cd baza_deluxe
-python3 -m http.server 8000
+docker compose up -d
 ```
 
-**Node.js (npx):**
+Aplikacja będzie dostępna pod adresem:
+
+- `http://localhost:8080`
+
+## Najczęstsze komendy
+
+Podgląd logów kontenera:
+
 ```bash
-cd baza_deluxe
-npx serve .
+docker compose logs -f web
 ```
 
-**PHP:**
+Zatrzymanie i usunięcie kontenera:
+
 ```bash
-cd baza_deluxe
-php -S localhost:8000
+docker compose down
 ```
 
-Następnie otwórz w przeglądarce: **http://localhost:8000**
+Restart po zmianach:
+
+```bash
+docker compose restart web
+```
+
+## Jak to działa technicznie
+
+- Serwer: `nginx:alpine`
+- Mapowanie portów: `8080:80`
+- Kod projektu montowany do kontenera jako `read-only`
+- Konfiguracja Nginx z `nginx.conf`
 
 ## Struktura projektu
 
-```
-index.html          — strona główna (SPA)
+```text
+index.html              # główny widok aplikacji
+docs.html               # dokumentacja funkcji w UI
+docker-compose.yml      # uruchamianie przez Docker Compose
+nginx.conf              # konfiguracja serwera
+
 css/
-  main.css          — style bazowe, motyw jasny/ciemny
-  components.css    — style komponentów UI
+  main.css
+  components.css
+
 js/
-  app.js            — główna logika aplikacji
-  card.js           — model karty SRS
-  deck.js           — zarządzanie taliami i kolejkami
-  importer.js       — import talii z JSON
-  sm2.js            — algorytm SM-2
-  storage.js        — warstwa localStorage
-  ui.js             — renderowanie interfejsu
-  utils.js          — funkcje pomocnicze
-data/
-  poi-egzamin.json  — wbudowana talia (auto-import przy starcie)
-  sample-exam.json  — przykładowa talia
+  app.js
+  card.js
+  deck.js
+  importer.js
+  randomizers.js
+  sm2.js
+  storage.js
+  ui.js
+  utils.js
+
+data/                   # talie wbudowane (auto-import przy starcie)
+  poi-egzamin.json
+  si-egzamin.json
+  sample-exam.json
+  randomize-demo.json
+  ii-egzamin.json
+  ii-egzamin-fiszki.json
+  zi2-egzamin.json
 ```
 
-## Format talii (JSON)
+## Import własnej talii
+
+W aplikacji użyj przycisku `Importuj talię` i wskaż plik JSON.
+Minimalny format:
 
 ```json
 {
   "deck": {
     "id": "moja-talia",
-    "name": "Nazwa talii",
-    "description": "Opcjonalny opis"
+    "name": "Nazwa talii"
   },
   "questions": [
     {
       "id": "q001",
       "text": "Treść pytania",
       "answers": [
-        { "id": "a", "text": "Odpowiedź A", "correct": false },
-        { "id": "b", "text": "Odpowiedź B", "correct": true }
-      ],
-      "explanation": "Opcjonalne wyjaśnienie"
+        { "id": "a", "text": "A", "correct": false },
+        { "id": "b", "text": "B", "correct": true }
+      ]
     }
   ]
 }
 ```
 
-Talie można importować przez przycisk **Importuj talię** w interfejsie aplikacji. Pliki JSON z katalogu `data/` są importowane automatycznie przy starcie.
+## Rozwiązywanie problemów
+
+- Błąd portu `8080` zajęty: zmień mapowanie w `docker-compose.yml` (np. `8081:80`) i uruchom ponownie.
+- Brak danych/„dziwne” zachowanie po zmianie formatu kart: wyczyść `localStorage` dla `localhost` i odśwież stronę.

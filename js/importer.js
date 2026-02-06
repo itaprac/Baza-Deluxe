@@ -102,9 +102,11 @@ export function validateDeckJSON(data) {
         });
       }
 
-      if (!Array.isArray(q.answers) || q.answers.length < 2) {
-        errors.push(`${prefix}: musi mieć co najmniej 2 odpowiedzi.`);
-      } else {
+      // Flashcard: no answers or empty array → OK (skip answer validation)
+      // Exactly 1 answer → invalid (neither flashcard nor quiz)
+      if (Array.isArray(q.answers) && q.answers.length === 1) {
+        errors.push(`${prefix}: musi mieć 0 (fiszka) lub co najmniej 2 odpowiedzi.`);
+      } else if (Array.isArray(q.answers) && q.answers.length >= 2) {
         let hasCorrect = false;
         let hasCorrectWhen = false;
         q.answers.forEach((a, j) => {

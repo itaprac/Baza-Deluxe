@@ -18,6 +18,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
   maximumInterval: 36500,          // days (~100 years)
   newCardsPerDay: 20,
   maxReviewsPerDay: 200,
+  learnAheadLimit: 20,             // minutes — show learning cards early if nothing else to study
 });
 
 /**

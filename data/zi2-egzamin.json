@@ -1,0 +1,2535 @@
+{
+  "deck": {
+    "id": "zi2-egzamin",
+    "name": "ZI2 - Zaawansowane Zagadnienia Informatyczne",
+    "description": "Pytania egzaminacyjne z przedmiotu ZI2 (87 pytań, 8 kategorii). Grafowe bazy danych, Neo4j/Cypher, sieci złożone, NoSQL, Cassandra, replikacja, ORM, modelowanie.",
+    "version": 1,
+    "categories": [
+      {
+        "id": "cat-01",
+        "name": "01. Grafowe bazy danych / Neo4j / Cypher",
+        "questionCount": 30
+      },
+      {
+        "id": "cat-02",
+        "name": "02. Sieci złożone / Analiza sieci",
+        "questionCount": 10
+      },
+      {
+        "id": "cat-03",
+        "name": "03. NoSQL / Teoria CAP",
+        "questionCount": 6
+      },
+      {
+        "id": "cat-04",
+        "name": "04. Cassandra",
+        "questionCount": 11
+      },
+      {
+        "id": "cat-05",
+        "name": "05. Replikacja / Partycjonowanie / Skalowanie",
+        "questionCount": 9
+      },
+      {
+        "id": "cat-06",
+        "name": "06. Interfejsy programistyczne / ORM",
+        "questionCount": 11
+      },
+      {
+        "id": "cat-07",
+        "name": "07. Modelowanie i symulacja",
+        "questionCount": 3
+      },
+      {
+        "id": "cat-08",
+        "name": "08. Systemy danych / Hurtownie / ETL",
+        "questionCount": 7
+      }
+    ]
+  },
+  "questions": [
+    {
+      "id": "zi2-01-q001",
+      "text": "Co oznacza model grafowy w bazie Neo4j?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Reprezentację danych w tabelach",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Reprezentację danych w postaci węzłów i relacji",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Hierarchiczną strukturę danych",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Struktury drzewa binarnego",
+          "correct": false
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 0
+    },
+    {
+      "id": "zi2-01-q002",
+      "text": "Jak nazywa się podstawowy język zapytań w Neo4j?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "SQL",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "GraphQL",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Cypher",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "SPARQL",
+          "correct": false
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 1
+    },
+    {
+      "id": "zi2-02-q001",
+      "text": "Które z poniższych stwierdzeń najlepiej opisuje sieci złożone?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Mają wyłącznie strukturę hierarchiczną",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Składają się z wielu elementów o losowych połączeniach",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Charakteryzują się nierównomiernym rozkładem stopni węzłów",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "Są zawsze planarne",
+          "correct": false
+        }
+      ],
+      "category": "cat-02",
+      "categoryName": "02. Sieci złożone / Analiza sieci",
+      "originalIndex": 2
+    },
+    {
+      "id": "zi2-02-q002",
+      "text": "Który typ sieci ma własności „świata małego”?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Sieci losowe",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Sieci skali swobodnej",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Sieci małego świata",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "Sieci hierarchiczne",
+          "correct": false
+        }
+      ],
+      "category": "cat-02",
+      "categoryName": "02. Sieci złożone / Analiza sieci",
+      "originalIndex": 3
+    },
+    {
+      "id": "zi2-01-q003",
+      "text": "W języku Cypher , jak dodajemy nowy węzeł do grafu?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "INSERT INTO Node",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "CREATE (n)",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "ADD NODE",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "CREATE NODE",
+          "correct": false
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 4
+    },
+    {
+      "id": "zi2-01-q004",
+      "text": "Jaka jest różnica między węzłem a relacją w Neo4j?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Węzeł opisuje połączenie między danymi, a relacja opisuje sam obiekt",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Relacja łączy węzły, a węzeł to jednostka danych",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Węzeł zawiera metadane, a relacja dane",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Węzeł jest dynamiczny, a relacja statyczna",
+          "correct": false
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 5
+    },
+    {
+      "id": "zi2-01-q005",
+      "text": "Który z poniższych przykładów Cypher znajduje wszystkie węzły typu \"Person\"?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "MATCH ( p:Person ) RETURN p",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "SELECT * FROM Person",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "FIND Person",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "GET (Person)",
+          "correct": false
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 6
+    },
+    {
+      "id": "zi2-02-q003",
+      "text": "Czym charakteryzują się sieci skali swobodnej?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Równomiernym rozkładem stopni węzłów",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Obecnością węzłów o bardzo dużym stopniu ( hubs )",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Stałą liczbą połączeń między węzłami",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Brakiem kluczowych węzłów",
+          "correct": false
+        }
+      ],
+      "category": "cat-02",
+      "categoryName": "02. Sieci złożone / Analiza sieci",
+      "originalIndex": 7
+    },
+    {
+      "id": "zi2-01-q006",
+      "text": "Jak w Neo4j reprezentowana jest właściwość węzła?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Jako para klucz -wartość",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Jako oddzielny węzeł",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Jako dynamiczna relacja",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Jako metadane",
+          "correct": false
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 8
+    },
+    {
+      "id": "zi2-01-q007",
+      "text": "Jak w Cypher definiujemy relację skierowaną?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "(a) -[r]->(b)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "(a)< -[r]-(b)",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "(a)< ->[r](b)",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "[a ->b]",
+          "correct": false
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 9
+    },
+    {
+      "id": "zi2-01-q008",
+      "text": "Jakie zapytanie w Cypher usuwa węzeł i jego relacje?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "DELETE NODE n",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "MATCH (n) DELETE n",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "MATCH (n) DETACH DELETE n",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "REMOVE n",
+          "correct": false
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 10
+    },
+    {
+      "id": "zi2-06-q001",
+      "text": "W interfejsach programistycznych baz danych niemożliwe jest mapowanie klas zawierających pola o typach użytkownika(zdefiniowanie klasy lub typy wyliczeniowe), możliwe jest wyłącznie mapowanie klas zawierając pola o typach prostych(liczbowe, tekstowe, numeryczne, logiczne)",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Prawda",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Fałsz",
+          "correct": true
+        }
+      ],
+      "category": "cat-06",
+      "categoryName": "06. Interfejsy programistyczne / ORM",
+      "originalIndex": 11
+    },
+    {
+      "id": "zi2-02-q004",
+      "text": "Jakie cechy ma sieć losowa Erdos -Renyi ?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Każdy węzeł ma dokładnie jedną relację",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Połączenia między węzłami są tworzone z równym prawdopodobieństwem",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Stopnie węzłów są skoncentrowane wokół jednego węzła",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Sieci te są zawsze drzewami",
+          "correct": false
+        }
+      ],
+      "category": "cat-02",
+      "categoryName": "02. Sieci złożone / Analiza sieci",
+      "originalIndex": 12
+    },
+    {
+      "id": "zi2-01-q009",
+      "text": "Jak w Cypher filtrować węzły na podstawie właściwości?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "MATCH (n) WHERE n.property =value RETURN n",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "FILTER ( n.property =value)",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "SELECT n FROM WHERE n.property =value",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "MATCH ( n.property =value)",
+          "correct": false
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 13
+    },
+    {
+      "id": "zi2-01-q010",
+      "text": "Który z poniższych operatorów w Cypher reprezentuje związek między węzłami?",
+      "answers": [
+        {
+          "id": "a",
+          "text": ":",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "->",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "--",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "||",
+          "correct": false
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 14
+    },
+    {
+      "id": "zi2-01-q011",
+      "text": "W jakim przypadku używamy zapytania MERGE w Cypher ?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Gdy chcemy usunąć węzeł",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Gdy chcemy upewnić się, że element istnieje",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Gdy chcemy znaleźć wszystkie węzły",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Gdy chcemy zaktualizować relacje",
+          "correct": false
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 15
+    },
+    {
+      "id": "zi2-02-q005",
+      "text": "Co oznacza termin „centralność węzła” w sieciach złożonych?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Odległość węzła od centrum grafu",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Znaczenie węzła w kontekście całej sieci",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Liczbę węzłów sąsiednich",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Liczbę właściwości węzła",
+          "correct": false
+        }
+      ],
+      "category": "cat-02",
+      "categoryName": "02. Sieci złożone / Analiza sieci",
+      "originalIndex": 16
+    },
+    {
+      "id": "zi2-01-q012",
+      "text": "Które zapytanie Cypher znajduje najkrótszą ścieżkę między dwoma węzłami?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "MATCH SHORTEST (a) -[r]->(b)",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "MATCH (a) -[r*]->(b) RETURN length(r)",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "MATCH p= shortestPath ((a)-[*]->(b)) RETURN p",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "FIND SHORTEST PATH",
+          "correct": false
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 17
+    },
+    {
+      "id": "zi2-05-q001",
+      "text": "Dopasuj do definicji: Podniesienie wydajności poprzez dodanie większej liczby maszyn ",
+      "answers": [
+        {
+          "id": "a",
+          "text": "skalowanie wertykalne (pionowe)",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "horyzontalne (poziome)",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "skalowanie systemowe",
+          "correct": false
+        }
+      ],
+      "category": "cat-05",
+      "categoryName": "05. Replikacja / Partycjonowanie / Skalowanie",
+      "originalIndex": 18
+    },
+    {
+      "id": "zi2-05-q002",
+      "text": "Dopasuj definicję do typu replikacji: Klienci wysyłają każdy zapis do kilku węzłów i odczytują z kilku węzłów równolegle w celu wykrycia i skorygowania węzłów z nieaktualnymi danymi.",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Single-leader replication",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Multi-leader replication",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Leadless replication",
+          "correct": true
+        }
+      ],
+      "category": "cat-05",
+      "categoryName": "05. Replikacja / Partycjonowanie / Skalowanie",
+      "originalIndex": 19
+    },
+    {
+      "id": "zi2-01-q013",
+      "text": "Czym jest graf RDF w kontekście baz danych?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Typem sieci złożonej",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Modelem danych dla semantycznych sieci grafowych",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Językiem zapytań dla Neo4j",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Bazą danych dokumentów",
+          "correct": false
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 20
+    },
+    {
+      "id": "zi2-01-q014",
+      "text": "Co oznacza symbol „ : ” w Cypher ?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Typ węzła lub relacji",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Separację warunków",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Operator przypisania",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Przypisanie właściwości",
+          "correct": false
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 21
+    },
+    {
+      "id": "zi2-01-q015",
+      "text": "Jak oznaczamy relacje w języku Cypher ?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "{rel}",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "[rel]",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "(rel)",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "<rel>",
+          "correct": false
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 22
+    },
+    {
+      "id": "zi2-01-q016",
+      "text": "Jak w Neo4j oznacza się relacje o określonym typie w Cypher ?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "MATCH (a) -[:REL] ->(b)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "MATCH (a) -[REL] -(b)",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "MATCH (a) -[:RELATION] ->(b)",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "MATCH (a) -[REL:TYPE] -(b)",
+          "correct": false
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 23
+    },
+    {
+      "id": "zi2-01-q017",
+      "text": "Jak w Cypher odczytać właściwość relacji?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "r[property]",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "r.property",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "property(r)",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "[r].property",
+          "correct": false
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 24
+    },
+    {
+      "id": "zi2-01-q018",
+      "text": "Która z poniższych jest poprawną składnią dla Cypher ?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "MATCH (n) -[r]->(m)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "SELECT n, r, m",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "FIND n, r, m",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "GET (n)<[r](m)",
+          "correct": false
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 25
+    },
+    {
+      "id": "zi2-01-q019",
+      "text": "Co oznacza podejście ACID w Neo4j?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Atomiczność , spójność, izolacja, trwałość",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Analiza, korelacja, implementacja, dystrybucja",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Agregacja, ciągłość, interakcja, dywersyfikacja",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Automatyzacja, cykliczność, izolacja, dostosowanie",
+          "correct": false
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 26
+    },
+    {
+      "id": "zi2-02-q006",
+      "text": "Który algorytm można zastosować do wykrywania społeczności w grafie?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Algorytm Dijkstry",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Algorytm Louvaina",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Algorytm Bellmana -Forda",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Algorytm A*",
+          "correct": false
+        }
+      ],
+      "category": "cat-02",
+      "categoryName": "02. Sieci złożone / Analiza sieci",
+      "originalIndex": 27
+    },
+    {
+      "id": "zi2-01-q020",
+      "text": "Które zapytanie Cypher znajdzie wszystkie węzły połączone bezpośrednio z węzłem a?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "MATCH (a) -[]-(b) RETURN b",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "MATCH (a) ->(b) RETURN b",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "MATCH (a)< -(b) RETURN b",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "MATCH (a) RETURN (b)",
+          "correct": false
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 28
+    },
+    {
+      "id": "zi2-01-q021",
+      "text": "Jaka jest różnica między MATCH a OPTIONAL MATCH w Cypher ?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "MATCH ignoruje błędy, OPTIONAL MATCH je uwzględnia",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "OPTIONAL MATCH zwraca wyniki nawet, gdy brak dopasowań",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "MATCH zwraca brak wyników przy braku dopasowań",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Brak różnicy",
+          "correct": false
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 29
+    },
+    {
+      "id": "zi2-01-q022",
+      "text": "Jakie jest zastosowanie języka Cypher ?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Zarządzanie dokumentami",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Zapytania grafowe",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Analiza danych tabelarycznych",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Optymalizacja maszyn wirtualnych",
+          "correct": false
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 30
+    },
+    {
+      "id": "zi2-01-q023",
+      "text": "Który operator w Cypher reprezentuje powtarzające się relacje?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "[r*]",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "[r+]",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "[r?]",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "[r{n}]",
+          "correct": false
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 31
+    },
+    {
+      "id": "zi2-02-q007",
+      "text": "Co oznacza pojęcie „gęstość grafu”?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Proporcję liczby węzłów do relacji",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Stosunek istniejących połączeń do maksymalnej możliwej liczby połączeń",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Liczbę kluczowych węzłów",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Liczbę izolowanych komponentów",
+          "correct": false
+        }
+      ],
+      "category": "cat-02",
+      "categoryName": "02. Sieci złożone / Analiza sieci",
+      "originalIndex": 32
+    },
+    {
+      "id": "zi2-01-q024",
+      "text": "Jak w Neo4j definiujemy etykiety dla węzłów?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "n:Label",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "LABEL n:Type",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "DEFINE Label n",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "n[Label]",
+          "correct": false
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 33
+    },
+    {
+      "id": "zi2-01-q025",
+      "text": "Które zapytanie w Cypher tworzy relację między węzłami?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "MATCH (a), (b) CREATE (a) -[r]->(b)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "ADD (a) -[r]->(b)",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "DEFINE RELATION (a) ->(b)",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "CONNECT (a) ->(b)",
+          "correct": false
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 34
+    },
+    {
+      "id": "zi2-06-q002",
+      "text": "Asocjacja jednokierunkowa w mapowaniu obiektowo-relacyjnym oznacza:",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Relację pomiędzy obiektami w kolekqi obiektów wczytanych z bazy danych narzucającą kolejność oraz kierunek ich przeglądania",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Możliwość wyłącznie wczytywania obiektów określonego typu bez możliwości ich zapisu",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Relację pomiędzy obiektami, w któreł wyłącznie strona właściciela relacji posiada referencję do obiektu (lub obiektów) strony przeciwnej",
+          "correct": true
+        }
+      ],
+      "category": "cat-06",
+      "categoryName": "06. Interfejsy programistyczne / ORM",
+      "originalIndex": 35
+    },
+    {
+      "id": "zi2-01-q026",
+      "text": "Ekspresyjny język zapytań w grafowych bazach danych, odpowiednik SQLa z baz relacyjnych to",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Cyber",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "GraphSQL",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "GraphDB",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Cypher",
+          "correct": true
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 36
+    },
+    {
+      "id": "zi2-03-q001",
+      "text": "Wybierz stwierdzenia, które są prawdziwe w kontekście teorii CAP dotyczącej:",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Udowodniono, że ta teoria jest już nieaktualna.",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Bazy danych mogą spełniać tylko jedno z tych kryteriów.",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Teoria CAP dotyczą baz relacyjnych i nierelacyjnych.",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "Wybrane bazy danych mogą spełniać jednocześnie wszystkie trzy kryteria.",
+          "correct": false
+        },
+        {
+          "id": "e",
+          "text": "Bazy danych mogą spełniać jednoczesnie tylko dwa z tych kryteriów.",
+          "correct": true
+        }
+      ],
+      "category": "cat-03",
+      "categoryName": "03. NoSQL / Teoria CAP",
+      "originalIndex": 37
+    },
+    {
+      "id": "zi2-02-q008",
+      "text": "Miara pośrednictwa w strukturych sieciowych określa",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Znaczenie węzła w przesyle informacji pomiędzy segmentami sieci",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Liczbę sąsiadów pośredniczących w przesyle informacji",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Liczbę kontaktów w transmisji informacji",
+          "correct": false
+        }
+      ],
+      "category": "cat-02",
+      "categoryName": "02. Sieci złożone / Analiza sieci",
+      "originalIndex": 38
+    },
+    {
+      "id": "zi2-04-q001",
+      "text": "Zakładając, że klaster składa się z 11 węzłów umieszczonych w dwóch centrach danych (w Centrum 1 jest 6 węzłów, a w Centrum 2 jest 5 węzłów). W Cassandrze ustawiony jest CONSISTENCY QUORUM, a replication factor jest ustawiony na 6. Podaj ile węzłów będzie musiało potwierdzić zapis nowych danych do klastra, aby operacja się zakończyła sukcesem.",
+      "answers": [
+        {
+          "id": "a",
+          "text": "3",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "4",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "5",
+          "correct": false
+        }
+      ],
+      "category": "cat-04",
+      "categoryName": "04. Cassandra",
+      "originalIndex": 39
+    },
+    {
+      "id": "zi2-03-q002",
+      "text": "Wybierz stwierdzenia dotyczące baz typu klucz-wartość (key-value):",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Można w nich przechowywać tylko proste struktury danych.",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Bardzo łatwo jest je skalować.",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Są bardzo szybkie.",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "Można w nich przechowywać złozone struktury danych.",
+          "correct": false
+        },
+        {
+          "id": "e",
+          "text": "Przykładami baz klucz-wartość są MongoDB i CouchDB.",
+          "correct": false
+        }
+      ],
+      "category": "cat-03",
+      "categoryName": "03. NoSQL / Teoria CAP",
+      "originalIndex": 40
+    },
+    {
+      "id": "zi2-03-q003",
+      "text": "Wybierz bazy, które należą do kategorii NoSQL",
+      "answers": [
+        {
+          "id": "a",
+          "text": "MongoDB",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "MariaDB",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Neo4J",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "Dynamo",
+          "correct": true
+        },
+        {
+          "id": "e",
+          "text": "PostgreSQL",
+          "correct": false
+        },
+        {
+          "id": "f",
+          "text": "Cassandra",
+          "correct": true
+        },
+        {
+          "id": "g",
+          "text": "Oracle",
+          "correct": false
+        },
+        {
+          "id": "h",
+          "text": "BigTable",
+          "correct": true
+        }
+      ],
+      "category": "cat-03",
+      "categoryName": "03. NoSQL / Teoria CAP",
+      "originalIndex": 41
+    },
+    {
+      "id": "zi2-01-q027",
+      "text": "Wynikiem zapytań w grafoweJ bazie danych Ne04J moze być",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Tabela z numerycznymi i tekstowymi danymi wynikowymi",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Wizualizacja grafu",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Ścieżka łącząca zadane węzły",
+          "correct": true
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 42
+    },
+    {
+      "id": "zi2-06-q003",
+      "text": "Query Builder w interfejsach programistycznych baz danych:",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Wprowadza altematywny dla SQL język zapytań do bazy danych",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Zmniejsza ryzyko sformułowania niepoprawnego zapytania",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Umozliwia automatyczne generowanie struktury tabel w bazie danych na podstawie pól klas zdefiniowanych w aplikacji",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Pozwala na budowanie zapytań w oparciu łańcuchowo wywoływane metody formułujące poszczególne ich części.",
+          "correct": true
+        }
+      ],
+      "category": "cat-06",
+      "categoryName": "06. Interfejsy programistyczne / ORM",
+      "originalIndex": 43
+    },
+    {
+      "id": "zi2-07-q001",
+      "text": "Rozprzestrzenianie informacji w mediach społecznościowych może być modelowane z wykorzystaniem",
+      "answers": [
+        {
+          "id": "a",
+          "text": "modelu SIR",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "modeli epidemiologicznych",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "systemów agentowych",
+          "correct": true
+        }
+      ],
+      "category": "cat-07",
+      "categoryName": "07. Modelowanie i symulacja",
+      "originalIndex": 44
+    },
+    {
+      "id": "zi2-05-q003",
+      "text": "Wybierz systemy baz danych pracujących w architekturze Leaderless replication",
+      "answers": [
+        {
+          "id": "a",
+          "text": "MySQL",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "MongoDB",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "PostreSQL",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Amazon Dynamo",
+          "correct": true
+        },
+        {
+          "id": "e",
+          "text": "Cassandra",
+          "correct": true
+        }
+      ],
+      "category": "cat-05",
+      "categoryName": "05. Replikacja / Partycjonowanie / Skalowanie",
+      "originalIndex": 45
+    },
+    {
+      "id": "zi2-07-q002",
+      "text": "Możliwe stany węzłow słecł w modelu rozprzestrzenianła informacji SIR to",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Susceptible Infected Recovered",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Susceptible Interested Recovered",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Selected Infected Recovered",
+          "correct": false
+        }
+      ],
+      "category": "cat-07",
+      "categoryName": "07. Modelowanie i symulacja",
+      "originalIndex": 46
+    },
+    {
+      "id": "zi2-01-q028",
+      "text": "Grafowa baza danych",
+      "answers": [
+        {
+          "id": "a",
+          "text": "zapewnia dedykowane funkcje przetwarzania grafów",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "zapewnia możliwość wyznaczania najkrótszych ścieżek",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "wprowadza nowe funkcje do Języka SQL",
+          "correct": false
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 47
+    },
+    {
+      "id": "zi2-08-q001",
+      "text": "Przechowują dane tak. aby oni sami lub inna aplikacja mogła je później odnaleźć",
+      "answers": [
+        {
+          "id": "a",
+          "text": "bazy danych",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "indeksy",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "przetwarzanie strumieniowe (stream)",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "cache",
+          "correct": false
+        },
+        {
+          "id": "e",
+          "text": "przetwarzanie wsadowe (batch)",
+          "correct": false
+        }
+      ],
+      "category": "cat-08",
+      "categoryName": "08. Systemy danych / Hurtownie / ETL",
+      "originalIndex": 48
+    },
+    {
+      "id": "zi2-08-q002",
+      "text": "Pozwalają użytkownikom na wyszukiwanie danych według słów kluczowych lub filtrowanie ich na różne sposoby",
+      "answers": [
+        {
+          "id": "a",
+          "text": "bazy danych",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "indeksy",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "przetwarzanie strumieniowe (stream)",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "cache",
+          "correct": false
+        },
+        {
+          "id": "e",
+          "text": "przetwarzanie wsadowe (batch)",
+          "correct": false
+        }
+      ],
+      "category": "cat-08",
+      "categoryName": "08. Systemy danych / Hurtownie / ETL",
+      "originalIndex": 49
+    },
+    {
+      "id": "zi2-08-q003",
+      "text": "Wysyłają wiadomość do innego procesu aby została obsłużona asynchronicznie",
+      "answers": [
+        {
+          "id": "a",
+          "text": "bazy danych",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "indeksy",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "przetwarzanie strumieniowe (stream)",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "cache",
+          "correct": false
+        },
+        {
+          "id": "e",
+          "text": "przetwarzanie wsadowe (batch)",
+          "correct": false
+        }
+      ],
+      "category": "cat-08",
+      "categoryName": "08. Systemy danych / Hurtownie / ETL",
+      "originalIndex": 50
+    },
+    {
+      "id": "zi2-08-q004",
+      "text": "Zapamiętują wynik operacji. aby przyspieszyć odczyt",
+      "answers": [
+        {
+          "id": "a",
+          "text": "bazy danych",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "indeksy",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "przetwarzanie strumieniowe (stream)",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "cache",
+          "correct": true
+        },
+        {
+          "id": "e",
+          "text": "przetwarzanie wsadowe (batch)",
+          "correct": false
+        }
+      ],
+      "category": "cat-08",
+      "categoryName": "08. Systemy danych / Hurtownie / ETL",
+      "originalIndex": 51
+    },
+    {
+      "id": "zi2-08-q005",
+      "text": "Okresowo pobierają i przetwarzają duzą ilość zgromadzonych danych.",
+      "answers": [
+        {
+          "id": "a",
+          "text": "bazy danych",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "indeksy",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "przetwarzanie strumieniowe (stream)",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "cache",
+          "correct": false
+        },
+        {
+          "id": "e",
+          "text": "przetwarzanie wsadowe (batch)",
+          "correct": true
+        }
+      ],
+      "category": "cat-08",
+      "categoryName": "08. Systemy danych / Hurtownie / ETL",
+      "originalIndex": 52
+    },
+    {
+      "id": "zi2-06-q004",
+      "text": "Które z wymienionych interfejsów programistycznych działają w warstwie abstrakcji bazy danych (w zakresie reprezentowania danych)",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Doctrine ORM",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "PHP Data Objects (PDO)",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Java Database Conectivity (JDBC)",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "Java/Jakarta Persistence API (JPA)",
+          "correct": false
+        },
+        {
+          "id": "e",
+          "text": "Doctrine DBAL",
+          "correct": true
+        }
+      ],
+      "category": "cat-06",
+      "categoryName": "06. Interfejsy programistyczne / ORM",
+      "originalIndex": 53
+    },
+    {
+      "id": "zi2-01-q029",
+      "text": "W Języku Cypher odpowiednikiem polecenia SELECT Jest:",
+      "answers": [
+        {
+          "id": "a",
+          "text": "PATH",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "MATCH",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "SEARCH",
+          "correct": false
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 54
+    },
+    {
+      "id": "zi2-07-q003",
+      "text": "NetLogo to",
+      "answers": [
+        {
+          "id": "a",
+          "text": "System modelowania i symulacji wieloagentowych",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Język programowania oparty na języku Logo",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "System grafowych baz danych",
+          "correct": false
+        }
+      ],
+      "category": "cat-07",
+      "categoryName": "07. Modelowanie i symulacja",
+      "originalIndex": 55
+    },
+    {
+      "id": "zi2-04-q002",
+      "text": "Wybierz stwierdzenia. które odnoszą się do protokołu snitch",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Informują Cassandrę o topologii sieci, aby żądania były kierowane efektywnie i pozwalają Cassandrze na dystrybucję replik poprzez grupowanie maszyn w centra danych i szafy.",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Cassandra decyduje, czy węzeł jest włączony, czy wyłączony na podstawie tego, czy moze się z nim połączyć z poprzez snitch'a, co pomaga w optymalnym kierowaniu żądań w ramach klastra",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Informacje są wykorzystywane do określenia, z których węzłów czytać i do których pisać, a także jak najlepiej",
+          "correct": true
+        }
+      ],
+      "category": "cat-04",
+      "categoryName": "04. Cassandra",
+      "originalIndex": 56
+    },
+    {
+      "id": "zi2-04-q003",
+      "text": "Wymień etapy procesu modelowania danych na potrzeby Cassandry",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Relacyjny model danych",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Znormalizowany model danych",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Model konceptualny wraz z modelem przypływu danych w aplikacji ",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "Logiczny model danych",
+          "correct": true
+        },
+        {
+          "id": "e",
+          "text": "Fizyczny model danych",
+          "correct": true
+        }
+      ],
+      "category": "cat-04",
+      "categoryName": "04. Cassandra",
+      "originalIndex": 57
+    },
+    {
+      "id": "zi2-02-q009",
+      "text": "Podstawą do wyznaczenia miary closeness w analizach sieci są",
+      "answers": [
+        {
+          "id": "a",
+          "text": "najdłuższe ściezki",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "najkrótsze ścieżki",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "połączenia dwukierunkowe",
+          "correct": false
+        }
+      ],
+      "category": "cat-02",
+      "categoryName": "02. Sieci złożone / Analiza sieci",
+      "originalIndex": 58
+    },
+    {
+      "id": "zi2-02-q010",
+      "text": "Stopień wierzchołka",
+      "answers": [
+        {
+          "id": "a",
+          "text": "jest jedną z miar centralności sieci",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "określa liczbę sąsiadów węzła",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "jest podstawą do wyznaczania długości ściezek",
+          "correct": false
+        }
+      ],
+      "category": "cat-02",
+      "categoryName": "02. Sieci złożone / Analiza sieci",
+      "originalIndex": 59
+    },
+    {
+      "id": "zi2-04-q004",
+      "text": "Wybierz stwierdzenia, które opisują model danych w Cassandrze",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Dane Są przechowywane w wierszach",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Dane tabeli są rozrzucone po różnych węzłach",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Dane całej tabeli są przechowywane w jednym węźle.",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Wszystkie wiersze tabeli muszą zawierać taki sam zestaw kolumn.",
+          "correct": false
+        },
+        {
+          "id": "e",
+          "text": "Wiesze w tabeli mogą składać się z różnych wierszy.",
+          "correct": false
+        },
+        {
+          "id": "f",
+          "text": "Dane są przechowywane w kolumnach",
+          "correct": true
+        }
+      ],
+      "category": "cat-04",
+      "categoryName": "04. Cassandra",
+      "originalIndex": 60
+    },
+    {
+      "id": "zi2-04-q005",
+      "text": "Wybierz stwierdzenia. które odnoszą się o protokołu gossip",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Co sekundę i wymienia wiadomości o stanie ze wszystkimi innymi węzłami w klastrze.",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Wiadomość ma przypisaną wersję. dzięki czemu podczas wymiany starsze informacje są nadpisywane najbardziej aktualnym stanem dla danego węzła.",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Jest protokołem komunikacyjnym typu peer-to-peer, w którym węzły okresowo wymieniają informacje o swoim starue oraz o innych znanych im węzłach.",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "Informuje Cassandrę 0 topologii Sieci, tak aby żądania były kierowane efektywnie.",
+          "correct": false
+        }
+      ],
+      "category": "cat-04",
+      "categoryName": "04. Cassandra",
+      "originalIndex": 61
+    },
+    {
+      "id": "zi2-06-q005",
+      "text": "Technika mapowania obiektowo-relacyjnego:",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Podnosi wydajność operacji zapisu i odczytu do bazy danych",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Wymaga stosowania w obiektowym modelu danych wyłącznie typów danych dostępnych w wykorzystywanym systemie bazodanowym",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Automatyzuje proces zakładania, definiowania i aktualizowania struktur tabel w bazie danych",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "Umożliwia reprezentowanie struktur obiektowych w relacyjnej bane danych",
+          "correct": true
+        }
+      ],
+      "category": "cat-06",
+      "categoryName": "06. Interfejsy programistyczne / ORM",
+      "originalIndex": 62
+    },
+    {
+      "id": "zi2-05-q004",
+      "text": "Wybierz systemy baz danych, które w środowisku rozproszonym pracują w architekturze Single-leader replication:",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Oracle",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "MongoDB",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "PosgreSQL",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "Cassandra",
+          "correct": false
+        },
+        {
+          "id": "e",
+          "text": "MySQL",
+          "correct": true
+        }
+      ],
+      "category": "cat-05",
+      "categoryName": "05. Replikacja / Partycjonowanie / Skalowanie",
+      "originalIndex": 63
+    },
+    {
+      "id": "zi2-04-q006",
+      "text": "Uporządkuj struktury danych w bazie Cassandra od poziomu najwyższego (największego kontenera) do najniższego (najmniejszej jednostki):",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Klaster, Tabela, Przestrzeń kluczy, Partycja, Wiersz, Kolumna",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Przestrzeń kluczy, Klaster, Tabela, Wiersz, Partycja, Kolumna",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Klaster, Przestrzeń kluczy, Tabela, Partycja, Wiersz, Kolumna",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "Klaster, Przestrzeń kluczy, Partycja, Tabela, Wiersz, Kolumna",
+          "correct": false
+        }
+      ],
+      "category": "cat-04",
+      "categoryName": "04. Cassandra",
+      "originalIndex": 64
+    },
+    {
+      "id": "zi2-04-q007",
+      "text": "Wybierz stwierdzenia, które odnoszą się do Cassandra Query Language",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Wszystkie kolumny klucza głównego muszą być określone w klauzuli WHERE w celu zidentyfikowania konkretnego wiersza, którego to dotyczy.",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Można łączyć dane operatorem JOIN tylko z dwóch tabel.",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Możliwe jest jedynie grupowanie wierszy na poziomie klucza partycji lub na poziomie kolumny grupującej.",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "Zapytanie musi odwoływać się tylko do danych umieszczonych w jednej partycji.",
+          "correct": false
+        },
+        {
+          "id": "e",
+          "text": "Nie obsługuje funkcji agregujących.",
+          "correct": false
+        }
+      ],
+      "category": "cat-04",
+      "categoryName": "04. Cassandra",
+      "originalIndex": 65
+    },
+    {
+      "id": "zi2-06-q006",
+      "text": "Pule połączeń (ang. connection pool) stosowane w interfejsach programistycznych baz danych",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Ograniczają blokowanie dostępu do połączenia z bazą danych w aplikacjach wielowątkowych",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Zapewnłają aplikacji dostęp do zestawu wielu jednocześnie otwartych połączeń do tej samej bazy danych",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Redukują konieczny narzut czasowy potrzebny na nawiązywanie nowego połączenła przez aplikację",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "Zapewnłają aplikacji dostęp do zestawu wielu jednocześnie otwartych połączeń do różnych baz danych",
+          "correct": false
+        }
+      ],
+      "category": "cat-06",
+      "categoryName": "06. Interfejsy programistyczne / ORM",
+      "originalIndex": 66
+    },
+    {
+      "id": "zi2-06-q007",
+      "text": "Sterowniki w interfejsach programistycznych dla relacyjnych baz danych (takich jak np. PDO lub JDBC)",
+      "answers": [
+        {
+          "id": "a",
+          "text": "umozliwiaJą rozszerzenie tych interfeJsOw o nowsze wersje języka zapytań SQL",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "zapewniają możliwość jednolitego komunikowania się z bazami danych od różnych dostawców",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "umozliwiają rozszerzenie możliwości obsługiwanych baz danych o nowe typy danych dla kolumn oraz dodatkowe mechanizmy indeksowania",
+          "correct": false
+        }
+      ],
+      "category": "cat-06",
+      "categoryName": "06. Interfejsy programistyczne / ORM",
+      "originalIndex": 67
+    },
+    {
+      "id": "zi2-04-q008",
+      "text": "Wybierz typ(y) partycjonowania wykorzystywane przez Cassandrę:",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Funkcja mieszająca (hash partitioning)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "W Cassandrze nie jest zaimplementowane partycjonowanie.",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Sortowanie leksykograficzne (key range partitioning)",
+          "correct": true
+        }
+      ],
+      "category": "cat-04",
+      "categoryName": "04. Cassandra",
+      "originalIndex": 68
+    },
+    {
+      "id": "zi2-06-q008",
+      "text": "Mechanizm szablonów zapytań SQL stosowany w interfejsach programistycznych baz danych",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Umożliwia przesłanie wartości parametrów do szablonu zapytania SQL zapisanego wcześniej w systemie bazy danych",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Umozliwia wstawienie wartości parametrów do zapytania SQL i następnłe przesłanie kompletnego zapytania do systemu bazy danych w celu wykonania",
+          "correct": false
+        }
+      ],
+      "category": "cat-06",
+      "categoryName": "06. Interfejsy programistyczne / ORM",
+      "originalIndex": 69
+    },
+    {
+      "id": "zi2-01-q030",
+      "text": "Język SQL trudno stosować do analizy struktur sieciowych ponieważ:",
+      "answers": [
+        {
+          "id": "a",
+          "text": "działa zbyt wolno",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "są one zbyt duże",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "nie posiada dedykowanych analiz sieciowych",
+          "correct": false
+        }
+      ],
+      "category": "cat-01",
+      "categoryName": "01. Grafowe bazy danych / Neo4j / Cypher",
+      "originalIndex": 70
+    },
+    {
+      "id": "zi2-03-q004",
+      "text": "Wybierz stwierdzenia, które są prawdziwe",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Nie można wykorzystywać baz relacyjnych w środowisku rozproszonym.",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Bazy NoSQL lepiej się nadają do przechowywania duzych zbiorów danych w środowisku rozproszonym",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Bazy relacyone są bardziej uniwersalne od baz NoSQL",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "Model ACID Jest wykorzystywany w bazach NoSQL",
+          "correct": false
+        },
+        {
+          "id": "e",
+          "text": "Bazy NoSQL są bazami bardziej uniwersalnymi niž bazy relacyjne.",
+          "correct": false
+        }
+      ],
+      "category": "cat-03",
+      "categoryName": "03. NoSQL / Teoria CAP",
+      "originalIndex": 71
+    },
+    {
+      "id": "zi2-05-q005",
+      "text": "Dopasuj definicję do typu replikacji:  Klienci wysyłają wszystkie zapisy do Jednego węzła, który wysyła strumień zdarzeń zmiany danych do innych replik",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Single-leader replication",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Multi-leader replication",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Leadless replication",
+          "correct": false
+        }
+      ],
+      "category": "cat-05",
+      "categoryName": "05. Replikacja / Partycjonowanie / Skalowanie",
+      "originalIndex": 72
+    },
+    {
+      "id": "zi2-06-q009",
+      "text": "Menadżer encji w interfejsach programistycznych baz danych to",
+      "answers": [
+        {
+          "id": "a",
+          "text": "rola członka zespołu w projekcie informatycznym odpowiedzialna za projekt i implementację struktur bazy danych",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "wzorzec projektowy klasy umożliwiający tworzenie nowych obiektów reprezentujący dane przetwarzane w aplikacji",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "wzorzec projektowy klasy odpowiadającej za zapis i odczyt w bazie danych obiektów reprezentujących dane w aplikacji",
+          "correct": true
+        }
+      ],
+      "category": "cat-06",
+      "categoryName": "06. Interfejsy programistyczne / ORM",
+      "originalIndex": 73
+    },
+    {
+      "id": "zi2-06-q010",
+      "text": "Kaskadowość w technikach mapowania obiektowo-relacyjnego polega na: ",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Wczytywaniu kolekcji obiektów jednego typu w kolejności zgodnej z wartościami identyfikatora,",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Możliwość łączenia operacji na bazie danych w grupy i wykonywania ich w ustalonej kolejności",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Wczytywaniu, zapisywaniu lub usuwaniu obiektu właściciela relacji wraz z obiektami podległymi",
+          "correct": true
+        }
+      ],
+      "category": "cat-06",
+      "categoryName": "06. Interfejsy programistyczne / ORM",
+      "originalIndex": 74
+    },
+    {
+      "id": "zi2-04-q009",
+      "text": "Wybierz struktury danych, które zapisane są w każdej komórce Cassandry (na przecięciu wiersza i kolumny)",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Wartość zgodnie z zadeklarowanym typem danych",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Typ danych",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Czas życia (time to live)",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Znacznik czasu (timestamp)",
+          "correct": true
+        }
+      ],
+      "category": "cat-04",
+      "categoryName": "04. Cassandra",
+      "originalIndex": 75
+    },
+    {
+      "id": "zi2-08-q006",
+      "text": "W kontekście ETL:",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Load oznacza załadowanie danych do hurtowni danych",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Extract oznacza pozyskiwanie danych ze źródłowych systemów operacyjnych lub archiwalnych",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "ETL wykonuje się zazwyczaj raz dziennie w godzinach wysokiego obciążenia systemów źródłowych",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Transform oznacza przekształcanie danych - co może obejmować czyszczenie, filtrowanie, walidację, wzbogacanie i stosowanie reguł biznesowych",
+          "correct": true
+        }
+      ],
+      "category": "cat-08",
+      "categoryName": "08. Systemy danych / Hurtownie / ETL",
+      "originalIndex": 76
+    },
+    {
+      "id": "zi2-08-q007",
+      "text": "Wybierz stwierdzenia poprawne w kontekście hurtowni danych:",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Przeznaczone są do celów analitycznych, odkrywania wiedzy z danych",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Wykorzystują relacyjny model danych",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Dane mogą pochodzić z wielu źródeł",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "Przetwarzają dane z wykorzystaniem transakcji",
+          "correct": false
+        },
+        {
+          "id": "e",
+          "text": "Dane ładowane są w trybiewsadowym z wykorzystaniem ETL",
+          "correct": true
+        }
+      ],
+      "category": "cat-08",
+      "categoryName": "08. Systemy danych / Hurtownie / ETL",
+      "originalIndex": 77
+    },
+    {
+      "id": "zi2-03-q005",
+      "text": "Wybierz stwierdzenia, które są prawdziwe w kontekście baz NOSQL:",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Spełniają wymagania własności ACID",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Są bazami bardziej uniwersalnymi niż bazy relacyjne",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Lepiej się nadają do przechowywania dużych zbiorów danych w środowisku rozproszonym",
+          "correct": true
+        },
+        {
+          "id": "d",
+          "text": "Głównym językiem zapytań jest SQL lub jego odmiana",
+          "correct": false
+        },
+        {
+          "id": "e",
+          "text": "Głównie skaluje się je w poziomie",
+          "correct": true
+        }
+      ],
+      "category": "cat-03",
+      "categoryName": "03. NoSQL / Teoria CAP",
+      "originalIndex": 78
+    },
+    {
+      "id": "zi2-03-q006",
+      "text": "Pojedynczy dokument przechowywany w kolekcji w bazie MongoDB:",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Musi posiadać zdefiniowany dla danej kolekcji zestaw pól o określonych nazwach i typach danych",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Musi posiadać zdefiniowany dla danej kolekcji zestaw pól o określonych nazwach",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Może posiadać dowolny zestaw pól",
+          "correct": true
+        }
+      ],
+      "category": "cat-03",
+      "categoryName": "03. NoSQL / Teoria CAP",
+      "originalIndex": 79
+    },
+    {
+      "id": "zi2-04-q010",
+      "text": "Wybierz stwierdzenia, które opisują model danych w Cassandrze",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Wszystkie wiersze tabeli muszą zawierać taki sam zestaw kolumn.",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Wiesze w tabeli mogą składać się z różnych wierszy.",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Na jednym klastrze może być tylko jeden „key space-",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Dane całej tabeli Są przechowywane w jednym węźle.",
+          "correct": false
+        },
+        {
+          "id": "e",
+          "text": "Dane tabeli są rozrzucone po węzłach.",
+          "correct": true
+        }
+      ],
+      "category": "cat-04",
+      "categoryName": "04. Cassandra",
+      "originalIndex": 80
+    },
+    {
+      "id": "zi2-06-q011",
+      "text": "Czy w interfejsach programistycznych baz danych wykorzystujących techniki ORM możliwe jest mapowanie klas powstałych w wyniku dziedziczenia?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Prawda",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Fałsz",
+          "correct": false
+        }
+      ],
+      "category": "cat-06",
+      "categoryName": "06. Interfejsy programistyczne / ORM",
+      "originalIndex": 81
+    },
+    {
+      "id": "zi2-05-q006",
+      "text": "Dopasuj do definicji: Podniesienie wydajności pojedynczej maszyny ",
+      "answers": [
+        {
+          "id": "a",
+          "text": "skalowanie wertykalne (pionowe)",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "horyzontalne (poziome)",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "skalowanie systemowe",
+          "correct": false
+        }
+      ],
+      "category": "cat-05",
+      "categoryName": "05. Replikacja / Partycjonowanie / Skalowanie",
+      "originalIndex": 82
+    },
+    {
+      "id": "zi2-05-q007",
+      "text": "Dopasuj definicję do typu replikacji: Klienci wysyłaJą każdy zapis do jednego z kilku węzłów liderów, z których każdy može przyjmować zapisy.",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Single-leader replication",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Multi-leader replication",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Leadless replication",
+          "correct": false
+        }
+      ],
+      "category": "cat-05",
+      "categoryName": "05. Replikacja / Partycjonowanie / Skalowanie",
+      "originalIndex": 83
+    },
+    {
+      "id": "zi2-05-q008",
+      "text": "Dopasuj definicję typu indeksowania w środowisku rozproszonym: Indeksy wtórne przechowywane są w tej samej partycji co klucz główny i wartość. Oznacza to, że tylko jedna partycja musi być aktualizowana przy zapisie, a odczyt indeksu wtórnego wymaga rozproszenia/zgromadzenia we wszystkich partycjach.",
+      "answers": [
+        {
+          "id": "a",
+          "text": "indeksy globalne",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "indeksy lokalne",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "indeksy partycjonujące",
+          "correct": false
+        }
+      ],
+      "category": "cat-05",
+      "categoryName": "05. Replikacja / Partycjonowanie / Skalowanie",
+      "originalIndex": 84
+    },
+    {
+      "id": "zi2-05-q009",
+      "text": "Dopasuj definicję typu indeksowania w środowisku rozproszonym: Indeksy wtórne są partycjonowane oddzielnie, przy użyciu wartości indeksowanych. Wpis w indeksie wtórnym może zawierać rekordy ze wszystkich partycji klucza głównego. Gdy dokument jest zapisywany, kilka partycji indeksu wtór musi zostać zaktualizowanych; odczyt może być obsługiwany z pojedynczej partycji.",
+      "answers": [
+        {
+          "id": "a",
+          "text": "indeksy globalne",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "indeksy lokalne",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "indeksy partycjonujące",
+          "correct": false
+        }
+      ],
+      "category": "cat-05",
+      "categoryName": "05. Replikacja / Partycjonowanie / Skalowanie",
+      "originalIndex": 85
+    },
+    {
+      "id": "zi2-04-q011",
+      "text": "Wybierz stwierdzenia, które odnoszą Się do Cassandry.",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Jest to rozproszona baza danych bez lidera.",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Każdy węzeł może być węzłem koordynującym.",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "Jest to rozproszona baza danych z wieloma liderami.",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Jest to rozproszona baza danych z Jednym liderem.",
+          "correct": false
+        },
+        {
+          "id": "e",
+          "text": "Tylko wybrane węźle (seeds) modą być węzłami koordynującymi.",
+          "correct": false
+        }
+      ],
+      "category": "cat-04",
+      "categoryName": "04. Cassandra",
+      "originalIndex": 86
+    }
+  ]
+}

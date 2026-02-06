@@ -105,4 +105,11 @@ export function renderLatex(html) {
   });
 }
 
+/**
+ * Returns true if the question is a flashcard (no ABCD answers).
+ */
+export function isFlashcard(question) {
+  return !question.answers || question.answers.length === 0;
+}
+
 export { DAY_MS, MINUTE_MS };
