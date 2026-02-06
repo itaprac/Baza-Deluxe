@@ -49,6 +49,7 @@ const DEFAULT_APP_SETTINGS = {
   theme: 'auto',
   colorTheme: 'academic-noir',
   layoutWidth: '65%',
+  deckListMode: 'compact', // 'compact' or 'classic'
   shuffleAnswers: true,
   questionOrder: 'shuffled', // 'shuffled' or 'ordered'
   randomizeNumbers: false,
@@ -523,6 +524,7 @@ function navigateToDeckList(scope = activeDeckScope) {
     activeScope: activeDeckScope,
     sessionMode,
     showPrivateLocked,
+    deckListMode: appSettings.deckListMode,
   });
   bindDeckListEvents();
 }
@@ -1299,6 +1301,16 @@ function bindAppSettingsEvents() {
       storage.saveAppSettings(appSettings);
     });
   }
+
+  // Deck list layout options
+  document.querySelectorAll('.deck-layout-option').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.deck-layout-option').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      appSettings.deckListMode = btn.dataset.deckLayout === 'classic' ? 'classic' : 'compact';
+      storage.saveAppSettings(appSettings);
+    });
+  });
 
   // Shuffle toggle
   const shuffleToggle = document.getElementById('toggle-shuffle');

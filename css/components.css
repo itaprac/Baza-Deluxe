@@ -241,6 +241,19 @@
   gap: 12px;
 }
 
+.deck-list-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.deck-list-grid.classic {
+  grid-template-columns: 1fr;
+}
+
+.deck-list-grid.compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .deck-card {
   background: var(--color-card-bg);
   border: 1px solid var(--color-border);
@@ -2128,6 +2141,37 @@
   opacity: 0.7;
 }
 
+/* --- Deck List Layout Selector --- */
+
+.deck-layout-options {
+  display: flex;
+  gap: 8px;
+}
+
+.deck-layout-option {
+  flex: 1;
+  padding: 10px 8px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-card-bg);
+  cursor: pointer;
+  text-align: center;
+  font-family: var(--font-family);
+  color: var(--color-text);
+  transition: all var(--transition-fast);
+}
+
+.deck-layout-option:hover {
+  border-color: var(--color-primary);
+}
+
+.deck-layout-option.active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-glow);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-glow);
+}
+
 .custom-width-row {
   display: flex;
   align-items: center;
@@ -2587,6 +2631,10 @@
     padding: 18px 20px;
   }
 
+  .deck-list-grid.compact {
+    grid-template-columns: 1fr;
+  }
+
   .docs-states {
     grid-template-columns: 1fr;
   }
@@ -2609,11 +2657,25 @@
     min-width: calc(50% - 4px);
   }
 
+  .deck-layout-options {
+    flex-wrap: wrap;
+  }
+
+  .deck-layout-option {
+    min-width: calc(50% - 4px);
+  }
+
   .color-theme-options {
     flex-wrap: wrap;
   }
 
   .color-theme-option {
     min-width: calc(50% - 4px);
+  }
+}
+
+@media (max-width: 920px) {
+  .deck-list-grid.compact {
+    grid-template-columns: 1fr;
   }
 }

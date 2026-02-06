@@ -9,6 +9,7 @@ export function renderDeckList(decks, statsMap, options = {}) {
   const activeScope = options.activeScope === 'private' ? 'private' : 'public';
   const sessionMode = options.sessionMode === 'user' ? 'user' : 'guest';
   const showPrivateLocked = !!options.showPrivateLocked;
+  const deckListMode = options.deckListMode === 'classic' ? 'classic' : 'compact';
 
   const tabsHtml = `
     <div class="deck-scope-tabs">
@@ -103,7 +104,12 @@ export function renderDeckList(decks, statsMap, options = {}) {
     `;
   }).join('');
 
-  container.innerHTML = `${tabsHtml}${cardsHtml}`;
+  container.innerHTML = `
+    ${tabsHtml}
+    <div class="deck-list-grid ${deckListMode === 'compact' ? 'compact' : 'classic'}">
+      ${cardsHtml}
+    </div>
+  `;
 }
 
 // --- Question Rendering ---
@@ -1149,6 +1155,19 @@ export function renderAppSettings(appSettings, defaults) {
     </button>
   `).join('');
 
+  const deckListLayouts = [
+    { value: 'compact', label: 'Kompaktowy', desc: '2 talie obok siebie na desktopie' },
+    { value: 'classic', label: 'Klasyczny', desc: '1 talia w wierszu (jak wcześniej)' },
+  ];
+  const deckListMode = appSettings.deckListMode === 'classic' ? 'classic' : 'compact';
+
+  const deckListLayoutHtml = deckListLayouts.map((layout) => `
+    <button class="deck-layout-option ${deckListMode === layout.value ? 'active' : ''}" data-deck-layout="${layout.value}">
+      <div class="layout-width-label">${layout.label}</div>
+      <div class="layout-width-desc">${layout.desc}</div>
+    </button>
+  `).join('');
+
   document.getElementById('app-settings-content').innerHTML = `
     <div class="app-settings-form">
       <div class="settings-section">
@@ -1188,6 +1207,13 @@ export function renderAppSettings(appSettings, defaults) {
               placeholder="np. 70">
             <span class="custom-width-unit">%</span>
           </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Widok listy talii</div>
+        <div class="deck-layout-options" id="deck-layout-options">
+          ${deckListLayoutHtml}
         </div>
       </div>
 
