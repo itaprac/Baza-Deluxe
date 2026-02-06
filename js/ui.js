@@ -10,6 +10,14 @@ export function renderDeckList(decks, statsMap, options = {}) {
   const sessionMode = options.sessionMode === 'user' ? 'user' : 'guest';
   const showPrivateLocked = !!options.showPrivateLocked;
   const deckListMode = options.deckListMode === 'classic' ? 'classic' : 'compact';
+  const privateActionsHtml = activeScope === 'private' && sessionMode === 'user'
+    ? `
+      <div class="private-deck-actions">
+        <button class="btn btn-primary" id="btn-create-deck">Nowa talia</button>
+        <button class="btn btn-secondary" id="btn-import-private">Importuj talię</button>
+      </div>
+    `
+    : '';
 
   const tabsHtml = `
     <div class="deck-scope-tabs">
@@ -36,20 +44,17 @@ export function renderDeckList(decks, statsMap, options = {}) {
     const emptyTitle = activeScope === 'public' ? 'Brak talii ogólnych' : 'Brak własnych talii';
     const emptyText = activeScope === 'public'
       ? 'Talie ogólne nie są jeszcze dostępne.'
-      : 'Zaimportuj plik JSON z pytaniami, aby utworzyć własną talię.';
-    const importButton = activeScope === 'private' && sessionMode === 'user'
-      ? '<button class="btn btn-primary" id="btn-import-empty">Importuj talię</button>'
-      : '';
+      : 'Utwórz własną talię ręcznie lub zaimportuj plik JSON z pytaniami.';
 
     container.innerHTML = `
       ${tabsHtml}
+      ${privateActionsHtml}
       <div class="empty-state">
         <div class="empty-state-icon">&#128218;</div>
         <div class="empty-state-title">${emptyTitle}</div>
         <div class="empty-state-text">
           ${emptyText}
         </div>
-        ${importButton}
       </div>
     `;
     return;
@@ -106,6 +111,7 @@ export function renderDeckList(decks, statsMap, options = {}) {
 
   container.innerHTML = `
     ${tabsHtml}
+    ${privateActionsHtml}
     <div class="deck-list-grid ${deckListMode === 'compact' ? 'compact' : 'classic'}">
       ${cardsHtml}
     </div>
@@ -471,11 +477,15 @@ export function renderCategorySelect(deckName, categories, statsMap) {
 
 // --- Mode Select ---
 
-export function renderModeSelect(deckName, deckStats) {
+export function renderModeSelect(deckName, deckStats, options = {}) {
   document.getElementById('mode-select-deck-name').textContent = deckName;
 
   const hasDue = deckStats.dueToday > 0 || deckStats.newAvailable > 0 || (deckStats.learningTotal || 0) > 0;
   const flaggedCount = deckStats.flagged || 0;
+  const canEdit = options.canEdit === true;
+  const browseDesc = canEdit
+    ? 'Lista wszystkich pytań z odpowiedziami + możliwość dodawania nowych pytań'
+    : 'Lista wszystkich pytań z odpowiedziami';
 
   const flaggedCard = flaggedCount > 0 ? `
       <div class="mode-card" data-mode="flagged">
@@ -504,7 +514,7 @@ export function renderModeSelect(deckName, deckStats) {
       <div class="mode-card ${deckStats.totalCards === 0 ? 'disabled' : ''}" data-mode="browse">
         <div class="mode-card-icon">&#x1F50D;</div>
         <div class="mode-card-name">Przeglądanie</div>
-        <div class="mode-card-desc">Lista wszystkich pytań z odpowiedziami</div>
+        <div class="mode-card-desc">${browseDesc}</div>
       </div>
       ${flaggedCard}
     </div>
@@ -647,9 +657,12 @@ export function renderBrowse(deckName, questions, options = {}) {
   const canEdit = options.canEdit !== false;
   document.getElementById('browse-deck-name').textContent = deckName;
 
-  const searchHtml = `
-    <div class="browse-search">
-      <input type="text" id="browse-search-input" placeholder="Szukaj pytania...">
+  const toolbarHtml = `
+    <div class="browse-toolbar">
+      <div class="browse-search">
+        <input type="text" id="browse-search-input" placeholder="Szukaj pytania...">
+      </div>
+      ${canEdit ? '<button class="btn btn-primary btn-sm" id="btn-browse-add-question">+ Dodaj pytanie</button>' : ''}
     </div>
   `;
 
@@ -689,7 +702,108 @@ export function renderBrowse(deckName, questions, options = {}) {
     `;
   }).join('');
 
-  document.getElementById('browse-content').innerHTML = searchHtml + `<div class="browse-list" id="browse-list">${listHtml}</div>`;
+  document.getElementById('browse-content').innerHTML = toolbarHtml + `<div class="browse-list" id="browse-list">${listHtml}</div>`;
+}
+
+export function renderBrowseCreateEditor(options = {}) {
+  const categories = Array.isArray(options.categories) ? options.categories : [];
+  const selectedCategory = typeof options.selectedCategory === 'string' ? options.selectedCategory : '';
+  const questionText = typeof options.text === 'string' ? options.text : '';
+  const explanation = typeof options.explanation === 'string' ? options.explanation : '';
+  const isFlashcard = !!options.isFlashcard;
+  const answers = Array.isArray(options.answers) && options.answers.length > 0
+    ? options.answers
+    : [
+      { text: '', correct: true },
+      { text: '', correct: false },
+    ];
+
+  const answerRowsHtml = answers.map((a, idx) => `
+    <div class="editor-answer-row create-answer-row" data-answer-index="${idx}">
+      <label class="toggle-switch toggle-switch-sm">
+        <input type="checkbox" class="create-answer-correct" ${a.correct ? 'checked' : ''}>
+        <span class="toggle-slider"></span>
+      </label>
+      <input type="text" class="editor-answer-text create-answer-text" value="${escapeAttr(a.text || '')}" placeholder="Treść odpowiedzi">
+      <button class="btn-remove-create-answer" title="Usuń odpowiedź" ${answers.length <= 2 ? 'disabled' : ''}>&times;</button>
+    </div>
+  `).join('');
+
+  const categorySection = categories.length > 0 ? `
+    <div class="editor-section">
+      <label class="editor-label" for="create-question-category">Kategoria</label>
+      <select class="editor-select" id="create-question-category">
+        <option value="">(Bez kategorii)</option>
+        ${categories.map((cat) => `
+          <option value="${escapeAttr(cat.id)}" ${cat.id === selectedCategory ? 'selected' : ''}>
+            ${escapeHtml(cat.name || cat.id)}
+          </option>
+        `).join('')}
+      </select>
+    </div>
+  ` : '';
+
+  return `
+    <div class="question-card question-editor browse-editor browse-create-editor">
+      <div class="editor-section">
+        <label class="editor-label">Nowe pytanie</label>
+        <div class="editor-type-toggle">
+          <div class="editor-type-toggle-text">Pytanie testowe / fiszka</div>
+          <label class="toggle-switch toggle-switch-sm">
+            <input type="checkbox" id="create-question-is-flashcard" ${isFlashcard ? 'checked' : ''}>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+      ${categorySection}
+      <div class="editor-section">
+        <label class="editor-label" for="create-question-text">Treść pytania</label>
+        <textarea class="editor-textarea" id="create-question-text" rows="3">${escapeHtml(questionText)}</textarea>
+      </div>
+      <div class="editor-section" id="create-editor-answers-section" style="${isFlashcard ? 'display:none' : ''}">
+        <label class="editor-label">Odpowiedzi <span class="editor-label-hint">(przełącznik = poprawna)</span></label>
+        <div class="editor-answers-list" id="create-editor-answers-list">
+          ${answerRowsHtml}
+        </div>
+        <button class="btn btn-secondary btn-sm" id="btn-create-add-answer">+ Dodaj odpowiedź</button>
+      </div>
+      <div class="editor-section">
+        <label class="editor-label" for="create-question-explanation">Wyjaśnienie <span class="editor-label-hint">(opcjonalne)</span></label>
+        <textarea class="editor-textarea" id="create-question-explanation" rows="2">${escapeHtml(explanation)}</textarea>
+      </div>
+      <div class="editor-section editor-randomize-section">
+        <div class="editor-randomize-header">
+          <label class="editor-label">Losowe wartości</label>
+          <label class="toggle-switch toggle-switch-sm">
+            <input type="checkbox" class="editor-randomize-toggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="editor-randomize-body" style="display:none">
+          <div class="editor-randomize-hint">
+            Użyj <code>{nazwa}</code> w treści, <code>=&#123;wyrażenie&#125;</code> w odpowiedziach.
+            Zakres: <code>min, max</code> (2 liczby) lub lista: <code>v1, v2, v3</code> (3+).
+          </div>
+          <div class="editor-vars-list"></div>
+          <button class="btn btn-secondary btn-sm btn-add-var">+ Dodaj zmienną</button>
+          <div class="editor-subsection">
+            <label class="editor-label editor-sublabel">Zmienne pochodne ($derived)</label>
+            <div class="editor-derived-list"></div>
+            <button class="btn btn-secondary btn-sm btn-add-derived">+ Dodaj pochodną</button>
+          </div>
+          <div class="editor-subsection">
+            <label class="editor-label editor-sublabel">Ograniczenia ($constraints)</label>
+            <div class="editor-constraints-list"></div>
+            <button class="btn btn-secondary btn-sm btn-add-constraint">+ Dodaj ograniczenie</button>
+          </div>
+        </div>
+      </div>
+      <div class="editor-actions">
+        <button class="btn btn-secondary" id="btn-create-question-cancel">Anuluj</button>
+        <button class="btn btn-primary" id="btn-create-question-save">Dodaj pytanie</button>
+      </div>
+    </div>
+  `;
 }
 
 // --- Browse Editor (inline) ---
@@ -851,10 +965,33 @@ export function renderFlaggedBrowse(deckName, flaggedQuestions) {
 
 // --- Settings ---
 
-export function renderSettings(settings, defaults) {
+export function renderSettings(settings, defaults, options = {}) {
   const stepsToStr = (arr) => Array.isArray(arr) ? arr.join(', ') : String(arr);
+  const deckMeta = options.deckMeta && typeof options.deckMeta === 'object' ? options.deckMeta : null;
+  const canEditMeta = options.canEditMeta === true;
+
+  const deckMetaHtml = deckMeta ? `
+    <div class="settings-form">
+      <div class="settings-group">
+        <label class="settings-label" for="set-deck-name">Nazwa talii</label>
+        <input class="settings-input" type="text" id="set-deck-name" value="${escapeAttr(deckMeta.name || '')}" ${canEditMeta ? '' : 'disabled'}>
+        <div class="settings-hint">${canEditMeta ? 'Edytowalna nazwa prywatnej talii.' : 'Talia ogólna: nazwa jest tylko do odczytu.'}</div>
+      </div>
+      <div class="settings-group">
+        <label class="settings-label" for="set-deck-description">Opis talii</label>
+        <textarea class="settings-input" id="set-deck-description" rows="3" ${canEditMeta ? '' : 'disabled'}>${escapeHtml(deckMeta.description || '')}</textarea>
+        <div class="settings-hint">${canEditMeta ? 'Edytowalny opis prywatnej talii.' : 'Talia ogólna: opis jest tylko do odczytu.'}</div>
+      </div>
+      ${canEditMeta ? `
+      <div class="settings-actions">
+        <button class="btn btn-secondary" id="btn-save-deck-meta">Zapisz nazwę i opis</button>
+      </div>
+      ` : ''}
+    </div>
+  ` : '';
 
   document.getElementById('settings-content').innerHTML = `
+    ${deckMetaHtml}
     <div class="settings-form">
       <div class="settings-group">
         <label class="settings-label" for="set-newCardsPerDay">Nowe karty dziennie</label>
@@ -1296,5 +1433,9 @@ function escapeHtml(text) {
 }
 
 function escapeAttr(text) {
-  return text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }

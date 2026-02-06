@@ -7,7 +7,8 @@ Stan użytkownika (talie, karty, statystyki, ustawienia, progres) zapisuje w Sup
 
 - `Ogólne` — talie wbudowane z katalogu `data/`, widoczne dla każdego (także gościa), tylko do nauki/przeglądu.
 - `Moje` — talie prywatne użytkownika, widoczne po zalogowaniu.
-- Import własnej talii jest dostępny wyłącznie po zalogowaniu i trafia do zakładki `Moje`.
+- W zakładce `Moje` możesz tworzyć talie ręcznie (`Nowa talia`) i dodawać pytania w trybie `Przeglądanie` (`+ Dodaj pytanie`).
+- Import własnej talii jest dostępny wyłącznie po zalogowaniu i tylko w zakładce `Moje`.
 - W taliach `Ogólne` nie można usuwać talii ani edytować pytań, ale można uczyć się, robić testy i używać własnych ustawień SRS.
 
 ## Wymagania
@@ -114,11 +115,15 @@ supabase/
   schema.sql            # tabela i polityki RLS dla danych użytkownika
 ```
 
-## Import własnej talii
+## Tworzenie i import własnej talii
 
-W aplikacji (po zalogowaniu) użyj przycisku `Importuj talię` i wskaż plik JSON.
-Minimalny format:
+Po zalogowaniu przejdź do zakładki `Moje`:
+- `Nowa talia` — tworzy prywatną talię ręcznie.
+- `Importuj talię` — importuje plik JSON.
 
+Po utworzeniu talii możesz w trybie `Przeglądanie` dodawać nowe pytania przyciskiem `+ Dodaj pytanie`.
+
+Minimalny format JSON do importu:
 ```json
 {
   "deck": {

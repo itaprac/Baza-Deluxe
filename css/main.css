@@ -123,9 +123,10 @@ body::after {
 
 /* Header */
 .app-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
+  column-gap: 12px;
   padding: 20px 0 18px;
   margin-bottom: 28px;
   border-bottom: none;
@@ -158,6 +159,7 @@ body::after {
   position: relative;
   cursor: pointer;
   transition: opacity var(--transition-fast);
+  justify-self: start;
 }
 
 .app-title:hover {
@@ -169,16 +171,21 @@ a.app-title {
   color: inherit;
 }
 
-.app-header > div {
+#header-app-actions {
   display: flex;
   gap: 8px;
   align-items: center;
+  justify-self: center;
+  justify-content: center;
 }
 
 .header-auth {
   display: flex;
   align-items: center;
   gap: 10px;
+  justify-self: end;
+  justify-content: flex-end;
+  min-width: 0;
 }
 
 .auth-user-email {

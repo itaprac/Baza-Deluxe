@@ -1,7 +1,7 @@
 // app.js — Application entry point, router, study session loop
 
 import { DEFAULT_SETTINGS, processRating, getButtonIntervals } from './sm2.js';
-import { RATINGS, isNew as isNewCard, isReview as isReviewCard, isLearning as isLearningCard, isRelearning as isRelearningCard, isFlagged } from './card.js';
+import { RATINGS, isNew as isNewCard, isReview as isReviewCard, isLearning as isLearningCard, isRelearning as isRelearningCard, isFlagged, createCard } from './card.js';
 import * as deck from './deck.js';
 import * as storage from './storage.js';
 import { importFromFile, importBuiltIn } from './importer.js';
@@ -17,6 +17,7 @@ import {
   renderTestQuestion,
   renderTestResult,
   renderBrowse,
+  renderBrowseCreateEditor,
   renderBrowseEditor,
   renderFlaggedBrowse,
   renderAppSettings,
@@ -28,7 +29,7 @@ import {
   showNotification,
   showConfirm,
 } from './ui.js';
-import { shuffle, isFlashcard } from './utils.js';
+import { shuffle, isFlashcard, generateId } from './utils.js';
 import { hasRandomizer, hasTemplate, randomize } from './randomizers.js';
 import {
   isSupabaseConfigured,
@@ -74,6 +75,7 @@ const BUILT_IN_DECK_SOURCES = [
 ];
 const BUILT_IN_DECK_ID_SET = new Set(BUILT_IN_DECK_SOURCES.map((item) => item.id));
 const BUILT_IN_DECK_IDS = [...BUILT_IN_DECK_ID_SET];
+const DECK_ID_RE = /^[a-z0-9_-]+$/i;
 
 let appSettings = { ...DEFAULT_APP_SETTINGS, keybindings: { ...DEFAULT_APP_SETTINGS.keybindings } };
 let fontScale = DEFAULT_FONT_SCALE;
@@ -110,6 +112,43 @@ let testAnswers = new Map(); // questionId → Set of selected answer ids
 let testShuffledAnswers = null;
 let testSelectedIds = new Set();
 let testShuffledMap = new Map(); // index → shuffled answers array
+
+function slugifyDeckId(value) {
+  const input = String(value || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/ł/g, 'l');
+  return input
+    .replace(/[^a-z0-9_-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+function getUniqueDeckId(base) {
+  const candidateBase = slugifyDeckId(base) || `talia-${Date.now().toString(36)}`;
+  const allDecks = storage.getDecks();
+  const taken = new Set(allDecks.map((d) => String(d.id || '').toLowerCase()));
+  for (const builtInId of BUILT_IN_DECK_IDS) {
+    taken.add(String(builtInId).toLowerCase());
+  }
+
+  if (!taken.has(candidateBase.toLowerCase())) return candidateBase;
+
+  let idx = 2;
+  while (taken.has(`${candidateBase}-${idx}`.toLowerCase())) {
+    idx++;
+  }
+  return `${candidateBase}-${idx}`;
+}
+
+function isDeckIdTaken(deckId) {
+  const normalized = String(deckId || '').toLowerCase();
+  if (!normalized) return false;
+  if (BUILT_IN_DECK_IDS.some((id) => id.toLowerCase() === normalized)) return true;
+  return storage.getDecks().some((d) => String(d.id || '').toLowerCase() === normalized);
+}
 
 function isBuiltInDeckId(deckId) {
   return typeof deckId === 'string' && BUILT_IN_DECK_ID_SET.has(deckId);
@@ -152,7 +191,9 @@ function migrateDeckMetadata() {
   const migrated = decks.map((deckMeta) => {
     const isBuiltIn = isBuiltInDeckId(deckMeta.id);
     const nextScope = isBuiltIn ? 'public' : 'private';
-    const nextSource = isBuiltIn ? 'builtin' : 'user-import';
+    const nextSource = isBuiltIn
+      ? 'builtin'
+      : (deckMeta.source === 'user-manual' ? 'user-manual' : 'user-import');
     const nextReadOnly = isBuiltIn;
 
     const needsUpdate =
@@ -263,18 +304,26 @@ function handleStartupOpen() {
   } else if (open === 'docs') {
     navigateToDocs();
   } else if (open === 'import') {
-    if (sessionMode === 'user') {
-      const fileInput = document.getElementById('file-input');
-      if (fileInput) fileInput.click();
-    } else {
-      showNotification('Import prywatnych talii wymaga zalogowania.', 'info');
-      showAuthPanel('Aby importować własne talie, zaloguj się.', 'info');
-    }
+    triggerPrivateImport();
   }
 
   const url = new URL(window.location.href);
   url.searchParams.delete('open');
   history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+}
+
+function triggerPrivateImport() {
+  if (!isSessionReady()) {
+    showAuthPanel('Zaloguj się lub kontynuuj jako gość.', 'info');
+    return;
+  }
+  if (sessionMode !== 'user') {
+    showNotification('Import prywatnych talii wymaga zalogowania.', 'info');
+    showAuthPanel('Aby importować własne talie, zaloguj się.', 'info');
+    return;
+  }
+  const fileInput = document.getElementById('file-input');
+  if (fileInput) fileInput.click();
 }
 
 function applyFontScale() {
@@ -651,7 +700,7 @@ function navigateToModeSelect(deckId) {
   }
 
   showView('mode-select');
-  renderModeSelect(deckName, stats);
+  renderModeSelect(deckName, stats, { canEdit: canEditDeckContent(deckId) });
   bindModeSelectEvents(deckId, stats);
 }
 
@@ -873,7 +922,7 @@ function bindTestResultEvents() {
 
 // --- Browse Mode ---
 
-function navigateToBrowse(deckId) {
+function navigateToBrowse(deckId, options = {}) {
   currentDeckId = deckId;
   const deckMeta = storage.getDecks().find(d => d.id === deckId);
   const deckName = deckMeta ? deckMeta.name : deckId;
@@ -882,6 +931,14 @@ function navigateToBrowse(deckId) {
   showView('browse');
   renderBrowse(deckName, questions, { canEdit: canEditDeckContent(deckId) });
   bindBrowseEvents();
+
+  if (typeof options.searchQuery === 'string') {
+    applyBrowseSearchQuery(options.searchQuery);
+  }
+
+  if (options.openCreateEditor && canEditDeckContent(deckId)) {
+    openBrowseCreateEditor();
+  }
 }
 
 function bindBrowseEvents() {
@@ -910,6 +967,13 @@ function bindBrowseEvents() {
         emptyEl.textContent = 'Brak wyników dla podanego zapytania.';
         browseList.appendChild(emptyEl);
       }
+    });
+  }
+
+  const addQuestionBtn = document.getElementById('btn-browse-add-question');
+  if (addQuestionBtn) {
+    addQuestionBtn.addEventListener('click', () => {
+      openBrowseCreateEditor();
     });
   }
 
@@ -954,13 +1018,296 @@ function openBrowseEditor(index) {
 
   // Cancel
   editor.querySelector('.btn-browse-editor-cancel').addEventListener('click', () => {
-    navigateToBrowse(currentDeckId);
+    navigateToBrowse(currentDeckId, { searchQuery: getBrowseSearchQuery() });
   });
 
   // Save
   editor.querySelector('.btn-browse-editor-save').addEventListener('click', () => {
     saveBrowseEdit(index, editor);
   });
+}
+
+function openBrowseCreateEditor() {
+  if (isCurrentDeckReadOnlyContent()) {
+    showNotification('Talia ogólna jest tylko do nauki. Edycja jest zablokowana.', 'info');
+    return;
+  }
+
+  const browseList = document.getElementById('browse-list');
+  if (!browseList) return;
+
+  const existing = browseList.querySelector('.browse-create-editor');
+  if (existing) {
+    existing.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+
+  const deckMeta = getDeckMeta(currentDeckId);
+  const categories = Array.isArray(deckMeta?.categories) ? deckMeta.categories : [];
+  const selectedCategory = currentCategory && categories.some((cat) => cat.id === currentCategory)
+    ? currentCategory
+    : '';
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'browse-item';
+  wrapper.innerHTML = renderBrowseCreateEditor({
+    categories,
+    selectedCategory,
+    isFlashcard: false,
+  });
+  browseList.prepend(wrapper);
+
+  const editor = wrapper.querySelector('.browse-create-editor');
+  if (!editor) return;
+
+  bindCreateQuestionEditorEvents(editor, wrapper);
+  bindBrowseEditorAddButtons(editor);
+  bindBrowseEditorRemoveButtons(editor);
+
+  const textInput = editor.querySelector('#create-question-text');
+  if (textInput) textInput.focus();
+}
+
+function bindCreateQuestionEditorEvents(editor, wrapper) {
+  const flashcardToggle = editor.querySelector('#create-question-is-flashcard');
+  const answersSection = editor.querySelector('#create-editor-answers-section');
+  if (flashcardToggle && answersSection) {
+    flashcardToggle.addEventListener('change', () => {
+      answersSection.style.display = flashcardToggle.checked ? 'none' : '';
+    });
+  }
+
+  const addAnswerBtn = editor.querySelector('#btn-create-add-answer');
+  if (addAnswerBtn) {
+    addAnswerBtn.addEventListener('click', () => {
+      addCreateAnswerRow(editor, { text: '', correct: false });
+    });
+  }
+
+  bindCreateAnswerRemoveButtons(editor);
+  updateCreateAnswerRemoveState(editor);
+
+  const cancelBtn = editor.querySelector('#btn-create-question-cancel');
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', () => {
+      wrapper.remove();
+    });
+  }
+
+  const saveBtn = editor.querySelector('#btn-create-question-save');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', () => {
+      saveCreatedQuestion(editor, wrapper);
+    });
+  }
+}
+
+function addCreateAnswerRow(editor, answer = { text: '', correct: false }) {
+  const list = editor.querySelector('#create-editor-answers-list');
+  if (!list) return;
+  const safeValue = String(answer.text || '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  const row = document.createElement('div');
+  row.className = 'editor-answer-row create-answer-row';
+  row.innerHTML = `
+    <label class="toggle-switch toggle-switch-sm">
+      <input type="checkbox" class="create-answer-correct" ${answer.correct ? 'checked' : ''}>
+      <span class="toggle-slider"></span>
+    </label>
+    <input type="text" class="editor-answer-text create-answer-text" value="${safeValue}">
+    <button class="btn-remove-create-answer" title="Usuń odpowiedź">&times;</button>
+  `;
+  list.appendChild(row);
+  bindCreateAnswerRemoveButtons(editor);
+  updateCreateAnswerRemoveState(editor);
+}
+
+function bindCreateAnswerRemoveButtons(editor) {
+  editor.querySelectorAll('.btn-remove-create-answer').forEach((btn) => {
+    btn.replaceWith(btn.cloneNode(true));
+  });
+
+  editor.querySelectorAll('.btn-remove-create-answer').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      btn.closest('.create-answer-row')?.remove();
+      updateCreateAnswerRemoveState(editor);
+    });
+  });
+}
+
+function updateCreateAnswerRemoveState(editor) {
+  const rows = editor.querySelectorAll('.create-answer-row');
+  const disableRemove = rows.length <= 2;
+  rows.forEach((row) => {
+    const btn = row.querySelector('.btn-remove-create-answer');
+    if (btn) btn.disabled = disableRemove;
+  });
+}
+
+function collectRandomizeFromEditor(editor) {
+  const randomizeToggle = editor.querySelector('.editor-randomize-toggle');
+  let newRandomize = undefined;
+  if (randomizeToggle && randomizeToggle.checked) {
+    newRandomize = {};
+
+    const varRows = editor.querySelectorAll('.editor-var-row');
+    for (const row of varRows) {
+      const varName = row.querySelector('.editor-var-name').value.trim();
+      const varValues = row.querySelector('.editor-var-values').value.trim();
+      if (!varName || !varValues) continue;
+      if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(varName)) continue;
+      const parts = varValues.split(',').map(s => s.trim());
+      const nums = parts.map(s => parseFloat(s)).filter(n => !isNaN(n));
+      if (nums.length === parts.length && nums.length >= 2) {
+        newRandomize[varName] = nums;
+      } else if (parts.length >= 2) {
+        newRandomize[varName] = parts;
+      }
+    }
+
+    const derivedRows = editor.querySelectorAll('.editor-derived-row');
+    if (derivedRows.length > 0) {
+      const derived = {};
+      for (const row of derivedRows) {
+        const name = row.querySelector('.editor-derived-name').value.trim();
+        const expr = row.querySelector('.editor-derived-expr').value.trim();
+        if (!name || !expr) continue;
+        if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)) {
+          derived[name] = expr;
+        }
+      }
+      if (Object.keys(derived).length > 0) newRandomize.$derived = derived;
+    }
+
+    const constraintRows = editor.querySelectorAll('.editor-constraint-row');
+    if (constraintRows.length > 0) {
+      const constraints = [];
+      for (const row of constraintRows) {
+        const expr = row.querySelector('.editor-constraint-expr').value.trim();
+        if (expr) constraints.push(expr);
+      }
+      if (constraints.length > 0) newRandomize.$constraints = constraints;
+    }
+
+    const hasVars = Object.keys(newRandomize).some(k => !k.startsWith('$'));
+    if (!hasVars && !newRandomize.$derived) newRandomize = undefined;
+  }
+  return newRandomize;
+}
+
+function saveCreatedQuestion(editor, wrapper) {
+  if (isCurrentDeckReadOnlyContent()) {
+    showNotification('Talia ogólna jest tylko do nauki. Edycja jest zablokowana.', 'info');
+    return;
+  }
+
+  const text = (editor.querySelector('#create-question-text')?.value || '').trim();
+  if (!text) {
+    showNotification('Treść pytania nie może być pusta.', 'error');
+    return;
+  }
+
+  const isFlashcardQuestion = !!editor.querySelector('#create-question-is-flashcard')?.checked;
+  const explanation = (editor.querySelector('#create-question-explanation')?.value || '').trim();
+
+  const answers = [];
+  if (!isFlashcardQuestion) {
+    const rows = editor.querySelectorAll('.create-answer-row');
+    if (rows.length < 2) {
+      showNotification('Pytanie testowe musi mieć co najmniej 2 odpowiedzi.', 'error');
+      return;
+    }
+
+    let hasCorrect = false;
+    rows.forEach((row, idx) => {
+      const answerText = (row.querySelector('.create-answer-text')?.value || '').trim();
+      const isCorrect = !!row.querySelector('.create-answer-correct')?.checked;
+      if (!answerText) return;
+      answers.push({ id: `a${idx + 1}`, text: answerText, correct: isCorrect });
+      if (isCorrect) hasCorrect = true;
+    });
+
+    if (answers.length < 2) {
+      showNotification('Każda odpowiedź musi mieć treść.', 'error');
+      return;
+    }
+
+    if (!hasCorrect) {
+      showNotification('Co najmniej jedna odpowiedź musi być poprawna.', 'error');
+      return;
+    }
+  }
+
+  const randomize = collectRandomizeFromEditor(editor);
+
+  const allQuestions = storage.getQuestions(currentDeckId);
+  const existingIds = new Set(allQuestions.map((q) => q.id));
+  let questionId = generateId();
+  while (existingIds.has(questionId)) {
+    questionId = generateId();
+  }
+
+  const newQuestion = {
+    id: questionId,
+    text,
+    answers: isFlashcardQuestion ? [] : answers,
+  };
+
+  const categorySelect = editor.querySelector('#create-question-category');
+  const selectedCategory = categorySelect ? categorySelect.value.trim() : '';
+  if (selectedCategory) {
+    newQuestion.category = selectedCategory;
+  }
+  if (explanation) {
+    newQuestion.explanation = explanation;
+  }
+  if (randomize) {
+    newQuestion.randomize = randomize;
+  }
+
+  allQuestions.push(newQuestion);
+  storage.saveQuestions(currentDeckId, allQuestions);
+
+  const cards = storage.getCards(currentDeckId);
+  cards.push(createCard(questionId, currentDeckId));
+  storage.saveCards(currentDeckId, cards);
+
+  const decks = storage.getDecks();
+  const deckIndex = decks.findIndex((d) => d.id === currentDeckId);
+  if (deckIndex >= 0) {
+    const nextDeck = { ...decks[deckIndex], questionCount: allQuestions.length };
+    if (selectedCategory && Array.isArray(nextDeck.categories)) {
+      nextDeck.categories = nextDeck.categories.map((cat) => {
+        if (cat.id !== selectedCategory) return cat;
+        return {
+          ...cat,
+          questionCount: (Number(cat.questionCount) || 0) + 1,
+        };
+      });
+    }
+    decks[deckIndex] = nextDeck;
+    storage.saveDecks(decks);
+  }
+
+  const activeSearch = getBrowseSearchQuery();
+  wrapper.remove();
+  showNotification('Pytanie zostało dodane.', 'success');
+  navigateToBrowse(currentDeckId, { searchQuery: activeSearch });
+}
+
+function getBrowseSearchQuery() {
+  const input = document.getElementById('browse-search-input');
+  return input ? input.value : '';
+}
+
+function applyBrowseSearchQuery(query) {
+  const input = document.getElementById('browse-search-input');
+  if (!input) return;
+  input.value = query;
+  input.dispatchEvent(new Event('input'));
 }
 
 function bindBrowseEditorAddButtons(editor) {
@@ -1063,54 +1410,7 @@ function saveBrowseEdit(index, editor) {
     }
   }
 
-  // Read randomize data
-  const randomizeToggle = editor.querySelector('.editor-randomize-toggle');
-  let newRandomize = undefined;
-  if (randomizeToggle && randomizeToggle.checked) {
-    newRandomize = {};
-
-    const varRows = editor.querySelectorAll('.editor-var-row');
-    for (const row of varRows) {
-      const varName = row.querySelector('.editor-var-name').value.trim();
-      const varValues = row.querySelector('.editor-var-values').value.trim();
-      if (!varName || !varValues) continue;
-      if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(varName)) continue;
-      const parts = varValues.split(',').map(s => s.trim());
-      const nums = parts.map(s => parseFloat(s)).filter(n => !isNaN(n));
-      if (nums.length === parts.length && nums.length >= 2) {
-        newRandomize[varName] = nums;
-      } else if (parts.length >= 2) {
-        newRandomize[varName] = parts;
-      }
-    }
-
-    const derivedRows = editor.querySelectorAll('.editor-derived-row');
-    if (derivedRows.length > 0) {
-      const derived = {};
-      for (const row of derivedRows) {
-        const name = row.querySelector('.editor-derived-name').value.trim();
-        const expr = row.querySelector('.editor-derived-expr').value.trim();
-        if (!name || !expr) continue;
-        if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)) {
-          derived[name] = expr;
-        }
-      }
-      if (Object.keys(derived).length > 0) newRandomize.$derived = derived;
-    }
-
-    const constraintRows = editor.querySelectorAll('.editor-constraint-row');
-    if (constraintRows.length > 0) {
-      const constraints = [];
-      for (const row of constraintRows) {
-        const expr = row.querySelector('.editor-constraint-expr').value.trim();
-        if (expr) constraints.push(expr);
-      }
-      if (constraints.length > 0) newRandomize.$constraints = constraints;
-    }
-
-    const hasVars = Object.keys(newRandomize).some(k => !k.startsWith('$'));
-    if (!hasVars && !newRandomize.$derived) newRandomize = undefined;
-  }
+  const newRandomize = collectRandomizeFromEditor(editor);
 
   // Save to storage
   const questions = getFilteredQuestions(currentDeckId);
@@ -1133,7 +1433,7 @@ function saveBrowseEdit(index, editor) {
   }
 
   showNotification('Pytanie zostało zaktualizowane.', 'success');
-  navigateToBrowse(currentDeckId);
+  navigateToBrowse(currentDeckId, { searchQuery: getBrowseSearchQuery() });
 }
 
 // --- Settings ---
@@ -1146,7 +1446,10 @@ function navigateToSettings(deckId, returnTo = 'mode-select') {
 
   showView('settings');
   const deckSettings = getSettingsForDeck(deckId);
-  renderSettings(deckSettings, DEFAULT_SETTINGS);
+  renderSettings(deckSettings, DEFAULT_SETTINGS, {
+    deckMeta,
+    canEditMeta: canEditDeckContent(deckId),
+  });
   bindSettingsEvents(deckId);
 }
 
@@ -1418,13 +1721,23 @@ function startKeyRecording(bindingKey, buttonEl) {
 // --- Deck Settings ---
 
 function bindSettingsEvents(deckId) {
+  const saveDeckMetaBtn = document.getElementById('btn-save-deck-meta');
+  if (saveDeckMetaBtn) {
+    saveDeckMetaBtn.addEventListener('click', () => {
+      saveDeckMetadata(deckId);
+    });
+  }
+
   document.getElementById('btn-save-settings').addEventListener('click', () => {
     saveDeckSettings(deckId);
   });
 
   document.getElementById('btn-restore-defaults').addEventListener('click', () => {
     storage.saveDeckSettings(deckId, { ...DEFAULT_SETTINGS });
-    renderSettings(DEFAULT_SETTINGS, DEFAULT_SETTINGS);
+    renderSettings(DEFAULT_SETTINGS, DEFAULT_SETTINGS, {
+      deckMeta: getDeckMeta(deckId),
+      canEditMeta: canEditDeckContent(deckId),
+    });
     bindSettingsEvents(deckId);
     showNotification('Przywrócono ustawienia domyślne.', 'info');
   });
@@ -1440,6 +1753,47 @@ function bindSettingsEvents(deckId) {
       returnFromSettings();
     }
   });
+}
+
+function saveDeckMetadata(deckId) {
+  const deckMeta = getDeckMeta(deckId);
+  if (!deckMeta) {
+    showNotification('Nie znaleziono talii.', 'error');
+    return;
+  }
+  if (isDeckReadOnlyContent(deckMeta)) {
+    showNotification('Talia ogólna jest tylko do odczytu.', 'info');
+    return;
+  }
+
+  const nameInput = document.getElementById('set-deck-name');
+  const descInput = document.getElementById('set-deck-description');
+  const nextName = (nameInput?.value || '').trim();
+  const nextDescription = (descInput?.value || '').trim();
+
+  if (!nextName) {
+    showNotification('Nazwa talii nie może być pusta.', 'error');
+    return;
+  }
+
+  const decks = storage.getDecks();
+  const idx = decks.findIndex((d) => d.id === deckId);
+  if (idx < 0) {
+    showNotification('Nie znaleziono talii.', 'error');
+    return;
+  }
+
+  decks[idx] = {
+    ...decks[idx],
+    name: nextName,
+    description: nextDescription,
+  };
+  storage.saveDecks(decks);
+
+  const settingsDeckName = document.getElementById('settings-deck-name');
+  if (settingsDeckName) settingsDeckName.textContent = nextName;
+
+  showNotification('Nazwa i opis talii zostały zapisane.', 'success');
 }
 
 function parseSteps(value) {
@@ -1835,20 +2189,6 @@ function bindGlobalEvents() {
     navigateToDocs();
   });
 
-  // Import button
-  document.getElementById('btn-import').addEventListener('click', () => {
-    if (!isSessionReady()) {
-      showAuthPanel('Zaloguj się lub kontynuuj jako gość.', 'info');
-      return;
-    }
-    if (sessionMode !== 'user') {
-      showNotification('Import prywatnych talii wymaga zalogowania.', 'info');
-      showAuthPanel('Aby importować własne talie, zaloguj się.', 'info');
-      return;
-    }
-    document.getElementById('file-input').click();
-  });
-
   // File input
   document.getElementById('file-input').addEventListener('change', async (e) => {
     if (!isSessionReady()) return;
@@ -1981,18 +2321,133 @@ function bindDeckListEvents() {
     });
   });
 
-  // Empty state import button
-  const emptyImportBtn = document.getElementById('btn-import-empty');
-  if (emptyImportBtn) {
-    emptyImportBtn.addEventListener('click', () => {
-      if (sessionMode !== 'user') {
-        showNotification('Import prywatnych talii wymaga zalogowania.', 'info');
-        showAuthPanel('Aby importować własne talie, zaloguj się.', 'info');
-        return;
-      }
-      document.getElementById('file-input').click();
+  const privateImportBtn = document.getElementById('btn-import-private');
+  if (privateImportBtn) {
+    privateImportBtn.addEventListener('click', () => {
+      triggerPrivateImport();
     });
   }
+
+  const createDeckBtn = document.getElementById('btn-create-deck');
+  if (createDeckBtn) {
+    createDeckBtn.addEventListener('click', () => {
+      openCreateDeckModal();
+    });
+  }
+}
+
+function openCreateDeckModal() {
+  if (sessionMode !== 'user') {
+    showNotification('Tworzenie własnych talii wymaga zalogowania.', 'info');
+    showAuthPanel('Aby tworzyć własne talie, zaloguj się.', 'info');
+    return;
+  }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal-box deck-create-modal">
+      <div class="modal-title">Nowa talia</div>
+      <div class="modal-text">Utwórz prywatną talię i dodawaj pytania ręcznie w dowolnym momencie.</div>
+      <form class="modal-form" id="create-deck-form">
+        <div class="modal-form-group">
+          <label class="modal-form-label" for="create-deck-name">Nazwa talii</label>
+          <input class="modal-form-input" id="create-deck-name" type="text" required>
+        </div>
+        <div class="modal-form-group">
+          <label class="modal-form-label" for="create-deck-id">ID talii</label>
+          <input class="modal-form-input" id="create-deck-id" type="text" required>
+          <div class="modal-form-hint">Dozwolone: litery, cyfry, myślnik i podkreślenie.</div>
+        </div>
+        <div class="modal-form-group">
+          <label class="modal-form-label" for="create-deck-description">Opis (opcjonalnie)</label>
+          <textarea class="modal-form-textarea" id="create-deck-description"></textarea>
+        </div>
+        <div class="modal-form-error" id="create-deck-error"></div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" type="button" id="btn-create-deck-cancel">Anuluj</button>
+          <button class="btn btn-primary" type="submit">Utwórz talię</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const form = overlay.querySelector('#create-deck-form');
+  const nameInput = overlay.querySelector('#create-deck-name');
+  const idInput = overlay.querySelector('#create-deck-id');
+  const descInput = overlay.querySelector('#create-deck-description');
+  const errorEl = overlay.querySelector('#create-deck-error');
+  const cancelBtn = overlay.querySelector('#btn-create-deck-cancel');
+
+  let idEditedManually = false;
+  const updateId = () => {
+    if (idEditedManually) return;
+    const sourceName = nameInput.value.trim() || 'moja-talia';
+    idInput.value = getUniqueDeckId(sourceName);
+  };
+
+  updateId();
+  nameInput.focus();
+
+  nameInput.addEventListener('input', updateId);
+  nameInput.addEventListener('input', () => { errorEl.textContent = ''; });
+  idInput.addEventListener('input', () => {
+    idEditedManually = true;
+    errorEl.textContent = '';
+  });
+  descInput.addEventListener('input', () => { errorEl.textContent = ''; });
+
+  const closeModal = () => overlay.remove();
+
+  cancelBtn.addEventListener('click', closeModal);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeModal();
+  });
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = nameInput.value.trim();
+    const deckId = idInput.value.trim();
+    const description = descInput.value.trim();
+
+    if (!name) {
+      errorEl.textContent = 'Nazwa talii jest wymagana.';
+      return;
+    }
+    if (!DECK_ID_RE.test(deckId)) {
+      errorEl.textContent = 'ID talii ma nieprawidłowy format.';
+      return;
+    }
+    if (isDeckIdTaken(deckId)) {
+      errorEl.textContent = 'To ID talii jest już zajęte.';
+      return;
+    }
+
+    const decks = storage.getDecks();
+    const deckMeta = {
+      id: deckId,
+      name,
+      description,
+      questionCount: 0,
+      importedAt: Date.now(),
+      version: 1,
+      scope: 'private',
+      source: 'user-manual',
+      readOnlyContent: false,
+    };
+
+    decks.push(deckMeta);
+    storage.saveDecks(decks);
+    storage.saveQuestions(deckId, []);
+    storage.saveCards(deckId, []);
+
+    currentCategory = null;
+    activeDeckScope = 'private';
+    closeModal();
+    showNotification(`Utworzono talię "${name}".`, 'success');
+    navigateToBrowse(deckId, { openCreateEditor: true });
+  });
 }
 
 function bindQuestionEvents(isMultiSelect) {

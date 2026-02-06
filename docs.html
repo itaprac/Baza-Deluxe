@@ -35,7 +35,6 @@
         <input type="file" id="file-input" class="file-input-hidden" accept=".json">
         <a href="docs.html" class="btn btn-secondary btn-sm">Dokumentacja</a>
         <button class="btn btn-secondary btn-sm" id="btn-app-settings">Ustawienia</button>
-        <button class="btn btn-primary btn-sm" id="btn-import">Importuj talię</button>
       </div>
       <div class="header-auth">
         <span class="auth-user-email" id="auth-user-email">Niezalogowany</span>
@@ -78,10 +77,23 @@
       <section class="docs-section" id="import">
         <h2 class="docs-section-title">Import talii</h2>
         <p>
-          Import prywatnych talii działa po zalogowaniu i zapisuje je w zakładce <strong>Moje</strong>.
+          Zarządzanie prywatnymi taliami działa po zalogowaniu i zapisuje je w zakładce <strong>Moje</strong>.
+          Możesz utworzyć talię ręcznie przyciskiem <strong>Nowa talia</strong> albo zaimportować plik JSON
+          przyciskiem <strong>Importuj talię</strong>.
+        </p>
+        <p>
           Ponowny import tej samej talii (ten sam <code>deck.id</code>) aktualizuje pytania i dodaje nowe,
           zachowując postęp nauki kart.
         </p>
+
+        <h3>Tworzenie talii ręcznie</h3>
+        <ol>
+          <li>Zaloguj się i przejdź do zakładki <strong>Moje</strong>.</li>
+          <li>Kliknij <strong>Nowa talia</strong>, podaj nazwę i ID talii.</li>
+          <li>Po utworzeniu talii wejdź w <strong>Przeglądanie</strong>.</li>
+          <li>Kliknij <strong>+ Dodaj pytanie</strong> i zapisz pytanie.</li>
+          <li>Nowe pytania możesz dodawać w dowolnym momencie, także do istniejącej talii.</li>
+        </ol>
 
         <h3>Import w 5 krokach</h3>
         <ol>
@@ -212,6 +224,10 @@
         <p>
           Lista wszystkich pytań z odpowiedziami i wyjaśnieniami. Przydatne do nauki pasywnej
           lub szybkiego sprawdzenia materiału. Dostępna wyszukiwarka pytań.
+        </p>
+        <p>
+          W prywatnych taliach w tym widoku możesz też dodawać nowe pytania przyciskiem
+          <strong>+ Dodaj pytanie</strong>.
         </p>
         <p>
           Dodatkowo, po oznaczeniu pytań flagą, pojawia się tryb <strong>Oznaczone</strong>,
@@ -706,7 +722,6 @@
     import { isSupabaseConfigured, getCurrentSession, signOutUser } from './js/supabase.js';
 
     const settingsBtn = document.getElementById('btn-app-settings');
-    const importBtn = document.getElementById('btn-import');
     const authEmail = document.getElementById('auth-user-email');
     const logoutBtn = document.getElementById('btn-auth-logout');
 
@@ -735,12 +750,6 @@
     if (settingsBtn) {
       settingsBtn.addEventListener('click', () => {
         window.location.href = 'index.html?open=app-settings';
-      });
-    }
-
-    if (importBtn) {
-      importBtn.addEventListener('click', () => {
-        window.location.href = 'index.html?open=import';
       });
     }
 
