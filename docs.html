@@ -31,7 +31,10 @@
     <header class="app-header">
       <a href="index.html" class="app-title">Baza Deluxe</a>
       <div>
-        <a href="index.html" class="btn btn-secondary btn-sm">Powrót do aplikacji</a>
+        <input type="file" id="file-input" class="file-input-hidden" accept=".json">
+        <a href="docs.html" class="btn btn-secondary btn-sm">Dokumentacja</a>
+        <button class="btn btn-secondary btn-sm" id="btn-app-settings">Ustawienia</button>
+        <button class="btn btn-primary btn-sm" id="btn-import">Importuj talię</button>
       </div>
     </header>
 
@@ -56,11 +59,13 @@
         <h2 class="docs-section-title">Czym jest Baza Deluxe</h2>
         <p>
           Baza Deluxe to aplikacja webowa do nauki z wykorzystaniem fiszek i powtarzania rozłożonego w czasie.
-          Działa całkowicie w przeglądarce — dane są przechowywane w localStorage, nie wymagany jest serwer ani konto.
+          Działa całkowicie w przeglądarce — dane są przechowywane lokalnie w <code>localStorage</code>,
+          bez konta i bez wysyłania danych na zewnętrzny backend.
         </p>
         <p>
           Aplikacja obsługuje talie pytań wielokrotnego wyboru z wieloma poprawnymi odpowiedziami,
-          kategoriami, wyjaśnieniami i trzema trybami nauki: Anki (powtarzanie rozłożone), Test i Przeglądanie.
+          kategoriami, wyjaśnieniami i trzema głównymi trybami nauki:
+          Anki (powtarzanie rozłożone), Test i Przeglądanie.
         </p>
       </section>
 
@@ -68,48 +73,81 @@
       <section class="docs-section" id="import">
         <h2 class="docs-section-title">Import talii</h2>
         <p>
-          Talie importuje się przez pliki JSON. Kliknij przycisk <strong>Importuj talię</strong> na stronie głównej
-          i wybierz plik JSON. Ponowny import tej samej talii (ten sam <code>id</code>) zaktualizuje istniejące pytania
-          i doda nowe, zachowując postęp nauki.
+          Talie importuje się przez pliki JSON. Ponowny import tej samej talii
+          (ten sam <code>deck.id</code>) aktualizuje pytania i dodaje nowe, zachowując postęp nauki kart.
         </p>
-        <h3>Format JSON</h3>
-        <p>Plik JSON powinien mieć następującą strukturę:</p>
+
+        <h3>Import w 4 krokach</h3>
+        <ol>
+          <li>Na stronie głównej kliknij <strong>Importuj talię</strong>.</li>
+          <li>Wskaż plik <code>.json</code> z talią.</li>
+          <li>Po poprawnym imporcie zobaczysz komunikat typu: <code>Zaimportowano "Nazwa talii": ...</code>.</li>
+          <li>Talia pojawi się na liście i będzie gotowa do nauki.</li>
+        </ol>
+
+        <h3>Format JSON (zgodny z aplikacją)</h3>
+        <p>Plik musi mieć sekcję <code>deck</code> oraz tablicę <code>questions</code>:</p>
         <pre class="docs-code"><code>{
-  "id": "moja-talia",
-  "name": "Nazwa talii",
-  "description": "Opcjonalny opis",
-  "categories": [
-    { "id": "cat1", "name": "1. Kategoria pierwsza" },
-    { "id": "cat2", "name": "2. Kategoria druga" }
-  ],
+  "deck": {
+    "id": "moja-talia",
+    "name": "Nazwa talii",
+    "description": "Opcjonalny opis",
+    "version": 1,
+    "categories": [
+      { "id": "cat1", "name": "1. Kategoria pierwsza", "questionCount": 20 },
+      { "id": "cat2", "name": "2. Kategoria druga", "questionCount": 15 }
+    ]
+  },
   "questions": [
     {
       "id": "q1",
       "text": "Treść pytania?",
       "category": "cat1",
       "answers": [
-        { "id": "a1", "text": "Odpowiedź A", "correct": true },
-        { "id": "a2", "text": "Odpowiedź B", "correct": false },
-        { "id": "a3", "text": "Odpowiedź C", "correct": true },
-        { "id": "a4", "text": "Odpowiedź D", "correct": false }
+        { "id": "a", "text": "Odpowiedź A", "correct": true },
+        { "id": "b", "text": "Odpowiedź B", "correct": false },
+        { "id": "c", "text": "Odpowiedź C", "correct": true },
+        { "id": "d", "text": "Odpowiedź D", "correct": false }
       ],
       "explanation": "Opcjonalne wyjaśnienie."
     }
   ]
 }</code></pre>
-        <h3>Wymagane pola</h3>
+
+        <h3>Walidacja importu (co jest wymagane)</h3>
         <ul>
-          <li><code>id</code> — unikalny identyfikator talii (string)</li>
-          <li><code>name</code> — nazwa wyświetlana w aplikacji</li>
-          <li><code>questions</code> — tablica pytań, każde z <code>id</code>, <code>text</code>, <code>answers</code></li>
-          <li>Każda odpowiedź musi mieć <code>id</code>, <code>text</code> i <code>correct</code> (boolean)</li>
+          <li><code>deck.id</code> i <code>deck.name</code> są wymagane.</li>
+          <li><code>deck.id</code> może zawierać tylko litery, cyfry, myślniki i podkreślenia.</li>
+          <li><code>questions</code> musi być niepustą tablicą.</li>
+          <li>Każde pytanie musi mieć unikalne <code>id</code> i pole <code>text</code>.</li>
+          <li>Jeśli pytanie ma odpowiedzi, musi mieć <code>0</code> (fiszka) albo <code>2+</code> odpowiedzi.
+            Pytanie z dokładnie jedną odpowiedzią jest odrzucane.</li>
+          <li>Każda odpowiedź musi mieć <code>id</code>, <code>text</code> oraz
+            <code>correct</code> (boolean) lub <code>correctWhen</code> (dla dynamicznej poprawności).</li>
+          <li>W pytaniu testowym musi istnieć co najmniej jedna odpowiedź poprawna.</li>
         </ul>
-        <h3>Opcjonalne pola</h3>
+
+        <h3>Pytania typu fiszka</h3>
+        <p>
+          Fiszka to pytanie bez tablicy <code>answers</code> lub z pustą tablicą.
+          Wtedy w trybie nauki pokazujesz odpowiedź, a potem oceniasz kartę jak w Anki.
+        </p>
+
+        <h3>Pola opcjonalne</h3>
         <ul>
-          <li><code>description</code> — opis talii</li>
-          <li><code>categories</code> — lista kategorii do filtrowania pytań</li>
-          <li><code>category</code> w pytaniu — przypisanie do kategorii</li>
-          <li><code>explanation</code> w pytaniu — wyjaśnienie wyświetlane po odpowiedzi</li>
+          <li><code>deck.description</code>, <code>deck.version</code></li>
+          <li><code>deck.categories</code> (dla widoku wyboru kategorii; każda kategoria powinna mieć <code>id</code>, <code>name</code>, <code>questionCount</code>)</li>
+          <li><code>category</code> w pytaniu (ID kategorii)</li>
+          <li><code>explanation</code> w pytaniu</li>
+          <li><code>randomize</code> w pytaniu (losowe wartości / szablony)</li>
+        </ul>
+
+        <h3>Najczęstsze błędy importu</h3>
+        <ul>
+          <li>Brak sekcji <code>deck</code> albo <code>deck.id</code>/<code>deck.name</code>.</li>
+          <li>Powielone identyfikatory pytań (<code>questions[*].id</code>).</li>
+          <li>Pytanie z jedną odpowiedzią (musi być 0 lub minimum 2).</li>
+          <li>Brak odpowiedzi poprawnej w pytaniu testowym.</li>
         </ul>
 
         <h3>Wbudowane talie (katalog data/)</h3>
@@ -127,7 +165,7 @@
           <li>Talia załaduje się automatycznie przy pierwszym uruchomieniu aplikacji</li>
         </ul>
         <p>
-          Jeśli talia o tym samym <code>id</code> już istnieje w localStorage, ponowny import zaktualizuje
+          Jeśli talia o tym samym <code>deck.id</code> już istnieje w localStorage, ponowny import zaktualizuje
           pytania i doda nowe, zachowując postęp nauki.
         </p>
       </section>
@@ -162,6 +200,10 @@
         <p>
           Lista wszystkich pytań z odpowiedziami i wyjaśnieniami. Przydatne do nauki pasywnej
           lub szybkiego sprawdzenia materiału. Dostępna wyszukiwarka pytań.
+        </p>
+        <p>
+          Dodatkowo, po oznaczeniu pytań flagą, pojawia się tryb <strong>Oznaczone</strong>,
+          który pozwala szybko wrócić do pytań wymagających uwagi.
         </p>
       </section>
 
@@ -322,6 +364,11 @@
               <td><kbd>1</kbd>-<kbd>9</kbd></td>
               <td>Zaznacz odpowiedź o danym numerze (w fazie pytania)</td>
             </tr>
+            <tr>
+              <td>Oznacz pytanie flagą</td>
+              <td><kbd>F</kbd></td>
+              <td>Przełącza flagę pytania w trybie nauki</td>
+            </tr>
           </tbody>
         </table>
         <p>
@@ -338,11 +385,12 @@
         <ul>
           <li><strong>Motyw kolorystyczny</strong> — 5 palet kolorów (Academic Noir, Ocean, Forest, Midnight, Lavender)</li>
           <li><strong>Tryb wyświetlania</strong> — Jasny, Ciemny lub Automatyczny (wg systemu)</li>
-          <li><strong>Szerokość układu</strong> — Kompaktowy (800px), Normalny (960px), Szeroki (1200px), Pełna szerokość</li>
+          <li><strong>Szerokość układu</strong> — 4 presety (35%, 40%, 50%, 65%) oraz własna wartość (20-100%)</li>
           <li><strong>Skróty klawiszowe</strong> — zmiana klawiszy do nawigacji w trybie nauki</li>
           <li><strong>Mieszanie odpowiedzi</strong> — losowa kolejność odpowiedzi</li>
-          <li><strong>Kolejność pytań</strong> — losowa lub wg tematu (test)</li>
-          <li><strong>Losowe wartości</strong> — zmienne liczby w pytaniach obliczeniowych</li>
+          <li><strong>Kolejność pytań</strong> — w teście: losowa albo po kolei (wg kolejności w pliku)</li>
+          <li><strong>Losowe wartości w pytaniach obliczeniowych</strong> — losowanie dla pytań z wbudowanym randomizerem</li>
+          <li><strong>Oznaczone pytania w trybie Anki</strong> — czy oflagowane pytania mają trafiać do zwykłej sesji Anki</li>
         </ul>
 
         <h3>Ustawienia talii</h3>
@@ -372,8 +420,12 @@
         <p>
           Pytania mogą zawierać opcjonalne pole <code>randomize</code>, które definiuje zmienne losowe.
           Przy każdym wyświetleniu pytania losowane są nowe wartości, a w treści, odpowiedziach
-          i wyjaśnieniu podstawiane są obliczone wyniki. Wymaga włączenia opcji
-          <strong>Losowe wartości w pytaniach obliczeniowych</strong> w ustawieniach aplikacji.
+          i wyjaśnieniu podstawiane są obliczone wyniki.
+        </p>
+        <p>
+          Dla pytań opartych o pole <code>randomize</code> losowanie działa automatycznie.
+          Przełącznik <strong>Losowe wartości w pytaniach obliczeniowych</strong> dotyczy
+          dodatkowych, wbudowanych randomizerów zdefiniowanych w kodzie aplikacji.
         </p>
 
         <h3>Format pola randomize</h3>
@@ -638,5 +690,41 @@
 
     </div>
   </div>
+  <script type="module">
+    import { importFromFile } from './js/importer.js';
+    import { showNotification } from './js/ui.js';
+
+    const settingsBtn = document.getElementById('btn-app-settings');
+    const importBtn = document.getElementById('btn-import');
+    const fileInput = document.getElementById('file-input');
+
+    if (settingsBtn) {
+      settingsBtn.addEventListener('click', () => {
+        window.location.href = 'index.html?open=app-settings';
+      });
+    }
+
+    if (importBtn && fileInput) {
+      importBtn.addEventListener('click', () => {
+        fileInput.click();
+      });
+
+      fileInput.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        e.target.value = '';
+
+        const result = await importFromFile(file);
+        if (result.valid) {
+          showNotification(
+            `Zaimportowano "${result.deck.name}": ${result.added} nowych, ${result.updated} istniejących, ${result.total} łącznie.`,
+            'success'
+          );
+        } else {
+          showNotification(`Błąd importu: ${result.errors[0]}`, 'error');
+        }
+      });
+    }
+  </script>
 </body>
 </html>

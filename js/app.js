@@ -30,6 +30,14 @@ import {
 } from './ui.js';
 import { shuffle, isFlashcard } from './utils.js';
 import { hasRandomizer, hasTemplate, randomize } from './randomizers.js';
+import {
+  isSupabaseConfigured,
+  getCurrentSession,
+  onAuthStateChange,
+  signInWithPassword,
+  signUpWithPassword,
+  signOutUser,
+} from './supabase.js';
 
 // --- App State ---
 
@@ -72,6 +80,9 @@ let selectedAnswerIds = new Set();
 let studiedCount = 0;
 let sessionTotal = 0;
 let waitTimer = null;
+let currentUser = null;
+let authSubscription = null;
+let authEventsBound = false;
 
 // Test mode state
 let testQuestions = [];
@@ -98,38 +109,15 @@ function getSettingsForDeck(deckId) {
 
 // --- Initialization ---
 
-function init() {
-  // Load app settings
-  const savedApp = storage.getAppSettings();
-  if (savedApp) {
-    appSettings = {
-      ...DEFAULT_APP_SETTINGS,
-      ...savedApp,
-      keybindings: { ...DEFAULT_APP_SETTINGS.keybindings, ...(savedApp.keybindings || {}) },
-    };
-  }
-
-  // Apply theme, color theme, and layout width
-  applyTheme(appSettings.theme);
-  applyColorTheme(appSettings.colorTheme);
-  applyLayoutWidth(appSettings.layoutWidth);
-
-  // Load font scale
-  const savedFont = localStorage.getItem('baza_fontScale');
-  if (savedFont !== null) {
-    const parsed = parseFloat(savedFont);
-    if (!isNaN(parsed) && parsed > 0) fontScale = parsed;
-  }
-  applyFontScale();
-
-  // Bind events
+async function init() {
   bindGlobalEvents();
+  bindAuthEvents();
 
   // Browser back button support
   history.pushState(null, '', '');
   window.addEventListener('popstate', () => {
     const activeView = document.querySelector('.view.active');
-    if (!activeView || activeView.id === 'view-deck-list') {
+    if (!activeView || activeView.id === 'view-deck-list' || activeView.id === 'view-auth') {
       return; // allow leaving the app from the main screen
     }
     // Maintain the history buffer so next back press also works
@@ -141,15 +129,105 @@ function init() {
     }
   });
 
-  // Try loading built-in decks
-  loadBuiltInDecks();
+  if (!isSupabaseConfigured()) {
+    resetUserPreferences();
+    showLoggedOutState('Skonfiguruj Supabase w index.html (__BAZA_SUPABASE_URL i __BAZA_SUPABASE_ANON_KEY).', 'error');
+    return;
+  }
 
-  // Show deck list
-  navigateToDeckList();
+  try {
+    const session = await getCurrentSession();
+    if (session?.user) {
+      await bootstrapUserSession(session.user);
+      handleStartupOpen();
+    } else {
+      resetUserPreferences();
+      showLoggedOutState();
+    }
+  } catch (error) {
+    resetUserPreferences();
+    showLoggedOutState(`Błąd inicjalizacji Supabase: ${error.message}`, 'error');
+  }
+
+  if (!authSubscription) {
+    authSubscription = onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        if (currentUser?.id !== session.user.id) {
+          try {
+            await bootstrapUserSession(session.user);
+            handleStartupOpen();
+          } catch (error) {
+            showLoggedOutState(`Błąd synchronizacji danych: ${error.message}`, 'error');
+          }
+        }
+        return;
+      }
+      if (currentUser) {
+        showLoggedOutState('Wylogowano.', 'info');
+      }
+    });
+  }
+}
+
+function handleStartupOpen() {
+  const params = new URLSearchParams(window.location.search);
+  const open = params.get('open');
+  if (!open) return;
+
+  if (open === 'app-settings') {
+    navigateToAppSettings();
+  } else if (open === 'import') {
+    const fileInput = document.getElementById('file-input');
+    if (fileInput) fileInput.click();
+  }
+
+  const url = new URL(window.location.href);
+  url.searchParams.delete('open');
+  history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
 }
 
 function applyFontScale() {
   document.documentElement.style.setProperty('--font-scale', fontScale);
+}
+
+function resetUserPreferences() {
+  appSettings = {
+    ...DEFAULT_APP_SETTINGS,
+    keybindings: { ...DEFAULT_APP_SETTINGS.keybindings },
+  };
+  fontScale = DEFAULT_FONT_SCALE;
+  applyTheme(appSettings.theme);
+  applyColorTheme(appSettings.colorTheme);
+  applyLayoutWidth(appSettings.layoutWidth);
+  applyFontScale();
+}
+
+function loadUserPreferences() {
+  const savedApp = storage.getAppSettings();
+  if (savedApp) {
+    appSettings = {
+      ...DEFAULT_APP_SETTINGS,
+      ...savedApp,
+      keybindings: { ...DEFAULT_APP_SETTINGS.keybindings, ...(savedApp.keybindings || {}) },
+    };
+  } else {
+    appSettings = {
+      ...DEFAULT_APP_SETTINGS,
+      keybindings: { ...DEFAULT_APP_SETTINGS.keybindings },
+    };
+  }
+
+  applyTheme(appSettings.theme);
+  applyColorTheme(appSettings.colorTheme);
+  applyLayoutWidth(appSettings.layoutWidth);
+
+  const savedFont = storage.getFontScale();
+  if (typeof savedFont === 'number' && savedFont > 0) {
+    fontScale = savedFont;
+  } else {
+    fontScale = DEFAULT_FONT_SCALE;
+  }
+  applyFontScale();
 }
 
 function changeFontSize(delta) {
@@ -157,7 +235,47 @@ function changeFontSize(delta) {
   if (newScale <= 0) return;
   fontScale = newScale;
   applyFontScale();
-  localStorage.setItem('baza_fontScale', fontScale);
+  storage.saveFontScale(fontScale);
+}
+
+function updateHeaderAuthState(isAuthenticated, email = '') {
+  const actions = document.getElementById('header-app-actions');
+  const emailEl = document.getElementById('auth-user-email');
+  const logoutBtn = document.getElementById('btn-auth-logout');
+
+  if (actions) actions.style.display = isAuthenticated ? 'flex' : 'none';
+  if (logoutBtn) logoutBtn.style.display = isAuthenticated ? '' : 'none';
+  if (emailEl) emailEl.textContent = isAuthenticated ? email : 'Niezalogowany';
+}
+
+function showAuthMessage(message = '', type = 'info') {
+  const el = document.getElementById('auth-message');
+  if (!el) return;
+  el.textContent = message;
+  el.className = `auth-message ${type}`;
+}
+
+function showLoggedOutState(message = '', type = 'info') {
+  clearWaitTimer();
+  currentUser = null;
+  storage.clearSession();
+  resetUserPreferences();
+  updateHeaderAuthState(false);
+  showView('auth');
+  showAuthMessage(message, type);
+}
+
+async function bootstrapUserSession(user) {
+  currentUser = user;
+  updateHeaderAuthState(true, user.email || 'Zalogowany użytkownik');
+  showView('auth');
+  showAuthMessage('Ładowanie danych użytkownika...', 'info');
+
+  await storage.initForUser(user.id);
+  loadUserPreferences();
+  await loadBuiltInDecks();
+  navigateToDeckList();
+  showAuthMessage('');
 }
 
 let mediaQueryCleanup = null;
@@ -249,6 +367,7 @@ function handleKeyDown(e) {
 }
 
 async function loadBuiltInDecks() {
+  if (!currentUser) return;
   const decks = storage.getDecks();
   const builtInFiles = ['data/poi-egzamin.json', 'data/sample-exam.json', 'data/si-egzamin.json', 'data/randomize-demo.json', 'data/ii-egzamin.json', 'data/ii-egzamin-fiszki.json', 'data/zi2-egzamin.json'];
 
@@ -267,6 +386,10 @@ async function loadBuiltInDecks() {
 // --- Navigation ---
 
 function navigateToDeckList() {
+  if (!currentUser) {
+    showView('auth');
+    return;
+  }
   clearWaitTimer();
   studyPhase = null;
   studyingFlagged = false;
@@ -1274,6 +1397,122 @@ function showQuestionForCard(card) {
 
 // --- Event Binding ---
 
+function getAuthFormValues() {
+  const emailInput = document.getElementById('auth-email');
+  const passwordInput = document.getElementById('auth-password');
+  const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
+  const password = passwordInput ? passwordInput.value : '';
+  return { email, password };
+}
+
+function setAuthFormBusy(isBusy) {
+  const loginBtn = document.getElementById('btn-auth-login');
+  const signupBtn = document.getElementById('btn-auth-signup');
+  if (loginBtn) loginBtn.disabled = isBusy;
+  if (signupBtn) signupBtn.disabled = isBusy;
+}
+
+function validateAuthInputs(email, password) {
+  if (!email || !password) {
+    showAuthMessage('Podaj e-mail i hasło.', 'error');
+    return false;
+  }
+  if (password.length < 6) {
+    showAuthMessage('Hasło musi mieć co najmniej 6 znaków.', 'error');
+    return false;
+  }
+  return true;
+}
+
+async function handleAuthLogin() {
+  const { email, password } = getAuthFormValues();
+  if (!validateAuthInputs(email, password)) return;
+
+  setAuthFormBusy(true);
+  showAuthMessage('Logowanie...', 'info');
+
+  try {
+    const { data, error } = await signInWithPassword(email, password);
+    if (error) throw error;
+    if (!data?.user) {
+      throw new Error('Nie udało się pobrać danych użytkownika po logowaniu.');
+    }
+
+    await bootstrapUserSession(data.user);
+    handleStartupOpen();
+  } catch (error) {
+    showAuthMessage(error.message || 'Błąd logowania.', 'error');
+  } finally {
+    setAuthFormBusy(false);
+  }
+}
+
+async function handleAuthSignup() {
+  const { email, password } = getAuthFormValues();
+  if (!validateAuthInputs(email, password)) return;
+
+  setAuthFormBusy(true);
+  showAuthMessage('Tworzenie konta...', 'info');
+
+  try {
+    const { data, error } = await signUpWithPassword(email, password);
+    if (error) throw error;
+
+    if (data?.session?.user) {
+      await bootstrapUserSession(data.session.user);
+      handleStartupOpen();
+      return;
+    }
+
+    showAuthMessage('Konto utworzone. Potwierdź rejestrację w e-mailu i zaloguj się.', 'info');
+  } catch (error) {
+    showAuthMessage(error.message || 'Błąd rejestracji.', 'error');
+  } finally {
+    setAuthFormBusy(false);
+  }
+}
+
+function bindAuthEvents() {
+  if (authEventsBound) return;
+  authEventsBound = true;
+
+  const authForm = document.getElementById('auth-form');
+  if (authForm) {
+    authForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await handleAuthLogin();
+    });
+  }
+
+  const loginBtn = document.getElementById('btn-auth-login');
+  if (loginBtn) {
+    loginBtn.addEventListener('click', async () => {
+      await handleAuthLogin();
+    });
+  }
+
+  const signupBtn = document.getElementById('btn-auth-signup');
+  if (signupBtn) {
+    signupBtn.addEventListener('click', async () => {
+      await handleAuthSignup();
+    });
+  }
+
+  const logoutBtn = document.getElementById('btn-auth-logout');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', async () => {
+      try {
+        const { error } = await signOutUser();
+        if (error) throw error;
+      } catch (error) {
+        showNotification(`Błąd wylogowania: ${error.message}`, 'error');
+      } finally {
+        showLoggedOutState('Wylogowano.', 'info');
+      }
+    });
+  }
+}
+
 function bindGlobalEvents() {
   // Keyboard shortcuts
   document.addEventListener('keydown', handleKeyDown);
@@ -1284,21 +1523,34 @@ function bindGlobalEvents() {
 
   // Home button (title)
   document.getElementById('btn-go-home').addEventListener('click', () => {
+    if (!currentUser) {
+      showView('auth');
+      return;
+    }
     navigateToDeckList();
   });
 
   // App settings button
   document.getElementById('btn-app-settings').addEventListener('click', () => {
+    if (!currentUser) {
+      showView('auth');
+      return;
+    }
     navigateToAppSettings();
   });
 
   // Import button
   document.getElementById('btn-import').addEventListener('click', () => {
+    if (!currentUser) {
+      showView('auth');
+      return;
+    }
     document.getElementById('file-input').click();
   });
 
   // File input
   document.getElementById('file-input').addEventListener('change', async (e) => {
+    if (!currentUser) return;
     const file = e.target.files[0];
     if (!file) return;
     e.target.value = ''; // reset
@@ -1852,4 +2104,10 @@ function clearWaitTimer() {
 
 // --- Start ---
 
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', () => {
+  init().catch((error) => {
+    console.error('Initialization failed:', error);
+    showNotification(`Błąd startu aplikacji: ${error.message}`, 'error');
+    showLoggedOutState('Nie udało się uruchomić aplikacji.', 'error');
+  });
+});
