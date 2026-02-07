@@ -6,7 +6,13 @@
   <title>Dokumentacja — Bazunia</title>
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/components.css">
-  <script src="/js/runtime-config.js"></script>
+  <script src="/api/runtime-config"></script>
+  <script>
+    // Vercel: /api/runtime-config, local Docker/dev fallback: /js/runtime-config.js
+    if (!window.__BAZUNIA_SUPABASE_URL && !window.__BAZA_SUPABASE_URL) {
+      document.write('<script src="/js/runtime-config.js"><\\/script>');
+    }
+  </script>
   <script>
     // Apply saved theme, color theme, and layout width from localStorage
     (function() {

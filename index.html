@@ -8,7 +8,13 @@
   <link rel="stylesheet" href="/css/components.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <script src="/js/runtime-config.js"></script>
+  <script src="/api/runtime-config"></script>
+  <script>
+    // Vercel: /api/runtime-config, local Docker/dev fallback: /js/runtime-config.js
+    if (!window.__BAZUNIA_SUPABASE_URL && !window.__BAZA_SUPABASE_URL) {
+      document.write('<script src="/js/runtime-config.js"><\\/script>');
+    }
+  </script>
 </head>
 <body>
   <div class="app-container">
