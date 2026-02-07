@@ -391,6 +391,15 @@
   transform: translateY(-2px);
 }
 
+.deck-card.is-public-hidden {
+  opacity: 0.68;
+  border-style: dashed;
+}
+
+.deck-card.is-public-hidden:hover {
+  opacity: 0.82;
+}
+
 .deck-card-header {
   display: flex;
   align-items: flex-start;
@@ -2872,6 +2881,12 @@
     flex-wrap: wrap;
   }
 
+  .user-menu {
+    right: 50%;
+    transform: translateX(50%);
+    min-width: min(260px, calc(100vw - 32px));
+  }
+
   .app-title {
     justify-self: center;
   }
@@ -2992,6 +3007,25 @@
 
   .color-theme-option {
     min-width: calc(50% - 4px);
+  }
+
+  .admin-table {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .admin-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-search-input {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .admin-pager {
+    justify-content: space-between;
   }
 }
 

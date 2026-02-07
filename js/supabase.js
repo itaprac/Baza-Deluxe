@@ -84,6 +84,109 @@ export async function sendPasswordResetEmail(email) {
   });
 }
 
+// --- Role and admin RPC ---
+
+export async function fetchCurrentUserRole() {
+  const client = ensureClient();
+  const { data, error } = await client.rpc('current_app_role');
+  if (error) throw error;
+  return typeof data === 'string' ? data : 'user';
+}
+
+export async function fetchAdminUsers() {
+  const client = ensureClient();
+  const { data, error } = await client.rpc('admin_list_users');
+  if (error) throw error;
+  return data || [];
+}
+
+export async function setUserRole(targetUserId, nextRole) {
+  const client = ensureClient();
+  const { error } = await client.rpc('admin_set_user_role', {
+    target_user_id: targetUserId,
+    next_role: nextRole,
+  });
+  if (error) throw error;
+}
+
+// --- Global public decks ---
+
+const PUBLIC_DECK_COLUMNS = [
+  'id',
+  'name',
+  'description',
+  'deck_group',
+  'categories',
+  'questions',
+  'question_count',
+  'version',
+  'source',
+  'is_archived',
+  'updated_by',
+  'created_at',
+  'updated_at',
+].join(',');
+
+export async function fetchPublicDecks(options = {}) {
+  const includeArchived = options.includeArchived === true;
+  const client = ensureClient();
+
+  let query = client
+    .from('public_decks')
+    .select(PUBLIC_DECK_COLUMNS)
+    .order('name', { ascending: true });
+
+  if (!includeArchived) {
+    query = query.eq('is_archived', false);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data || [];
+}
+
+export async function upsertPublicDeck(deckPayload) {
+  const client = ensureClient();
+  const { data, error } = await client
+    .from('public_decks')
+    .upsert(deckPayload, { onConflict: 'id' })
+    .select(PUBLIC_DECK_COLUMNS)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function archivePublicDeck(deckId) {
+  const client = ensureClient();
+  const { error } = await client
+    .from('public_decks')
+    .update({ is_archived: true })
+    .eq('id', deckId);
+
+  if (error) throw error;
+}
+
+export async function restorePublicDeck(deckId) {
+  const client = ensureClient();
+  const { error } = await client
+    .from('public_decks')
+    .update({ is_archived: false })
+    .eq('id', deckId);
+
+  if (error) throw error;
+}
+
+export async function hidePublicDeck(deckId) {
+  return archivePublicDeck(deckId);
+}
+
+export async function unhidePublicDeck(deckId) {
+  return restorePublicDeck(deckId);
+}
+
+// --- User storage ---
+
 export async function fetchAllUserStorage(userId) {
   const client = ensureClient();
   const { data, error } = await client

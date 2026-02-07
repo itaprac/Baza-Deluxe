@@ -22,8 +22,18 @@
         <button class="btn btn-secondary btn-sm" id="btn-app-settings">Ustawienia</button>
       </div>
       <div class="header-auth">
-        <span class="auth-user-email" id="auth-user-email">Niezalogowany</span>
-        <button class="btn btn-secondary btn-sm" id="btn-auth-logout" style="display: none;">Wyloguj</button>
+        <button class="avatar-trigger" id="btn-user-menu" type="button" aria-haspopup="menu" aria-expanded="false">
+          <span class="avatar-circle" id="auth-user-avatar">?</span>
+        </button>
+        <div class="user-menu" id="user-menu" hidden>
+          <div class="user-menu-head">
+            <div class="user-menu-email" id="auth-menu-email">Niezalogowany</div>
+            <div class="user-menu-role" id="auth-menu-role">gość</div>
+          </div>
+          <button class="user-menu-item" id="btn-open-user-view" type="button" style="display: none;">Mój profil</button>
+          <button class="user-menu-item" id="btn-open-admin-view" type="button" style="display: none;">Panel admina</button>
+          <button class="user-menu-item danger" id="btn-auth-logout" type="button" style="display: none;">Wyloguj</button>
+        </div>
       </div>
     </header>
 
@@ -162,6 +172,26 @@
         <div></div>
       </div>
       <div id="app-settings-content"></div>
+    </div>
+
+    <!-- === USER PROFILE VIEW === -->
+    <div id="view-user" class="view">
+      <div class="study-header">
+        <button class="btn-back" id="btn-back-from-user">&larr; Powrót</button>
+        <span class="deck-name">Profil użytkownika</span>
+        <div></div>
+      </div>
+      <div id="user-profile-content"></div>
+    </div>
+
+    <!-- === ADMIN VIEW === -->
+    <div id="view-admin" class="view">
+      <div class="study-header">
+        <button class="btn-back" id="btn-back-from-admin">&larr; Powrót</button>
+        <span class="deck-name">Panel admina</span>
+        <div></div>
+      </div>
+      <div id="admin-panel-content"></div>
     </div>
 
     <!-- === DOCS VIEW === -->

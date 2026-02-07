@@ -10,11 +10,18 @@ export function renderDeckList(decks, statsMap, options = {}) {
   const sessionMode = options.sessionMode === 'user' ? 'user' : 'guest';
   const showPrivateLocked = !!options.showPrivateLocked;
   const deckListMode = options.deckListMode === 'classic' ? 'classic' : 'compact';
+  const canEditPublicDecks = options.canEditPublicDecks === true;
+  const showPrivateArchived = options.showPrivateArchived === true;
+  const hasArchivedPrivate = options.hasArchivedPrivate === true;
+  const privateArchiveToggleHtml = activeScope === 'private' && sessionMode === 'user' && (hasArchivedPrivate || showPrivateArchived)
+    ? `<button class="btn btn-secondary" id="btn-toggle-private-archived">${showPrivateArchived ? 'Pokaż aktywne' : 'Pokaż archiwalne'}</button>`
+    : '';
   const privateActionsHtml = activeScope === 'private' && sessionMode === 'user'
     ? `
       <div class="private-deck-actions">
-        <button class="btn btn-primary" id="btn-create-deck">Nowa talia</button>
-        <button class="btn btn-secondary" id="btn-import-private">Importuj talię</button>
+        ${showPrivateArchived ? '' : '<button class="btn btn-primary" id="btn-create-deck">Nowa talia</button>'}
+        ${showPrivateArchived ? '' : '<button class="btn btn-secondary" id="btn-import-private">Importuj talię</button>'}
+        ${privateArchiveToggleHtml}
       </div>
     `
     : '';
@@ -41,10 +48,14 @@ export function renderDeckList(decks, statsMap, options = {}) {
   }
 
   if (decks.length === 0) {
-    const emptyTitle = activeScope === 'public' ? 'Brak talii ogólnych' : 'Brak własnych talii';
+    const emptyTitle = activeScope === 'public'
+      ? 'Brak talii ogólnych'
+      : (showPrivateArchived ? 'Brak zarchiwizowanych talii' : 'Brak własnych talii');
     const emptyText = activeScope === 'public'
       ? 'Talie ogólne nie są jeszcze dostępne.'
-      : 'Utwórz własną talię ręcznie lub zaimportuj plik JSON z pytaniami.';
+      : (showPrivateArchived
+        ? 'Archiwum prywatne jest puste.'
+        : 'Utwórz własną talię ręcznie lub zaimportuj plik JSON z pytaniami.');
 
     container.innerHTML = `
       ${tabsHtml}
@@ -68,16 +79,26 @@ export function renderDeckList(decks, statsMap, options = {}) {
 
   const renderDeckCard = (deck) => {
     const stats = statsMap[deck.id] || { dueReview: 0, dueLearning: 0, newAvailable: 0, totalCards: 0 };
-    const readOnlyContent = deck.readOnlyContent === true;
-    const deckKindBadge = readOnlyContent
-      ? '<span class="deck-scope-badge">Ogólna</span>'
-      : '<span class="deck-scope-badge private">Prywatna</span>';
-    const readOnlyHint = readOnlyContent
+    const isPublicDeck = deck.scope === 'public';
+    const isHiddenPublicDeck = isPublicDeck && deck.adminOnly === true;
+    const isArchivedPrivateDeck = !isPublicDeck && deck.isArchived === true;
+    const readOnlyContent = isPublicDeck ? !canEditPublicDecks : deck.readOnlyContent === true;
+    const deckKindBadge = isPublicDeck
+      ? `<span class="deck-scope-badge">${isHiddenPublicDeck ? 'Ogólna (ukryta)' : 'Ogólna'}</span>`
+      : `<span class="deck-scope-badge private">${isArchivedPrivateDeck ? 'Prywatna (archiwum)' : 'Prywatna'}</span>`;
+    const readOnlyHint = isPublicDeck && readOnlyContent
       ? '<div class="deck-card-readonly-hint">Treść talii tylko do odczytu.</div>'
       : '';
+    const hiddenHint = isHiddenPublicDeck
+      ? '<div class="deck-card-readonly-hint">Ta talia jest ukryta dla zwykłych użytkowników.</div>'
+      : '';
+    const deleteBtnLabel = isPublicDeck
+      ? (isHiddenPublicDeck ? 'Pokaż' : 'Ukryj')
+      : (isArchivedPrivateDeck ? 'Przywróć' : 'Archiwizuj');
+    const showStudyActions = !isArchivedPrivateDeck;
 
     return `
-      <div class="deck-card" data-deck-id="${deck.id}" data-read-only="${readOnlyContent ? '1' : '0'}">
+      <div class="deck-card${isHiddenPublicDeck ? ' is-public-hidden' : ''}" data-deck-id="${deck.id}" data-read-only="${readOnlyContent ? '1' : '0'}" data-public-hidden="${isHiddenPublicDeck ? '1' : '0'}" data-private-archived="${isArchivedPrivateDeck ? '1' : '0'}">
         <div class="deck-card-header">
           <div class="deck-card-title">${escapeHtml(deck.name)}</div>
           ${deckKindBadge}
@@ -86,6 +107,7 @@ export function renderDeckList(decks, statsMap, options = {}) {
           ${deck.description ? escapeHtml(deck.description) : '&nbsp;'}
         </div>
         ${readOnlyHint}
+        ${hiddenHint}
         <div class="deck-card-stats">
           <div class="deck-stat new">
             <span class="stat-value">${stats.newAvailable}</span>
@@ -101,15 +123,17 @@ export function renderDeckList(decks, statsMap, options = {}) {
           </div>
         </div>
         <div class="deck-card-actions">
-          <button class="btn btn-primary btn-study" data-deck-id="${deck.id}">
-            Otwórz
-          </button>
-          <button class="btn btn-secondary btn-sm btn-deck-settings" data-deck-id="${deck.id}">
-            Ustawienia
-          </button>
+          ${showStudyActions ? `
+            <button class="btn btn-primary btn-study" data-deck-id="${deck.id}">
+              Otwórz
+            </button>
+            <button class="btn btn-secondary btn-sm btn-deck-settings" data-deck-id="${deck.id}">
+              Ustawienia
+            </button>
+          ` : ''}
           ${readOnlyContent ? '' : `
-            <button class="btn btn-secondary btn-sm btn-delete-deck" data-deck-id="${deck.id}" data-deck-name="${escapeHtml(deck.name)}">
-              Usuń
+            <button class="btn btn-secondary btn-sm btn-delete-deck" data-deck-id="${deck.id}" data-deck-name="${escapeHtml(deck.name)}" data-public-hidden="${isHiddenPublicDeck ? '1' : '0'}" data-private-archived="${isArchivedPrivateDeck ? '1' : '0'}">
+              ${deleteBtnLabel}
             </button>
           `}
         </div>
@@ -460,7 +484,13 @@ export function showNotification(message, type = 'info') {
 
 // --- Confirm Modal ---
 
-export function showConfirm(title, text) {
+export function showConfirm(title, text, options = {}) {
+  return showConfirmWithOptions(title, text, options);
+}
+
+export function showConfirmWithOptions(title, text, options = {}) {
+  const confirmLabel = options.confirmLabel || 'Usuń';
+  const cancelLabel = options.cancelLabel || 'Anuluj';
   return new Promise((resolve) => {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
@@ -469,8 +499,8 @@ export function showConfirm(title, text) {
         <div class="modal-title">${escapeHtml(title)}</div>
         <div class="modal-text">${escapeHtml(text)}</div>
         <div class="modal-actions">
-          <button class="btn btn-secondary modal-cancel">Anuluj</button>
-          <button class="btn btn-danger modal-confirm">Usuń</button>
+          <button class="btn btn-secondary modal-cancel">${escapeHtml(cancelLabel)}</button>
+          <button class="btn btn-danger modal-confirm">${escapeHtml(confirmLabel)}</button>
         </div>
       </div>
     `;
@@ -1583,6 +1613,164 @@ export function renderAppSettings(appSettings, defaults) {
           Bazunia — aplikacja do nauki z powtarzaniem rozłożonym w czasie.
         </p>
         <button class="btn btn-secondary btn-sm" id="btn-open-docs">Dokumentacja</button>
+      </div>
+    </div>
+  `;
+}
+
+// --- User/Profile ---
+
+function formatDateTime(value) {
+  if (!value) return 'brak danych';
+  const dt = new Date(value);
+  if (Number.isNaN(dt.getTime())) return String(value);
+  return dt.toLocaleString('pl-PL', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+export function renderUserProfile(profile = {}) {
+  const roleLabel = profile.role || 'user';
+  const items = [
+    { label: 'E-mail', value: profile.email || 'brak danych' },
+    { label: 'ID użytkownika', value: profile.userId || 'brak danych' },
+    { label: 'Rola', value: roleLabel },
+    { label: 'Data utworzenia konta', value: formatDateTime(profile.createdAt) },
+    { label: 'Ostatnie logowanie', value: formatDateTime(profile.lastSignInAt) },
+  ];
+
+  const html = items.map((item) => `
+    <div class="user-card-item">
+      <div class="user-card-label">${escapeHtml(item.label)}</div>
+      <div class="user-card-value">${escapeHtml(String(item.value))}</div>
+    </div>
+  `).join('');
+
+  document.getElementById('user-profile-content').innerHTML = `
+    <div class="user-card">
+      <div class="user-card-grid">
+        ${html}
+      </div>
+    </div>
+  `;
+}
+
+// --- Admin ---
+
+function roleBadge(role) {
+  const normalized = role === 'dev' || role === 'admin' ? role : 'user';
+  return `<span class="admin-role-badge role-${normalized}">${escapeHtml(normalized)}</span>`;
+}
+
+export function renderAdminPanel(data = {}) {
+  const users = Array.isArray(data.users) ? data.users : [];
+  const hiddenDecks = Array.isArray(data.hiddenDecks) ? data.hiddenDecks : [];
+  const currentUserRole = data.currentUserRole === 'dev' ? 'dev' : (data.currentUserRole === 'admin' ? 'admin' : 'user');
+  const userQuery = String(data.userQuery || '');
+  const hiddenDeckQuery = String(data.hiddenDeckQuery || '');
+  const usersPage = Number(data.usersPage) || 1;
+  const usersPages = Number(data.usersPages) || 1;
+  const usersTotal = Number(data.usersTotal) || users.length;
+  const hiddenPage = Number(data.hiddenPage) || 1;
+  const hiddenPages = Number(data.hiddenPages) || 1;
+  const hiddenTotal = Number(data.hiddenTotal) || hiddenDecks.length;
+
+  const userRows = users.map((u) => {
+    const role = u.role === 'dev' || u.role === 'admin' ? u.role : 'user';
+    const actions = [];
+
+    if (role === 'user' && (currentUserRole === 'admin' || currentUserRole === 'dev')) {
+      actions.push(`<button class="btn btn-secondary btn-sm admin-user-action" data-user-id="${u.user_id}" data-next-role="admin">Ustaw admina</button>`);
+    }
+    if (role === 'admin' && currentUserRole === 'dev') {
+      actions.push(`<button class="btn btn-secondary btn-sm admin-user-action" data-user-id="${u.user_id}" data-next-role="user">Zdejmij admina</button>`);
+    }
+
+    return `
+      <tr>
+        <td>${escapeHtml(u.email || '(brak e-maila)')}</td>
+        <td>${roleBadge(role)}</td>
+        <td>${escapeHtml(formatDateTime(u.created_at))}</td>
+        <td>${escapeHtml(formatDateTime(u.last_sign_in_at))}</td>
+        <td>
+          <div class="admin-actions-row">
+            ${actions.join('') || '<span class="user-card-label">brak akcji</span>'}
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  const hiddenRows = hiddenDecks.map((d) => `
+    <tr>
+      <td>${escapeHtml(d.name || d.id)}</td>
+      <td>${escapeHtml(d.id)}</td>
+      <td>${escapeHtml(formatDateTime(d.updated_at))}</td>
+      <td>
+        <button class="btn btn-secondary btn-sm admin-unhide-deck" data-deck-id="${escapeAttr(d.id)}">Pokaż</button>
+      </td>
+    </tr>
+  `).join('');
+
+  document.getElementById('admin-panel-content').innerHTML = `
+    <div class="admin-panel">
+      <div class="admin-section">
+        <h3 class="admin-section-title">Użytkownicy</h3>
+        <div class="admin-toolbar">
+          <input type="text" class="settings-input admin-search-input" id="admin-user-search" placeholder="Szukaj po e-mailu, ID lub roli..." value="${escapeAttr(userQuery)}">
+          <div class="admin-pager">
+            <button class="btn btn-secondary btn-sm admin-page-btn" data-target="users" data-dir="-1" ${usersPage <= 1 ? 'disabled' : ''}>Poprzednia</button>
+            <span class="admin-page-info">${usersTotal} wyników • strona ${usersPage}/${usersPages}</span>
+            <button class="btn btn-secondary btn-sm admin-page-btn" data-target="users" data-dir="1" ${usersPage >= usersPages ? 'disabled' : ''}>Następna</button>
+          </div>
+        </div>
+        ${usersTotal === 0 ? '<div class="admin-empty">Brak użytkowników dla podanego filtra.</div>' : `
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>E-mail</th>
+                <th>Rola</th>
+                <th>Konto od</th>
+                <th>Ostatnie logowanie</th>
+                <th>Akcje</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${userRows}
+            </tbody>
+          </table>
+        `}
+      </div>
+
+      <div class="admin-section">
+        <h3 class="admin-section-title">Ukryte talie ogólne (widoczne tylko dla admin/dev)</h3>
+        <div class="admin-toolbar">
+          <input type="text" class="settings-input admin-search-input" id="admin-hidden-search" placeholder="Szukaj po nazwie lub ID talii..." value="${escapeAttr(hiddenDeckQuery)}">
+          <div class="admin-pager">
+            <button class="btn btn-secondary btn-sm admin-page-btn" data-target="hidden" data-dir="-1" ${hiddenPage <= 1 ? 'disabled' : ''}>Poprzednia</button>
+            <span class="admin-page-info">${hiddenTotal} wyników • strona ${hiddenPage}/${hiddenPages}</span>
+            <button class="btn btn-secondary btn-sm admin-page-btn" data-target="hidden" data-dir="1" ${hiddenPage >= hiddenPages ? 'disabled' : ''}>Następna</button>
+          </div>
+        </div>
+        ${hiddenTotal === 0 ? '<div class="admin-empty">Brak ukrytych talii dla podanego filtra.</div>' : `
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Nazwa</th>
+                <th>ID</th>
+                <th>Zmodyfikowano</th>
+                <th>Akcja</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${hiddenRows}
+            </tbody>
+          </table>
+        `}
       </div>
     </div>
   `;

@@ -245,6 +245,12 @@ function registerImport(data, options = {}) {
     source: importOptions.source,
     readOnlyContent: importOptions.readOnlyContent,
   };
+  if (importOptions.scope === 'private' && existingDeck?.isArchived === true) {
+    deckMeta.isArchived = true;
+  }
+  if (importOptions.scope === 'public' && existingDeck?.adminOnly === true) {
+    deckMeta.adminOnly = true;
+  }
   if (nextGroup) {
     deckMeta.group = nextGroup;
   }
