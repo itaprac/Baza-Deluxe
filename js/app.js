@@ -1139,7 +1139,9 @@ async function bootstrapUserSession(user) {
   }
   migrateDeckMetadata();
   loadUserPreferences();
-  await syncPublicDecksForCurrentUser();
+  // Public decks should always come from local built-in JSON files.
+  // This keeps deck content identical between guest and logged-in sessions.
+  await loadBuiltInDecks();
   await syncSubscribedDecksForCurrentUser();
   updateHeaderSessionState('user', {
     email: user.email || '',
@@ -1239,6 +1241,7 @@ function handleKeyDown(e) {
 
 async function loadBuiltInDecks() {
   if (!isSessionReady()) return;
+  pruneNonBuiltInPublicDecks();
   for (const builtIn of BUILT_IN_DECK_SOURCES) {
     try {
       await importBuiltIn(builtIn.file, {
@@ -1251,6 +1254,33 @@ async function loadBuiltInDecks() {
     }
   }
   migrateDeckMetadata();
+}
+
+function pruneNonBuiltInPublicDecks() {
+  const decks = storage.getDecks();
+  if (!Array.isArray(decks) || decks.length === 0) return;
+
+  let changed = false;
+  const nextDecks = [];
+
+  for (const deckMeta of decks) {
+    if (getDeckScope(deckMeta) !== 'public') {
+      nextDecks.push(deckMeta);
+      continue;
+    }
+    if (isBuiltInDeckId(deckMeta.id)) {
+      nextDecks.push(deckMeta);
+      continue;
+    }
+
+    // Remove stale public decks that are no longer part of built-in sources.
+    changed = true;
+    storage.clearDeckData(deckMeta.id);
+  }
+
+  if (changed) {
+    storage.saveDecks(nextDecks);
+  }
 }
 
 // --- Navigation ---
