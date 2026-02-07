@@ -134,6 +134,11 @@ export function renderDeckList(decks, statsMap, options = {}) {
         Kopiuj
       </button>
     `);
+    menuItems.push(`
+      <button class="deck-card-menu-item btn-export-deck" data-deck-id="${escapeAttr(deck.id)}" type="button">
+        Eksportuj JSON
+      </button>
+    `);
 
     if (canOpenDeck) {
       menuItems.push(`

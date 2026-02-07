@@ -127,6 +127,7 @@ supabase/
 Po zalogowaniu przejdź do zakładki `Moje`:
 - `Nowa talia` — tworzy prywatną talię ręcznie.
 - `Importuj talię` — importuje plik JSON.
+- `Eksportuj JSON` (menu `...` na karcie talii) — zapisuje aktualną talię do pliku `.json`.
 
 Po utworzeniu talii możesz w trybie `Przeglądanie` dodawać nowe pytania przyciskiem `+ Dodaj pytanie`.
 

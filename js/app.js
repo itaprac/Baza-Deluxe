@@ -3526,6 +3526,60 @@ function showCopyDeckModeModal(deckName) {
   });
 }
 
+function downloadJSONFile(filename, data) {
+  const blob = new Blob([data], { type: 'application/json;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function exportDeckToJSON(deckId) {
+  const deckMeta = getDeckMeta(deckId);
+  if (!deckMeta) {
+    showNotification('Nie znaleziono talii do eksportu.', 'error');
+    return;
+  }
+
+  const questions = storage.getQuestions(deckId);
+  if (!Array.isArray(questions) || questions.length === 0) {
+    showNotification('Ta talia nie ma pytań do eksportu.', 'info');
+    return;
+  }
+
+  const deckPayload = {
+    id: deckMeta.id,
+    name: deckMeta.name || deckMeta.id,
+    description: deckMeta.description || '',
+    version: Number(deckMeta.version) || 1,
+  };
+
+  const group = normalizeDeckGroup(deckMeta.group);
+  if (group) {
+    deckPayload.group = group;
+  }
+  if (Array.isArray(deckMeta.categories) && deckMeta.categories.length > 0) {
+    deckPayload.categories = cloneJSON(deckMeta.categories, []);
+  }
+
+  const exportPayload = {
+    deck: deckPayload,
+    questions: cloneJSON(questions, []),
+  };
+
+  try {
+    const fileBase = slugifyDeckId(deckMeta.name || deckMeta.id) || slugifyDeckId(deckMeta.id) || `talia-${Date.now().toString(36)}`;
+    downloadJSONFile(`${fileBase}.json`, JSON.stringify(exportPayload, null, 2));
+    showNotification(`Wyeksportowano talię "${deckPayload.name}".`, 'success');
+  } catch (error) {
+    showNotification(`Nie udało się wyeksportować talii: ${error.message}`, 'error');
+  }
+}
+
 async function copyDeckToPrivate(options = {}) {
   if (sessionMode !== 'user') {
     showNotification('Kopiowanie talii wymaga zalogowania.', 'info');
@@ -3831,6 +3885,14 @@ function bindDeckListEvents() {
       const deckId = btn.dataset.deckId;
       if (!deckId) return;
       await copyDeckFromLocal(deckId);
+    });
+  });
+
+  document.querySelectorAll('.btn-export-deck').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const deckId = btn.dataset.deckId;
+      if (!deckId) return;
+      await exportDeckToJSON(deckId);
     });
   });
 
