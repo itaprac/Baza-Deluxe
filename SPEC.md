@@ -482,3 +482,50 @@ easyCount:     int  — ocena "Łatwe"
 - Edytor pytań dostępny tylko w trybie Anki, nie pozwala dodawać/usuwać odpowiedzi
 - Key recorder nadpisuje binding jednym klawiszem (nie kumuluje, nie obsługuje Ctrl/Alt/Meta kombinacji)
 - Dane per-talia: pytania, karty (SRS) i statystyki mają osobne klucze w localStorage
+
+---
+
+## 16. Warstwa społecznościowa (username, udostępnianie, subskrypcje)
+
+### 16.1. Publiczny username
+
+- Każde konto ma `username` (losowany przy rejestracji).
+- `username` jest unikalny globalnie (case-insensitive).
+- Edycja `username` jest dostępna w profilu użytkownika.
+- W widokach społecznościowych pokazywany jest `username`, nie e-mail autora.
+
+### 16.2. Zakładki listy talii
+
+Lista główna ma 3 zakładki:
+
+- `Ogólne`
+- `Udostępnione`
+- `Moje`
+
+W `Moje` są 2 sekcje:
+
+- `Własne`
+- `Subskrybowane`
+
+### 16.3. Udostępnianie talii prywatnych
+
+- Właściciel prywatnej talii może ją opublikować w katalogu `Udostępnione`.
+- Publikacja tworzy snapshot pytań i metadanych w bazie.
+- Wyłączenie udostępniania ustawia publikację jako nieaktywną (`soft-unpublish`).
+- Jeśli talia jest udostępniona, zmiany treści/metadanych synchronizują snapshot automatycznie.
+
+### 16.4. Subskrypcje talii udostępnionych
+
+- Użytkownik może subskrybować talię z katalogu `Udostępnione`.
+- Subskrybowane talie są read-only (nauka/test/browse dostępne, edycja treści wyłączona).
+- Postęp SRS subskrybenta jest lokalny i niezależny od autora.
+- Synchronizacja subskrypcji odbywa się przy logowaniu i wejściu do zakładki `Moje`.
+- Gdy autor wyłączy udostępnianie, subskrypcja zostaje oznaczona jako `niedostępna` i pozostaje lokalnie.
+
+### 16.5. Kopiowanie talii
+
+- Talię można kopiować z `Ogólne`, `Udostępnione` i `Moje`.
+- Kopia zawsze tworzy nową, niezależną prywatną talię.
+- Przy kopiowaniu użytkownik wybiera tryb:
+  - `Start od zera` (karty `new`, puste statystyki),
+  - `Kopiuj postęp` (kopiowanie kart/statystyk, jeśli źródło je posiada).

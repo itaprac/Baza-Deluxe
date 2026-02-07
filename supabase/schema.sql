@@ -233,6 +233,287 @@ grant execute on function public.current_app_role() to authenticated;
 grant execute on function public.admin_list_users() to authenticated;
 grant execute on function public.admin_set_user_role(uuid, text) to authenticated;
 
+-- --- User public profiles (username) ---
+
+create table if not exists public.user_profiles (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  username text not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint user_profiles_username_format_check
+    check (username ~ '^[a-z0-9_.-]{3,24}$')
+);
+
+create unique index if not exists user_profiles_username_lower_uidx
+on public.user_profiles (lower(username));
+
+drop trigger if exists set_user_profiles_updated_at on public.user_profiles;
+create trigger set_user_profiles_updated_at
+before update on public.user_profiles
+for each row
+execute function public.set_updated_at_timestamp();
+
+create or replace function public.generate_random_username()
+returns text
+language plpgsql
+set search_path = public
+as $$
+begin
+  return 'u_' || substr(md5(random()::text || clock_timestamp()::text), 1, 10);
+end;
+$$;
+
+create or replace function public.handle_new_auth_user_profile()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  candidate text;
+begin
+  if exists (select 1 from public.user_profiles where user_id = new.id) then
+    return new;
+  end if;
+
+  for i in 1..50 loop
+    candidate := public.generate_random_username();
+    begin
+      insert into public.user_profiles (user_id, username)
+      values (new.id, candidate);
+      return new;
+    exception
+      when unique_violation then
+        if exists (select 1 from public.user_profiles where user_id = new.id) then
+          return new;
+        end if;
+    end;
+  end loop;
+
+  raise exception 'Nie udalo sie wygenerowac unikalnego username dla user_id=%', new.id;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created_profile on auth.users;
+create trigger on_auth_user_created_profile
+after insert on auth.users
+for each row execute function public.handle_new_auth_user_profile();
+
+-- Backfill existing accounts
+do $$
+declare
+  rec record;
+  candidate text;
+begin
+  for rec in
+    select u.id
+    from auth.users u
+    left join public.user_profiles up on up.user_id = u.id
+    where up.user_id is null
+  loop
+    for i in 1..50 loop
+      candidate := public.generate_random_username();
+      begin
+        insert into public.user_profiles (user_id, username)
+        values (rec.id, candidate);
+        exit;
+      exception
+        when unique_violation then
+          null;
+      end;
+    end loop;
+  end loop;
+end;
+$$;
+
+alter table public.user_profiles enable row level security;
+
+drop policy if exists "user_profiles_select_public" on public.user_profiles;
+create policy "user_profiles_select_public"
+on public.user_profiles
+for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "user_profiles_insert_own" on public.user_profiles;
+create policy "user_profiles_insert_own"
+on public.user_profiles
+for insert
+to authenticated
+with check (auth.uid() = user_id);
+
+drop policy if exists "user_profiles_update_own" on public.user_profiles;
+create policy "user_profiles_update_own"
+on public.user_profiles
+for update
+to authenticated
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
+
+-- --- User shared decks and subscriptions ---
+
+create table if not exists public.shared_decks (
+  id text primary key,
+  owner_user_id uuid not null references auth.users(id) on delete cascade,
+  owner_username text not null,
+  source_deck_id text not null,
+  name text not null,
+  description text not null default '',
+  deck_group text,
+  categories jsonb,
+  questions jsonb not null default '[]'::jsonb,
+  question_count int not null default 0,
+  is_published boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (owner_user_id, source_deck_id)
+);
+
+create index if not exists shared_decks_is_published_updated_at_idx
+on public.shared_decks (is_published, updated_at desc);
+
+create index if not exists shared_decks_owner_user_id_idx
+on public.shared_decks (owner_user_id);
+
+drop trigger if exists set_shared_decks_updated_at on public.shared_decks;
+create trigger set_shared_decks_updated_at
+before update on public.shared_decks
+for each row
+execute function public.set_updated_at_timestamp();
+
+create or replace function public.sync_shared_deck_owner_username()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.shared_decks
+  set owner_username = new.username
+  where owner_user_id = new.user_id;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_user_profile_username_updated on public.user_profiles;
+create trigger on_user_profile_username_updated
+after update of username on public.user_profiles
+for each row
+when (old.username is distinct from new.username)
+execute function public.sync_shared_deck_owner_username();
+
+create or replace function public.set_shared_deck_owner_username()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  profile_username text;
+begin
+  select up.username
+  into profile_username
+  from public.user_profiles up
+  where up.user_id = new.owner_user_id;
+
+  if profile_username is not null and length(profile_username) > 0 then
+    new.owner_username := profile_username;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists set_shared_deck_owner_username on public.shared_decks;
+create trigger set_shared_deck_owner_username
+before insert or update of owner_user_id, owner_username
+on public.shared_decks
+for each row
+execute function public.set_shared_deck_owner_username();
+
+alter table public.shared_decks enable row level security;
+
+drop policy if exists "shared_decks_read_published" on public.shared_decks;
+create policy "shared_decks_read_published"
+on public.shared_decks
+for select
+to anon, authenticated
+using (is_published = true);
+
+drop policy if exists "shared_decks_read_own_any" on public.shared_decks;
+create policy "shared_decks_read_own_any"
+on public.shared_decks
+for select
+to authenticated
+using (auth.uid() = owner_user_id);
+
+drop policy if exists "shared_decks_insert_own" on public.shared_decks;
+create policy "shared_decks_insert_own"
+on public.shared_decks
+for insert
+to authenticated
+with check (auth.uid() = owner_user_id);
+
+drop policy if exists "shared_decks_update_own" on public.shared_decks;
+create policy "shared_decks_update_own"
+on public.shared_decks
+for update
+to authenticated
+using (auth.uid() = owner_user_id)
+with check (auth.uid() = owner_user_id);
+
+create table if not exists public.shared_deck_subscriptions (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  shared_deck_id text not null references public.shared_decks(id) on delete restrict,
+  created_at timestamptz not null default now(),
+  primary key (user_id, shared_deck_id)
+);
+
+create index if not exists shared_deck_subscriptions_user_id_idx
+on public.shared_deck_subscriptions (user_id);
+
+create index if not exists shared_deck_subscriptions_shared_deck_id_idx
+on public.shared_deck_subscriptions (shared_deck_id);
+
+alter table public.shared_deck_subscriptions enable row level security;
+
+drop policy if exists "shared_deck_subscriptions_select_own" on public.shared_deck_subscriptions;
+create policy "shared_deck_subscriptions_select_own"
+on public.shared_deck_subscriptions
+for select
+to authenticated
+using (auth.uid() = user_id);
+
+drop policy if exists "shared_deck_subscriptions_insert_own" on public.shared_deck_subscriptions;
+create policy "shared_deck_subscriptions_insert_own"
+on public.shared_deck_subscriptions
+for insert
+to authenticated
+with check (
+  auth.uid() = user_id
+  and exists (
+    select 1
+    from public.shared_decks sd
+    where sd.id = shared_deck_id
+      and sd.is_published = true
+      and sd.owner_user_id <> auth.uid()
+  )
+);
+
+drop policy if exists "shared_deck_subscriptions_update_own" on public.shared_deck_subscriptions;
+create policy "shared_deck_subscriptions_update_own"
+on public.shared_deck_subscriptions
+for update
+to authenticated
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
+
+drop policy if exists "shared_deck_subscriptions_delete_own" on public.shared_deck_subscriptions;
+create policy "shared_deck_subscriptions_delete_own"
+on public.shared_deck_subscriptions
+for delete
+to authenticated
+using (auth.uid() = user_id);
+
 -- --- Global public decks ---
 
 create table if not exists public.public_decks (

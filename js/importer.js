@@ -248,6 +248,12 @@ function registerImport(data, options = {}) {
   if (importOptions.scope === 'private' && existingDeck?.isArchived === true) {
     deckMeta.isArchived = true;
   }
+  if (importOptions.scope === 'private' && existingDeck?.isShared === true) {
+    deckMeta.isShared = true;
+    if (typeof existingDeck.sharedDeckId === 'string' && existingDeck.sharedDeckId.length > 0) {
+      deckMeta.sharedDeckId = existingDeck.sharedDeckId;
+    }
+  }
   if (importOptions.scope === 'public' && existingDeck?.adminOnly === true) {
     deckMeta.adminOnly = true;
   }

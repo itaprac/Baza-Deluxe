@@ -127,6 +127,29 @@ const PUBLIC_DECK_COLUMNS = [
   'updated_at',
 ].join(',');
 
+const USER_PROFILE_COLUMNS = [
+  'user_id',
+  'username',
+  'created_at',
+  'updated_at',
+].join(',');
+
+const SHARED_DECK_COLUMNS = [
+  'id',
+  'owner_user_id',
+  'owner_username',
+  'source_deck_id',
+  'name',
+  'description',
+  'deck_group',
+  'categories',
+  'questions',
+  'question_count',
+  'is_published',
+  'created_at',
+  'updated_at',
+].join(',');
+
 export async function fetchPublicDecks(options = {}) {
   const includeArchived = options.includeArchived === true;
   const client = ensureClient();
@@ -183,6 +206,190 @@ export async function hidePublicDeck(deckId) {
 
 export async function unhidePublicDeck(deckId) {
   return restorePublicDeck(deckId);
+}
+
+// --- User profile (username) ---
+
+export async function fetchMyProfile() {
+  const client = ensureClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await client.auth.getUser();
+  if (authError) throw authError;
+  if (!user) throw new Error('Brak aktywnego użytkownika.');
+
+  const { data, error } = await client
+    .from('user_profiles')
+    .select(USER_PROFILE_COLUMNS)
+    .eq('user_id', user.id)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function updateMyUsername(username) {
+  const normalized = String(username || '').trim().toLowerCase();
+  const client = ensureClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await client.auth.getUser();
+  if (authError) throw authError;
+  if (!user) throw new Error('Brak aktywnego użytkownika.');
+
+  const { data, error } = await client
+    .from('user_profiles')
+    .update({ username: normalized })
+    .eq('user_id', user.id)
+    .select(USER_PROFILE_COLUMNS)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+// --- Shared decks catalog and subscriptions ---
+
+function escapeLikeQuery(value) {
+  return String(value || '').replace(/[,%_]/g, ' ');
+}
+
+export async function searchSharedDecks(options = {}) {
+  const client = ensureClient();
+  const query = String(options.query || '').trim();
+  const pageSize = Math.max(1, Number(options.pageSize) || 20);
+  const page = Math.max(1, Number(options.page) || 1);
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  let request = client
+    .from('shared_decks')
+    .select(SHARED_DECK_COLUMNS, { count: 'exact' })
+    .eq('is_published', true)
+    .order('updated_at', { ascending: false })
+    .range(from, to);
+
+  if (query) {
+    const needle = `%${escapeLikeQuery(query)}%`;
+    request = request.or(`name.ilike.${needle},description.ilike.${needle}`);
+  }
+
+  const { data, error, count } = await request;
+  if (error) throw error;
+  const total = Number.isFinite(count) ? count : (data || []).length;
+  return {
+    items: data || [],
+    total,
+    page,
+    pageSize,
+  };
+}
+
+export async function publishSharedDeck(deckPayload) {
+  const client = ensureClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await client.auth.getUser();
+  if (authError) throw authError;
+  if (!user) throw new Error('Brak aktywnego użytkownika.');
+
+  const payload = {
+    ...deckPayload,
+    owner_user_id: user.id,
+    is_published: true,
+  };
+
+  const { data, error } = await client
+    .from('shared_decks')
+    .upsert(payload, { onConflict: 'owner_user_id,source_deck_id' })
+    .select(SHARED_DECK_COLUMNS)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function unpublishSharedDeck(sharedDeckId) {
+  const client = ensureClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await client.auth.getUser();
+  if (authError) throw authError;
+  if (!user) throw new Error('Brak aktywnego użytkownika.');
+
+  const { data, error } = await client
+    .from('shared_decks')
+    .update({ is_published: false })
+    .eq('id', sharedDeckId)
+    .eq('owner_user_id', user.id)
+    .select(SHARED_DECK_COLUMNS)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function fetchMySubscriptions() {
+  const client = ensureClient();
+  const { data, error } = await client
+    .from('shared_deck_subscriptions')
+    .select(`
+      user_id,
+      shared_deck_id,
+      created_at,
+      shared_decks (${SHARED_DECK_COLUMNS})
+    `)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+}
+
+export async function subscribeToSharedDeck(sharedDeckId) {
+  const client = ensureClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await client.auth.getUser();
+  if (authError) throw authError;
+  if (!user) throw new Error('Brak aktywnego użytkownika.');
+
+  const { data, error } = await client
+    .from('shared_deck_subscriptions')
+    .upsert(
+      {
+        user_id: user.id,
+        shared_deck_id: sharedDeckId,
+      },
+      { onConflict: 'user_id,shared_deck_id' }
+    )
+    .select('user_id,shared_deck_id,created_at')
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function unsubscribeFromSharedDeck(sharedDeckId) {
+  const client = ensureClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await client.auth.getUser();
+  if (authError) throw authError;
+  if (!user) throw new Error('Brak aktywnego użytkownika.');
+
+  const { error } = await client
+    .from('shared_deck_subscriptions')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('shared_deck_id', sharedDeckId);
+
+  if (error) throw error;
 }
 
 // --- User storage ---

@@ -3,13 +3,16 @@
 Aplikacja webowa do nauki pytań egzaminacyjnych i fiszek z algorytmem powtórek SM-2.
 Stan użytkownika (talie, karty, statystyki, ustawienia, progres) zapisuje w Supabase.
 
-## Publiczne vs prywatne talie
+## Publiczne, udostępnione i prywatne talie
 
-- `Ogólne` — talie wbudowane z katalogu `data/`, widoczne dla każdego (także gościa), tylko do nauki/przeglądu.
-- `Moje` — talie prywatne użytkownika, widoczne po zalogowaniu.
-- W zakładce `Moje` możesz tworzyć talie ręcznie (`Nowa talia`) i dodawać pytania w trybie `Przeglądanie` (`+ Dodaj pytanie`).
-- Import własnej talii jest dostępny wyłącznie po zalogowaniu i tylko w zakładce `Moje`.
-- W taliach `Ogólne` nie można usuwać talii ani edytować pytań, ale można uczyć się, robić testy i używać własnych ustawień SRS.
+- `Ogólne` — talie globalne (`public_decks`), widoczne dla każdego (także gościa), tylko do nauki/przeglądu.
+- `Udostępnione` — katalog talii publikowanych przez użytkowników, z wyszukiwaniem i paginacją.
+- `Moje` — dwie sekcje:
+  - `Własne` — talie prywatne użytkownika (tworzenie/import/edycja).
+  - `Subskrybowane` — talie zasubskrybowane z katalogu `Udostępnione` (read-only, z własnym postępem SRS).
+- Własne talie można `Udostępnić` / `Wyłączyć udostępnianie`.
+- Talię z `Ogólne`, `Udostępnione` i `Moje` można `Kopiować` do nowej prywatnej kopii (z resetem postępu lub z kopiowaniem postępu).
+- Dane innych użytkowników w warstwie społecznościowej są prezentowane przez `username` (bez pokazywania e-maila).
 
 ## Wymagania
 
@@ -32,6 +35,10 @@ Aplikacja będzie dostępna pod adresem:
 ## Konfiguracja Supabase
 
 1. W Supabase SQL Editor uruchom skrypt: `supabase/schema.sql`.
+   Skrypt tworzy m.in.:
+   - `public.user_profiles` (publiczny `username` użytkownika),
+   - `public.shared_decks` (udostępnione talie użytkowników),
+   - `public.shared_deck_subscriptions` (subskrypcje talii).
 2. Skopiuj plik `.env.example` do `.env` i ustaw:
 
 ```bash

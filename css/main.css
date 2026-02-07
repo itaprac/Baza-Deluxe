@@ -299,6 +299,32 @@ a.app-title {
   gap: 12px;
 }
 
+.user-profile-username-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.user-profile-username-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.user-profile-username-input {
+  flex: 1;
+}
+
+.user-profile-username-edit[hidden] {
+  display: none !important;
+}
+
+.user-profile-username-edit {
+  margin-top: 8px;
+}
+
 .user-card-item {
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius);
@@ -1031,4 +1057,10 @@ a.app-title {
 
 [data-color-theme="lavender"][data-theme="dark"] body::after {
   background: radial-gradient(ellipse, rgba(200, 160, 208, 0.04) 0%, transparent 70%);
+}
+
+@media (max-width: 640px) {
+  .user-profile-username-row {
+    flex-direction: column;
+  }
 }

@@ -4,15 +4,29 @@ import { shuffle, renderLatex, isFlashcard } from './utils.js';
 
 // --- Deck List View ---
 
+function renderDeckScopeTabs(activeScope = 'public') {
+  const normalized = activeScope === 'private' || activeScope === 'shared' ? activeScope : 'public';
+  return `
+    <div class="deck-scope-tabs">
+      <button class="deck-scope-tab ${normalized === 'public' ? 'active' : ''}" data-scope="public">Ogólne</button>
+      <button class="deck-scope-tab ${normalized === 'shared' ? 'active' : ''}" data-scope="shared">Udostępnione</button>
+      <button class="deck-scope-tab ${normalized === 'private' ? 'active' : ''}" data-scope="private">Moje</button>
+    </div>
+  `;
+}
+
 export function renderDeckList(decks, statsMap, options = {}) {
   const container = document.getElementById('deck-list-container');
-  const activeScope = options.activeScope === 'private' ? 'private' : 'public';
+  const activeScope = options.activeScope === 'private' || options.activeScope === 'shared'
+    ? options.activeScope
+    : 'public';
   const sessionMode = options.sessionMode === 'user' ? 'user' : 'guest';
   const showPrivateLocked = !!options.showPrivateLocked;
   const deckListMode = options.deckListMode === 'classic' ? 'classic' : 'compact';
   const canEditPublicDecks = options.canEditPublicDecks === true;
   const showPrivateArchived = options.showPrivateArchived === true;
   const hasArchivedPrivate = options.hasArchivedPrivate === true;
+  const tabsHtml = renderDeckScopeTabs(activeScope);
   const privateArchiveToggleHtml = activeScope === 'private' && sessionMode === 'user' && (hasArchivedPrivate || showPrivateArchived)
     ? `<button class="btn btn-secondary" id="btn-toggle-private-archived">${showPrivateArchived ? 'Pokaż aktywne' : 'Pokaż archiwalne'}</button>`
     : '';
@@ -25,13 +39,6 @@ export function renderDeckList(decks, statsMap, options = {}) {
       </div>
     `
     : '';
-
-  const tabsHtml = `
-    <div class="deck-scope-tabs">
-      <button class="deck-scope-tab ${activeScope === 'public' ? 'active' : ''}" data-scope="public">Ogólne</button>
-      <button class="deck-scope-tab ${activeScope === 'private' ? 'active' : ''}" data-scope="private">Moje</button>
-    </div>
-  `;
 
   if (showPrivateLocked) {
     container.innerHTML = `
@@ -47,7 +54,7 @@ export function renderDeckList(decks, statsMap, options = {}) {
     return;
   }
 
-  if (decks.length === 0) {
+  if (activeScope === 'public' && decks.length === 0) {
     const emptyTitle = activeScope === 'public'
       ? 'Brak talii ogólnych'
       : (showPrivateArchived ? 'Brak zarchiwizowanych talii' : 'Brak własnych talii');
@@ -79,35 +86,116 @@ export function renderDeckList(decks, statsMap, options = {}) {
 
   const renderDeckCard = (deck) => {
     const stats = statsMap[deck.id] || { dueReview: 0, dueLearning: 0, newAvailable: 0, totalCards: 0 };
-    const isPublicDeck = deck.scope === 'public';
+    const scope = deck.scope === 'public' || deck.scope === 'subscribed' ? deck.scope : 'private';
+    const isPublicDeck = scope === 'public';
+    const isSubscribedDeck = scope === 'subscribed';
+    const isOwnPrivateDeck = scope === 'private';
     const isHiddenPublicDeck = isPublicDeck && deck.adminOnly === true;
-    const isArchivedPrivateDeck = !isPublicDeck && deck.isArchived === true;
-    const readOnlyContent = isPublicDeck ? !canEditPublicDecks : deck.readOnlyContent === true;
-    const deckKindBadge = isPublicDeck
-      ? `<span class="deck-scope-badge">${isHiddenPublicDeck ? 'Ogólna (ukryta)' : 'Ogólna'}</span>`
-      : `<span class="deck-scope-badge private">${isArchivedPrivateDeck ? 'Prywatna (archiwum)' : 'Prywatna'}</span>`;
-    const readOnlyHint = isPublicDeck && readOnlyContent
+    const isArchivedPrivateDeck = isOwnPrivateDeck && deck.isArchived === true;
+    const isUnavailableSubscription = isSubscribedDeck && deck.subscriptionStatus === 'unavailable';
+    const readOnlyContent = isPublicDeck
+      ? !canEditPublicDecks
+      : (isSubscribedDeck || deck.readOnlyContent === true);
+
+    const isSharedOwnDeck = isOwnPrivateDeck && deck.isShared === true && !isArchivedPrivateDeck;
+    const statusBadges = [];
+    if (isSharedOwnDeck) {
+      statusBadges.push('<span class="deck-status-chip shared">Udostępniana</span>');
+    }
+    if (isUnavailableSubscription) {
+      statusBadges.push('<span class="deck-status-chip warning">Niedostępna</span>');
+    }
+    if (isHiddenPublicDeck) {
+      statusBadges.push('<span class="deck-status-chip muted">Ukryta</span>');
+    }
+    const statusBadgesHtml = statusBadges.join('');
+
+    const readOnlyHint = readOnlyContent
       ? '<div class="deck-card-readonly-hint">Treść talii tylko do odczytu.</div>'
       : '';
     const hiddenHint = isHiddenPublicDeck
       ? '<div class="deck-card-readonly-hint">Ta talia jest ukryta dla zwykłych użytkowników.</div>'
       : '';
-    const deleteBtnLabel = isPublicDeck
-      ? (isHiddenPublicDeck ? 'Pokaż' : 'Ukryj')
-      : (isArchivedPrivateDeck ? 'Przywróć' : 'Archiwizuj');
-    const showStudyActions = !isArchivedPrivateDeck;
+    const unavailableHint = isUnavailableSubscription
+      ? '<div class="deck-card-readonly-hint">Autor wyłączył udostępnianie. Możesz dalej uczyć się na ostatniej zsynchronizowanej wersji.</div>'
+      : '';
+    const canOpenDeck = !isArchivedPrivateDeck;
+    const canShowVisibilityToggle = isPublicDeck && !readOnlyContent;
+    const canShowArchiveToggle = isOwnPrivateDeck;
+    const canShowShareToggle = isOwnPrivateDeck && !isArchivedPrivateDeck;
+    const ownerLine = isSubscribedDeck && deck.ownerUsername
+      ? `<div class="deck-card-owner">Autor: @${escapeHtml(deck.ownerUsername)}</div>`
+      : '';
+    const sharedDeckIdAttr = deck.sharedDeckId ? ` data-shared-deck-id="${escapeAttr(deck.sharedDeckId)}"` : '';
+    const menuItems = [];
+
+    menuItems.push(`
+      <button class="deck-card-menu-item btn-copy-deck" data-deck-id="${escapeAttr(deck.id)}" type="button">
+        Kopiuj
+      </button>
+    `);
+
+    if (canOpenDeck) {
+      menuItems.push(`
+        <button class="deck-card-menu-item btn-deck-settings" data-deck-id="${escapeAttr(deck.id)}" type="button">
+          Ustawienia
+        </button>
+      `);
+    }
+    if (canShowVisibilityToggle) {
+      menuItems.push(`
+        <button class="deck-card-menu-item btn-delete-deck" data-deck-id="${escapeAttr(deck.id)}" data-deck-name="${escapeAttr(deck.name || deck.id)}" data-public-hidden="${isHiddenPublicDeck ? '1' : '0'}" data-private-archived="${isArchivedPrivateDeck ? '1' : '0'}" type="button">
+          ${isHiddenPublicDeck ? 'Pokaż' : 'Ukryj'}
+        </button>
+      `);
+    }
+    if (canShowArchiveToggle) {
+      menuItems.push(`
+        <button class="deck-card-menu-item btn-delete-deck" data-deck-id="${escapeAttr(deck.id)}" data-deck-name="${escapeAttr(deck.name || deck.id)}" data-public-hidden="0" data-private-archived="${isArchivedPrivateDeck ? '1' : '0'}" type="button">
+          ${isArchivedPrivateDeck ? 'Przywróć' : 'Archiwizuj'}
+        </button>
+      `);
+    }
+    if (canShowShareToggle) {
+      menuItems.push(`
+        <button class="deck-card-menu-item btn-share-deck" data-deck-id="${escapeAttr(deck.id)}"${sharedDeckIdAttr} data-is-shared="${deck.isShared === true ? '1' : '0'}" type="button">
+          ${deck.isShared === true ? 'Wyłącz udostępnianie' : 'Udostępnij'}
+        </button>
+      `);
+    }
+    if (isSubscribedDeck) {
+      menuItems.push(`
+        <button class="deck-card-menu-item btn-unsubscribe-deck" data-deck-id="${escapeAttr(deck.id)}"${sharedDeckIdAttr} type="button">
+          Odsubskrybuj
+        </button>
+      `);
+    }
+
+    const menuHtml = menuItems.length > 0 ? `
+      <div class="deck-card-menu">
+        <button class="deck-card-menu-trigger" type="button" aria-label="Menu talii">&#8942;</button>
+        <div class="deck-card-menu-dropdown">
+          ${menuItems.join('')}
+        </div>
+      </div>
+    ` : '';
 
     return `
-      <div class="deck-card${isHiddenPublicDeck ? ' is-public-hidden' : ''}" data-deck-id="${deck.id}" data-read-only="${readOnlyContent ? '1' : '0'}" data-public-hidden="${isHiddenPublicDeck ? '1' : '0'}" data-private-archived="${isArchivedPrivateDeck ? '1' : '0'}">
+      <div class="deck-card${isHiddenPublicDeck ? ' is-public-hidden' : ''}${canOpenDeck ? ' is-openable' : ''}${isSharedOwnDeck ? ' is-shared-own' : ''}" data-deck-id="${deck.id}" data-openable="${canOpenDeck ? '1' : '0'}" data-read-only="${readOnlyContent ? '1' : '0'}" data-public-hidden="${isHiddenPublicDeck ? '1' : '0'}" data-private-archived="${isArchivedPrivateDeck ? '1' : '0'}">
         <div class="deck-card-header">
           <div class="deck-card-title">${escapeHtml(deck.name)}</div>
-          ${deckKindBadge}
+          <div class="deck-card-header-right">
+            ${statusBadgesHtml}
+            ${menuHtml}
+          </div>
         </div>
         <div class="deck-card-description${deck.description ? '' : ' is-empty'}">
           ${deck.description ? escapeHtml(deck.description) : '&nbsp;'}
         </div>
+        ${ownerLine}
         ${readOnlyHint}
         ${hiddenHint}
+        ${unavailableHint}
         <div class="deck-card-stats">
           <div class="deck-stat new">
             <span class="stat-value">${stats.newAvailable}</span>
@@ -121,21 +209,6 @@ export function renderDeckList(decks, statsMap, options = {}) {
             <span class="stat-value">${stats.dueReview}</span>
             <span>do powtórki</span>
           </div>
-        </div>
-        <div class="deck-card-actions">
-          ${showStudyActions ? `
-            <button class="btn btn-primary btn-study" data-deck-id="${deck.id}">
-              Otwórz
-            </button>
-            <button class="btn btn-secondary btn-sm btn-deck-settings" data-deck-id="${deck.id}">
-              Ustawienia
-            </button>
-          ` : ''}
-          ${readOnlyContent ? '' : `
-            <button class="btn btn-secondary btn-sm btn-delete-deck" data-deck-id="${deck.id}" data-deck-name="${escapeHtml(deck.name)}" data-public-hidden="${isHiddenPublicDeck ? '1' : '0'}" data-private-archived="${isArchivedPrivateDeck ? '1' : '0'}">
-              ${deleteBtnLabel}
-            </button>
-          `}
         </div>
       </div>
     `;
@@ -179,7 +252,7 @@ export function renderDeckList(decks, statsMap, options = {}) {
     return `
       <section class="deck-group-section">
         <div class="deck-group-header">
-          <h3 class="deck-group-title">${escapeHtml(label)}</h3>
+          <h3 class="deck-group-title">Grupa: ${escapeHtml(label)}</h3>
           <span class="deck-group-count">${groupDecks.length}</span>
         </div>
         <div class="deck-list-grid ${deckListMode === 'compact' ? 'compact' : 'classic'}">
@@ -189,11 +262,203 @@ export function renderDeckList(decks, statsMap, options = {}) {
     `;
   }).join('');
 
+  if (activeScope === 'private') {
+    const ownDecks = decks.filter((deckMeta) => deckMeta.scope !== 'subscribed');
+    const subscribedDecks = decks.filter((deckMeta) => deckMeta.scope === 'subscribed');
+
+    const ownGroupsHtml = (() => {
+      if (ownDecks.length === 0) {
+        return `
+          <div class="empty-state compact">
+            <div class="empty-state-text">
+              ${showPrivateArchived
+                ? 'Brak zarchiwizowanych własnych talii.'
+                : 'Brak własnych talii. Utwórz nową albo zaimportuj JSON.'}
+            </div>
+          </div>
+        `;
+      }
+      const ownSorted = [...ownDecks].sort((a, b) => collator.compare(a.name || '', b.name || ''));
+      const ownGroupedMap = new Map();
+      for (const deckMeta of ownSorted) {
+        const groupLabel = getDeckGroupLabel(deckMeta);
+        const groupKey = groupLabel.toLocaleLowerCase('pl');
+        if (!ownGroupedMap.has(groupKey)) {
+          ownGroupedMap.set(groupKey, { label: groupLabel, decks: [] });
+        }
+        ownGroupedMap.get(groupKey).decks.push(deckMeta);
+      }
+      const ownEntries = Array.from(ownGroupedMap.values()).sort((a, b) => {
+        const groupA = a.label;
+        const groupB = b.label;
+        const aIsUngrouped = groupA === 'Bez grupy';
+        const bIsUngrouped = groupB === 'Bez grupy';
+        if (aIsUngrouped && !bIsUngrouped) return 1;
+        if (!aIsUngrouped && bIsUngrouped) return -1;
+        return collator.compare(groupA, groupB);
+      });
+      const ownShowHeaders = !(ownEntries.length === 1 && ownEntries[0].label === 'Bez grupy');
+      return ownEntries.map(({ label, decks: ownGroupDecks }) => {
+        const cardsHtml = ownGroupDecks.map((deckMeta) => renderDeckCard(deckMeta)).join('');
+        if (!ownShowHeaders) {
+          return `
+            <section class="deck-group-section">
+              <div class="deck-list-grid ${deckListMode === 'compact' ? 'compact' : 'classic'}">
+                ${cardsHtml}
+              </div>
+            </section>
+          `;
+        }
+        return `
+          <section class="deck-group-section">
+            <div class="deck-group-header">
+              <h3 class="deck-group-title">Grupa: ${escapeHtml(label)}</h3>
+              <span class="deck-group-count">${ownGroupDecks.length}</span>
+            </div>
+            <div class="deck-list-grid ${deckListMode === 'compact' ? 'compact' : 'classic'}">
+              ${cardsHtml}
+            </div>
+          </section>
+        `;
+      }).join('');
+    })();
+
+    const subscribedHtml = subscribedDecks.length > 0
+      ? `
+        <section class="deck-group-section">
+          <div class="deck-list-grid ${deckListMode === 'compact' ? 'compact' : 'classic'}">
+            ${subscribedDecks
+              .slice()
+              .sort((a, b) => collator.compare(a.name || '', b.name || ''))
+              .map((deckMeta) => renderDeckCard(deckMeta))
+              .join('')}
+          </div>
+        </section>
+      `
+      : `
+        <div class="empty-state compact">
+          <div class="empty-state-text">
+            Nie masz jeszcze subskrybowanych talii. Przejdź do zakładki "Udostępnione".
+          </div>
+        </div>
+      `;
+
+    container.innerHTML = `
+      ${tabsHtml}
+      ${privateActionsHtml}
+      <div class="deck-groups deck-private-sections">
+        <section class="deck-subsection">
+          <div class="deck-subsection-header">
+            <h3 class="deck-subsection-title">Własne</h3>
+          </div>
+          ${ownGroupsHtml}
+        </section>
+        <section class="deck-subsection">
+          <div class="deck-subsection-header">
+            <h3 class="deck-subsection-title">Subskrybowane</h3>
+          </div>
+          ${subscribedHtml}
+        </section>
+      </div>
+    `;
+    return;
+  }
+
   container.innerHTML = `
     ${tabsHtml}
     ${privateActionsHtml}
     <div class="deck-groups">
       ${groupsHtml}
+    </div>
+  `;
+}
+
+export function renderSharedDeckCatalog(data = {}, options = {}) {
+  const container = document.getElementById('deck-list-container');
+  const sessionMode = options.sessionMode === 'user' ? 'user' : 'guest';
+  const currentUserId = String(options.currentUserId || '');
+  const subscribedSet = new Set(Array.isArray(options.subscribedDeckIds) ? options.subscribedDeckIds : []);
+  const tabsHtml = renderDeckScopeTabs('shared');
+  const query = String(data.query || '');
+  const items = Array.isArray(data.items) ? data.items : [];
+  const page = Math.max(1, Number(data.page) || 1);
+  const pageSize = Math.max(1, Number(data.pageSize) || 20);
+  const total = Math.max(0, Number(data.total) || 0);
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const hasItems = items.length > 0;
+
+  const cardsHtml = hasItems
+    ? items.map((item) => {
+      const isSubscribed = subscribedSet.has(item.id);
+      const isOwnDeck = currentUserId.length > 0 && String(item.owner_user_id || '') === currentUserId;
+      const canSubscribe = sessionMode === 'user' && !isSubscribed && !isOwnDeck;
+      const canUnsubscribe = sessionMode === 'user' && isSubscribed;
+      return `
+        <article class="deck-card shared-deck-card" data-shared-deck-id="${escapeAttr(item.id)}">
+          <div class="deck-card-header">
+            <div class="deck-card-title">${escapeHtml(item.name || item.id)}</div>
+            <span class="deck-scope-badge shared">Udostępniona</span>
+          </div>
+          <div class="deck-card-description${item.description ? '' : ' is-empty'}">
+            ${item.description ? escapeHtml(item.description) : '&nbsp;'}
+          </div>
+          <div class="deck-card-owner">Autor: @${escapeHtml(item.owner_username || 'unknown')}</div>
+          <div class="deck-card-stats">
+            <div class="deck-stat review">
+              <span class="stat-value">${Number(item.question_count) || 0}</span>
+              <span>pytań</span>
+            </div>
+          </div>
+          <div class="deck-card-actions">
+            <button class="btn btn-secondary btn-sm btn-shared-copy" data-shared-deck-id="${escapeAttr(item.id)}">Kopiuj</button>
+            ${canSubscribe ? `<button class="btn btn-primary btn-sm btn-shared-subscribe" data-shared-deck-id="${escapeAttr(item.id)}">Subskrybuj</button>` : ''}
+            ${canUnsubscribe ? `<button class="btn btn-secondary btn-sm btn-shared-unsubscribe" data-shared-deck-id="${escapeAttr(item.id)}">Odsubskrybuj</button>` : ''}
+            ${isOwnDeck ? '<button class="btn btn-secondary btn-sm" type="button" disabled>Twoja talia</button>' : ''}
+          </div>
+        </article>
+      `;
+    }).join('')
+    : `
+      <div class="empty-state">
+        <div class="empty-state-icon">&#128218;</div>
+        <div class="empty-state-title">Brak wyników</div>
+        <div class="empty-state-text">
+          ${query ? 'Nie znaleziono talii dla podanego zapytania.' : 'Brak publicznie udostępnionych talii.'}
+        </div>
+      </div>
+    `;
+
+  const guestHint = sessionMode !== 'user'
+    ? `
+      <div class="deck-card-readonly-hint shared-guest-hint">
+        Subskrypcja wymaga zalogowania. Możesz jednak kopiować talie do swoich po zalogowaniu.
+      </div>
+    `
+    : '';
+
+  container.innerHTML = `
+    ${tabsHtml}
+    <section class="shared-catalog-toolbar">
+      <input
+        class="settings-input shared-catalog-search"
+        id="shared-search-input"
+        type="text"
+        value="${escapeAttr(query)}"
+        placeholder="Szukaj po nazwie lub opisie..."
+      >
+      <div class="shared-catalog-pager">
+        <button class="btn btn-secondary btn-sm btn-shared-page" data-dir="-1" ${page <= 1 ? 'disabled' : ''}>Poprzednia</button>
+        <span class="shared-page-info">${total} wyników • strona ${page}/${totalPages}</span>
+        <button class="btn btn-secondary btn-sm btn-shared-page" data-dir="1" ${page >= totalPages ? 'disabled' : ''}>Następna</button>
+      </div>
+    </section>
+    ${guestHint}
+    <div class="deck-groups">
+      <section class="deck-group-section">
+        <div class="deck-list-grid ${options.deckListMode === 'classic' ? 'classic' : 'compact'}">
+          ${cardsHtml}
+        </div>
+      </section>
     </div>
   `;
 }
@@ -1621,6 +1886,7 @@ function formatDateTime(value) {
 
 export function renderUserProfile(profile = {}) {
   const roleLabel = profile.role || 'user';
+  const username = String(profile.username || '');
   const items = [
     { label: 'E-mail', value: profile.email || 'brak danych' },
     { label: 'ID użytkownika', value: profile.userId || 'brak danych' },
@@ -1639,6 +1905,31 @@ export function renderUserProfile(profile = {}) {
   document.getElementById('user-profile-content').innerHTML = `
     <div class="user-card">
       <div class="user-card-grid">
+        <div class="user-card-item">
+          <div class="user-card-label">Username</div>
+          <div class="user-profile-username-display" id="profile-username-display-row">
+            <div class="user-card-value" id="profile-username-value">${escapeHtml(username || 'brak danych')}</div>
+            <button class="btn btn-secondary btn-sm" id="btn-edit-username" type="button">Edytuj</button>
+          </div>
+          <div class="user-profile-username-edit" id="profile-username-edit-row" hidden>
+            <div class="user-profile-username-row">
+              <input
+                class="settings-input user-profile-username-input"
+                id="profile-username-input"
+                type="text"
+                value="${escapeAttr(username)}"
+                placeholder="np. u_abc123"
+                autocapitalize="off"
+                autocorrect="off"
+                spellcheck="false"
+              >
+              <button class="btn btn-primary btn-sm" id="btn-save-username" type="button">Zapisz</button>
+              <button class="btn btn-secondary btn-sm" id="btn-cancel-username-edit" type="button">Anuluj</button>
+            </div>
+            <div class="modal-form-hint">Dozwolone: 3-24 znaki, małe litery, cyfry oraz _ . -</div>
+            <div class="modal-form-error" id="profile-username-error"></div>
+          </div>
+        </div>
         ${html}
       </div>
     </div>
