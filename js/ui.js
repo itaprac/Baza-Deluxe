@@ -424,11 +424,13 @@ export function renderSharedDeckCatalog(data = {}, options = {}) {
       `;
     }).join('')
     : `
-      <div class="empty-state">
-        <div class="empty-state-icon">&#128218;</div>
-        <div class="empty-state-title">Brak wyników</div>
-        <div class="empty-state-text">
-          ${query ? 'Nie znaleziono talii dla podanego zapytania.' : 'Brak publicznie udostępnionych talii.'}
+      <div class="shared-empty-state-wrap">
+        <div class="empty-state shared-empty-state">
+          <div class="empty-state-icon">&#128218;</div>
+          <div class="empty-state-title">Brak wyników</div>
+          <div class="empty-state-text">
+            ${query ? 'Nie znaleziono talii dla podanego zapytania.' : 'Brak publicznie udostępnionych talii.'}
+          </div>
         </div>
       </div>
     `;

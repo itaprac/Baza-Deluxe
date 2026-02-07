@@ -170,6 +170,7 @@ let sharedCatalogState = {
   total: 0,
   items: [],
 };
+let sharedSearchRequestSeq = 0;
 let mySubscriptionDeckIds = new Set();
 
 // Test mode state
@@ -202,12 +203,14 @@ function normalizeDeckGroup(value) {
   return value.trim().replace(/\s+/g, ' ');
 }
 
-function getAvailableDeckGroups() {
+function getAvailableDeckGroups(scope = 'private') {
+  const targetScope = scope === 'public' ? 'public' : 'private';
   const collator = new Intl.Collator('pl', { sensitivity: 'base', numeric: true });
   const groups = new Set();
   for (const deckMeta of storage.getDecks()) {
-    if (isDeckReadOnlyContent(deckMeta)) continue;
-    if (deckMeta.isArchived === true) continue;
+    const deckScope = getDeckScope(deckMeta);
+    if (deckScope !== targetScope) continue;
+    if (targetScope === 'private' && deckMeta.isArchived === true) continue;
     const groupName = normalizeDeckGroup(deckMeta.group);
     if (groupName) groups.add(groupName);
   }
@@ -2190,6 +2193,8 @@ function navigateToSettings(deckId, returnTo = 'mode-select') {
   currentDeckId = deckId;
   settingsReturnTo = returnTo;
   const deckMeta = storage.getDecks().find(d => d.id === deckId);
+  const deckScope = getDeckScope(deckMeta);
+  const groupScope = deckScope === 'public' ? 'public' : 'private';
   document.getElementById('settings-deck-name').textContent = deckMeta ? deckMeta.name : deckId;
 
   showView('settings');
@@ -2197,7 +2202,7 @@ function navigateToSettings(deckId, returnTo = 'mode-select') {
   renderSettings(deckSettings, DEFAULT_SETTINGS, {
     deckMeta,
     canEditMeta: canEditDeckContent(deckId),
-    groupOptions: getAvailableDeckGroups(),
+    groupOptions: getAvailableDeckGroups(groupScope),
   });
   bindSettingsEvents(deckId);
 }
@@ -2835,7 +2840,7 @@ function bindSettingsEvents(deckId) {
     renderSettings(DEFAULT_SETTINGS, DEFAULT_SETTINGS, {
       deckMeta: getDeckMeta(deckId),
       canEditMeta: canEditDeckContent(deckId),
-      groupOptions: getAvailableDeckGroups(),
+      groupOptions: getAvailableDeckGroups(getDeckScope(getDeckMeta(deckId)) === 'public' ? 'public' : 'private'),
     });
     bindSettingsEvents(deckId);
     showNotification('Przywrócono ustawienia domyślne.', 'info');
@@ -4000,10 +4005,31 @@ function bindDeckListEvents() {
   const sharedSearchInput = document.getElementById('shared-search-input');
   if (sharedSearchInput) {
     sharedSearchInput.addEventListener('input', async () => {
-      sharedCatalogState.query = sharedSearchInput.value || '';
+      const queryValue = sharedSearchInput.value || '';
+      const selectionStart = sharedSearchInput.selectionStart;
+      const selectionEnd = sharedSearchInput.selectionEnd;
+      sharedCatalogState.query = queryValue;
       sharedCatalogState.page = 1;
+      const requestSeq = ++sharedSearchRequestSeq;
       await refreshSharedCatalog();
+      if (requestSeq !== sharedSearchRequestSeq) return;
       navigateToDeckList('shared', { skipSharedRefresh: true });
+
+      const nextInput = document.getElementById('shared-search-input');
+      if (!nextInput) return;
+      const fallbackPos = nextInput.value.length;
+      const nextSelectionStart = Number.isFinite(selectionStart)
+        ? Math.min(selectionStart, fallbackPos)
+        : fallbackPos;
+      const nextSelectionEnd = Number.isFinite(selectionEnd)
+        ? Math.min(selectionEnd, fallbackPos)
+        : nextSelectionStart;
+      nextInput.focus({ preventScroll: true });
+      try {
+        nextInput.setSelectionRange(nextSelectionStart, nextSelectionEnd);
+      } catch {
+        // setSelectionRange may fail in some browsers/input states
+      }
     });
   }
 
@@ -4100,7 +4126,7 @@ function openCreateDeckModal() {
     groupSelect.appendChild(option);
   };
   addGroupOption('', 'Bez grupy');
-  for (const groupName of getAvailableDeckGroups()) {
+  for (const groupName of getAvailableDeckGroups('private')) {
     addGroupOption(groupName, groupName);
   }
   addGroupOption('__new__', '+ Nowa grupa');
