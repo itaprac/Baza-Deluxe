@@ -345,7 +345,7 @@ export function renderDeckList(decks, statsMap, options = {}) {
     return `
       <section class="deck-group-section">
         <div class="deck-group-header">
-          <h3 class="deck-group-title">Grupa: ${escapeHtml(label)}</h3>
+          <h3 class="deck-group-title">${escapeHtml(label)}</h3>
           <span class="deck-group-count">${groupDecks.length}</span>
         </div>
         <div class="deck-list-grid ${deckListMode === 'compact' ? 'compact' : 'classic'}">
@@ -405,7 +405,7 @@ export function renderDeckList(decks, statsMap, options = {}) {
         return `
           <section class="deck-group-section">
             <div class="deck-group-header">
-              <h3 class="deck-group-title">Grupa: ${escapeHtml(label)}</h3>
+              <h3 class="deck-group-title">${escapeHtml(label)}</h3>
               <span class="deck-group-count">${ownGroupDecks.length}</span>
             </div>
             <div class="deck-list-grid ${deckListMode === 'compact' ? 'compact' : 'classic'}">
