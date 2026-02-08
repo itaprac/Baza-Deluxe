@@ -249,6 +249,13 @@ export function renderDeckList(decks, statsMap, options = {}) {
         </button>
       `);
     }
+    if (isOwnPrivateDeck) {
+      menuItems.push(`
+        <button class="deck-card-menu-item danger btn-remove-private-deck" data-deck-id="${escapeAttr(deck.id)}" data-deck-name="${escapeAttr(deck.name || deck.id)}" data-is-shared="${deck.isShared === true ? '1' : '0'}" data-shared-deck-id="${escapeAttr(deck.sharedDeckId || '')}" type="button">
+          Usuń
+        </button>
+      `);
+    }
     if (canShowShareToggle) {
       menuItems.push(`
         <button class="deck-card-menu-item btn-share-deck" data-deck-id="${escapeAttr(deck.id)}"${sharedDeckIdAttr} data-is-shared="${deck.isShared === true ? '1' : '0'}" type="button">

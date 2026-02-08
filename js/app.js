@@ -1302,6 +1302,33 @@ function updateLocalDeckMeta(deckId, updater) {
   return true;
 }
 
+async function deletePrivateDeck(deckId) {
+  const deckMeta = getDeckMeta(deckId);
+  if (!deckMeta) return false;
+  if (getDeckScope(deckMeta) !== 'private') return false;
+
+  const isShared = deckMeta.isShared === true;
+  const sharedDeckId = String(deckMeta.sharedDeckId || '').trim();
+  if (isShared && sharedDeckId) {
+    await unpublishSharedDeck(sharedDeckId);
+  }
+
+  const decks = storage.getDecks();
+  const idx = decks.findIndex((d) => d.id === deckId);
+  if (idx < 0) return false;
+  decks.splice(idx, 1);
+  storage.saveDecks(decks);
+  storage.clearDeckData(deckId);
+
+  if (currentDeckId === deckId) {
+    currentDeckId = null;
+    currentCategory = null;
+    currentSessionCategory = null;
+  }
+
+  return true;
+}
+
 function getSharedRowFromSubscription(subRow) {
   if (!subRow || typeof subRow !== 'object') return null;
   if (subRow.shared_decks && typeof subRow.shared_decks === 'object' && !Array.isArray(subRow.shared_decks)) {
@@ -4488,6 +4515,34 @@ function bindDeckListEvents() {
         showNotification('Talia została przeniesiona do archiwum prywatnego.', 'info');
         showPrivateArchived = false;
         navigateToDeckList('private');
+      }
+    });
+  });
+
+  document.querySelectorAll('.btn-remove-private-deck').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const deckId = String(btn.dataset.deckId || '').trim();
+      const deckMeta = getDeckMeta(deckId);
+      if (!deckMeta) return;
+      if (getDeckScope(deckMeta) !== 'private') return;
+
+      const deckName = deckMeta.name || deckId;
+      const sharedWarning = deckMeta.isShared === true
+        ? ' Udostępnianie tej talii zostanie też wyłączone.'
+        : '';
+      const confirmed = await showConfirmWithOptions(
+        'Usuń talię',
+        `Czy na pewno chcesz trwale usunąć "${deckName}"? Ta operacja usunie pytania, postęp i ustawienia.${sharedWarning}`,
+        { confirmLabel: 'Usuń' }
+      );
+      if (!confirmed) return;
+
+      try {
+        await deletePrivateDeck(deckId);
+        showNotification('Talia została usunięta.', 'success');
+        navigateToDeckList('private');
+      } catch (error) {
+        showNotification(`Nie udało się usunąć talii: ${error.message}`, 'error');
       }
     });
   });

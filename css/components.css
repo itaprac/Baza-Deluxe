@@ -622,6 +622,14 @@
   background: var(--color-bg);
 }
 
+.deck-card-menu-item.danger {
+  color: var(--color-danger);
+}
+
+.deck-card-menu-item.danger:hover {
+  background: var(--color-answer-incorrect);
+}
+
 .deck-private-sections {
   gap: 20px;
 }
