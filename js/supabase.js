@@ -392,6 +392,56 @@ export async function unsubscribeFromSharedDeck(sharedDeckId) {
   if (error) throw error;
 }
 
+// --- Community answer votes ---
+
+export async function fetchAnswerVoteSummary(options = {}) {
+  const targetScope = String(options.targetScope || '').trim();
+  const targetDeckId = String(options.targetDeckId || '').trim();
+  const questionIds = Array.isArray(options.questionIds)
+    ? options.questionIds.map((id) => String(id || '').trim()).filter((id) => id.length > 0)
+    : [];
+
+  if (!targetScope || !targetDeckId || questionIds.length === 0) {
+    return [];
+  }
+
+  const client = ensureClient();
+  const { data, error } = await client.rpc('fetch_answer_vote_summary', {
+    p_target_scope: targetScope,
+    p_target_deck_id: targetDeckId,
+    p_question_ids: questionIds,
+  });
+
+  if (error) throw error;
+  return data || [];
+}
+
+export async function setAnswerVote(options = {}) {
+  const targetScope = String(options.targetScope || '').trim();
+  const targetDeckId = String(options.targetDeckId || '').trim();
+  const questionId = String(options.questionId || '').trim();
+  const answerId = String(options.answerId || '').trim();
+  const vote = Number(options.vote);
+
+  if (!targetScope || !targetDeckId || !questionId || !answerId) {
+    throw new Error('Brakuje danych głosu.');
+  }
+  if (![1, 0, -1].includes(vote)) {
+    throw new Error('Nieprawidłowa wartość głosu.');
+  }
+
+  const client = ensureClient();
+  const { error } = await client.rpc('set_answer_vote', {
+    p_target_scope: targetScope,
+    p_target_deck_id: targetDeckId,
+    p_question_id: questionId,
+    p_answer_id: answerId,
+    p_vote: vote,
+  });
+
+  if (error) throw error;
+}
+
 // --- User storage ---
 
 export async function fetchAllUserStorage(userId) {

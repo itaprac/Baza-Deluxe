@@ -825,7 +825,7 @@
   position: relative;
 }
 
-.answer-option:hover {
+.answer-option:not(.disabled):hover {
   border-color: var(--color-primary);
   background: var(--color-primary-glow);
 }
@@ -838,7 +838,6 @@
 
 .answer-option.disabled {
   cursor: default;
-  pointer-events: none;
 }
 
 /* Feedback states */
@@ -900,6 +899,7 @@
 
 .answer-text {
   flex: 1;
+  min-width: 0;
   font-size: calc(0.95rem * var(--font-scale));
   line-height: 1.55;
 }
@@ -909,6 +909,64 @@
   font-size: 1.1rem;
   line-height: 1;
   margin-top: 2px;
+}
+
+.answer-votes {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.answer-votes.disabled {
+  opacity: 0.7;
+}
+
+.vote-pill {
+  border: 1px solid var(--color-border);
+  background: var(--color-card-bg);
+  border-radius: 999px;
+  min-width: 44px;
+  padding: 3px 10px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.vote-pill.plus {
+  color: var(--color-success);
+}
+
+.vote-pill.minus {
+  color: var(--color-danger);
+}
+
+.vote-pill:hover {
+  border-color: var(--color-text-muted);
+  transform: translateY(-1px);
+}
+
+.vote-pill.active.plus {
+  background: var(--color-answer-correct);
+  border-color: var(--color-success);
+}
+
+.vote-pill.active.minus {
+  background: var(--color-answer-incorrect);
+  border-color: var(--color-danger);
+}
+
+.answer-votes.disabled .vote-pill {
+  cursor: help;
+}
+
+.vote-pill.loading {
+  opacity: 0.6;
+  cursor: wait;
 }
 
 /* Explanation box */
@@ -1642,6 +1700,11 @@
   line-height: 1.45;
 }
 
+.test-review-answer > span:not(.test-review-answer-icon) {
+  flex: 1;
+  min-width: 0;
+}
+
 .test-review-answer.is-correct {
   background: var(--color-answer-correct);
 }
@@ -1750,6 +1813,11 @@
   border-radius: var(--radius-sm);
   font-size: calc(0.88rem * var(--font-scale));
   line-height: 1.45;
+}
+
+.browse-answer-text {
+  flex: 1;
+  min-width: 0;
 }
 
 .browse-answer.correct {
@@ -3171,6 +3239,39 @@
 
   .question-card {
     padding: 20px 18px;
+  }
+
+  .answer-option {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .answer-votes {
+    width: 100%;
+    margin-left: 0;
+    padding-left: 34px;
+    justify-content: flex-end;
+  }
+
+  .browse-answer {
+    flex-wrap: wrap;
+  }
+
+  .browse-answer .answer-votes {
+    width: auto;
+    padding-left: 0;
+    margin-left: auto;
+  }
+
+  .test-review-answer {
+    flex-wrap: wrap;
+  }
+
+  .test-review-answer .answer-votes {
+    width: 100%;
+    padding-left: 20px;
+    margin-left: 0;
+    justify-content: flex-end;
   }
 
   .deck-card {

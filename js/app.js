@@ -68,6 +68,8 @@ import {
   fetchMySubscriptions,
   subscribeToSharedDeck,
   unsubscribeFromSharedDeck,
+  fetchAnswerVoteSummary,
+  setAnswerVote,
 } from './supabase.js';
 
 // --- App State ---
@@ -137,6 +139,7 @@ const ADMIN_USERS_PAGE_SIZE = 12;
 const ADMIN_HIDDEN_DECKS_PAGE_SIZE = 8;
 const SHARED_CATALOG_PAGE_SIZE = 20;
 const MAX_PRIVATE_DECKS_PER_USER = 15;
+const VOTE_FETCH_CHUNK_SIZE = 100;
 
 let appSettings = { ...DEFAULT_APP_SETTINGS, keybindings: { ...DEFAULT_APP_SETTINGS.keybindings } };
 let fontScale = DEFAULT_FONT_SCALE;
@@ -196,6 +199,12 @@ let testAnswers = new Map(); // questionId → Set of selected answer ids
 let testShuffledAnswers = null;
 let testSelectedIds = new Set();
 let testShuffledMap = new Map(); // index → shuffled answers array
+let testResultAnswers = [];
+
+// Community vote cache:
+// key = `${targetScope}|${targetDeckId}|${questionId}`
+// value = { loaded: boolean, answers: Map(answerId -> { plusCount, minusCount, userVote }) }
+let voteSummaryCache = new Map();
 
 function normalizeLayoutWidth(value) {
   return String(value || '').trim() === '50%' ? '50%' : '65%';
@@ -301,6 +310,283 @@ function getEffectiveSelectionModeForDeck(question, deckId = currentDeckId) {
     question,
     getDeckDefaultSelectionModeForDeckId(deckId)
   );
+}
+
+function getVoteTargetForDeck(deckId) {
+  const deckMeta = getDeckMeta(deckId);
+  if (!deckMeta) return null;
+  const scope = getDeckScope(deckMeta);
+
+  if (scope === 'public') {
+    return {
+      targetScope: 'public',
+      targetDeckId: deckMeta.id,
+    };
+  }
+
+  if (scope === 'subscribed' && typeof deckMeta.sharedDeckId === 'string' && deckMeta.sharedDeckId.length > 0) {
+    return {
+      targetScope: 'shared',
+      targetDeckId: deckMeta.sharedDeckId,
+    };
+  }
+
+  return null;
+}
+
+function resetVoteSummaryCache() {
+  voteSummaryCache = new Map();
+}
+
+function normalizeVoteEntry(entry = null) {
+  return {
+    plusCount: Math.max(0, Number(entry?.plusCount ?? entry?.plus_count ?? 0) || 0),
+    minusCount: Math.max(0, Number(entry?.minusCount ?? entry?.minus_count ?? 0) || 0),
+    userVote: Number(entry?.userVote ?? entry?.user_vote ?? 0) || 0,
+  };
+}
+
+function makeVoteCacheKey(voteTarget, questionId) {
+  if (!voteTarget || !questionId) return '';
+  return `${voteTarget.targetScope}|${voteTarget.targetDeckId}|${questionId}`;
+}
+
+function getVoteCacheEntry(voteTarget, questionId, create = false) {
+  const key = makeVoteCacheKey(voteTarget, questionId);
+  if (!key) return null;
+  let entry = voteSummaryCache.get(key) || null;
+  if (!entry && create) {
+    entry = {
+      loaded: false,
+      answers: new Map(),
+    };
+    voteSummaryCache.set(key, entry);
+  }
+  return entry;
+}
+
+function getVoteEntryForAnswer(voteTarget, questionId, answerId) {
+  const entry = getVoteCacheEntry(voteTarget, questionId, false);
+  if (!entry) return normalizeVoteEntry(null);
+  return normalizeVoteEntry(entry.answers.get(answerId));
+}
+
+function setVoteEntryForAnswer(voteTarget, questionId, answerId, voteEntry) {
+  const entry = getVoteCacheEntry(voteTarget, questionId, true);
+  if (!entry) return;
+  entry.loaded = true;
+  entry.answers.set(answerId, normalizeVoteEntry(voteEntry));
+}
+
+function chunkArray(items, chunkSize) {
+  const chunked = [];
+  for (let i = 0; i < items.length; i += chunkSize) {
+    chunked.push(items.slice(i, i + chunkSize));
+  }
+  return chunked;
+}
+
+async function ensureVoteSummaryForQuestions(deckId, questionIds = [], options = {}) {
+  if (!isSupabaseConfigured()) return null;
+
+  const voteTarget = getVoteTargetForDeck(deckId);
+  if (!voteTarget) return null;
+
+  const forceRefresh = options.forceRefresh === true;
+  const uniqueQuestionIds = [...new Set(
+    (Array.isArray(questionIds) ? questionIds : [])
+      .map((questionId) => String(questionId || '').trim())
+      .filter((questionId) => questionId.length > 0)
+  )];
+
+  if (uniqueQuestionIds.length === 0) return voteTarget;
+
+  const questionIdsToFetch = forceRefresh
+    ? uniqueQuestionIds
+    : uniqueQuestionIds.filter((questionId) => {
+      const entry = getVoteCacheEntry(voteTarget, questionId, true);
+      return !entry || entry.loaded !== true;
+    });
+
+  if (questionIdsToFetch.length === 0) return voteTarget;
+
+  const rows = [];
+  const chunks = chunkArray(questionIdsToFetch, VOTE_FETCH_CHUNK_SIZE);
+
+  for (const questionChunk of chunks) {
+    const partialRows = await fetchAnswerVoteSummary({
+      targetScope: voteTarget.targetScope,
+      targetDeckId: voteTarget.targetDeckId,
+      questionIds: questionChunk,
+    });
+    if (Array.isArray(partialRows)) rows.push(...partialRows);
+  }
+
+  for (const questionId of questionIdsToFetch) {
+    const entry = getVoteCacheEntry(voteTarget, questionId, true);
+    entry.loaded = true;
+    entry.answers = new Map();
+  }
+
+  for (const row of rows) {
+    const questionId = String(row?.question_id || '').trim();
+    const answerId = String(row?.answer_id || '').trim();
+    if (!questionId || !answerId) continue;
+    const entry = getVoteCacheEntry(voteTarget, questionId, true);
+    entry.loaded = true;
+    entry.answers.set(answerId, normalizeVoteEntry({
+      plusCount: row.plus_count,
+      minusCount: row.minus_count,
+      userVote: row.user_vote,
+    }));
+  }
+
+  return voteTarget;
+}
+
+function buildVoteSummaryByQuestion(voteTarget, questions = []) {
+  const summary = {};
+  if (!voteTarget) return summary;
+
+  for (const question of questions) {
+    if (!question || !Array.isArray(question.answers) || question.answers.length === 0) continue;
+    const questionEntry = getVoteCacheEntry(voteTarget, question.id, false);
+    const answerMap = {};
+    for (const answer of question.answers) {
+      const answerEntry = questionEntry ? questionEntry.answers.get(answer.id) : null;
+      answerMap[answer.id] = normalizeVoteEntry(answerEntry);
+    }
+    summary[question.id] = answerMap;
+  }
+
+  return summary;
+}
+
+function getVoteConfigForDeck(deckId, options = {}) {
+  const voteTarget = getVoteTargetForDeck(deckId);
+  const enabled = isSupabaseConfigured() && !!voteTarget;
+  return {
+    enabled,
+    canVote: enabled && sessionMode === 'user',
+    showMinus: options.showMinus === true,
+  };
+}
+
+function setVoteButtonsLoading(questionId, answerId, loading) {
+  document.querySelectorAll('.vote-pill').forEach((button) => {
+    if (button.dataset.questionId !== questionId) return;
+    if (button.dataset.answerId !== answerId) return;
+    button.classList.toggle('loading', loading);
+    button.disabled = loading;
+  });
+}
+
+function syncVoteButtonsForQuestion(deckId, question) {
+  if (!question) return;
+  const voteTarget = getVoteTargetForDeck(deckId);
+  if (!voteTarget) return;
+  const questionId = String(question.id || '');
+  if (!questionId) return;
+  const selectionMode = getEffectiveSelectionModeForDeck(question, deckId);
+  const showMinus = selectionMode === 'multiple';
+  const canVote = sessionMode === 'user';
+
+  for (const answer of (Array.isArray(question.answers) ? question.answers : [])) {
+    const answerId = String(answer.id || '');
+    if (!answerId) continue;
+    const voteEntry = getVoteEntryForAnswer(voteTarget, questionId, answerId);
+    document.querySelectorAll('.vote-pill').forEach((button) => {
+      if (button.dataset.questionId !== questionId) return;
+      if (button.dataset.answerId !== answerId) return;
+      const voteValue = Number(button.dataset.voteAction || 0);
+      if (!showMinus && voteValue === -1) {
+        button.style.display = 'none';
+        return;
+      }
+      if (voteValue === -1) {
+        button.style.display = '';
+      }
+      const count = voteValue === 1 ? voteEntry.plusCount : voteEntry.minusCount;
+      button.textContent = `${voteValue === 1 ? '+' : '-'}${count}`;
+      button.classList.toggle('active', voteEntry.userVote === voteValue);
+      if (!button.classList.contains('loading')) {
+        button.disabled = false;
+      }
+    });
+  }
+
+  document.querySelectorAll('.answer-votes[data-question-id]').forEach((wrapper) => {
+    if (wrapper.dataset.questionId !== questionId) return;
+    wrapper.classList.toggle('disabled', !canVote);
+  });
+}
+
+async function handleVoteButtonClick(deckId, question, answerId, requestedVote) {
+  const voteTarget = getVoteTargetForDeck(deckId);
+  if (!voteTarget || !isSupabaseConfigured()) return;
+  const questionId = String(question?.id || '');
+  const normalizedAnswerId = String(answerId || '');
+  if (!questionId || !normalizedAnswerId) return;
+
+  if (sessionMode !== 'user') {
+    showNotification('Zaloguj się, aby głosować nad poprawnością odpowiedzi.', 'info');
+    return;
+  }
+
+  const previousEntry = getVoteEntryForAnswer(voteTarget, questionId, normalizedAnswerId);
+  const nextVote = previousEntry.userVote === requestedVote ? 0 : requestedVote;
+  const optimisticEntry = { ...previousEntry };
+
+  if (previousEntry.userVote === 1) optimisticEntry.plusCount = Math.max(0, optimisticEntry.plusCount - 1);
+  if (previousEntry.userVote === -1) optimisticEntry.minusCount = Math.max(0, optimisticEntry.minusCount - 1);
+  if (nextVote === 1) optimisticEntry.plusCount += 1;
+  if (nextVote === -1) optimisticEntry.minusCount += 1;
+  optimisticEntry.userVote = nextVote;
+
+  setVoteEntryForAnswer(voteTarget, questionId, normalizedAnswerId, optimisticEntry);
+  syncVoteButtonsForQuestion(deckId, question);
+  setVoteButtonsLoading(questionId, normalizedAnswerId, true);
+
+  try {
+    await setAnswerVote({
+      targetScope: voteTarget.targetScope,
+      targetDeckId: voteTarget.targetDeckId,
+      questionId,
+      answerId: normalizedAnswerId,
+      vote: nextVote,
+    });
+    await ensureVoteSummaryForQuestions(deckId, [questionId], { forceRefresh: true });
+  } catch (error) {
+    setVoteEntryForAnswer(voteTarget, questionId, normalizedAnswerId, previousEntry);
+    showNotification(`Nie udało się zapisać głosu: ${error.message}`, 'error');
+  } finally {
+    syncVoteButtonsForQuestion(deckId, question);
+    setVoteButtonsLoading(questionId, normalizedAnswerId, false);
+  }
+}
+
+function bindVoteButtons(deckId, questions = []) {
+  if (!isSupabaseConfigured()) return;
+  const voteTarget = getVoteTargetForDeck(deckId);
+  if (!voteTarget) return;
+
+  const questionMap = new Map(
+    (Array.isArray(questions) ? questions : [])
+      .filter((question) => question && question.id != null)
+      .map((question) => [String(question.id), question])
+  );
+
+  document.querySelectorAll('.vote-pill[data-vote-action][data-question-id][data-answer-id]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const questionId = String(button.dataset.questionId || '');
+      const answerId = String(button.dataset.answerId || '');
+      const requestedVote = Number(button.dataset.voteAction || 0);
+      if (!questionId || !answerId || ![1, -1].includes(requestedVote)) return;
+      const question = questionMap.get(questionId);
+      if (!question) return;
+      await handleVoteButtonClick(deckId, question, answerId, requestedVote);
+    });
+  });
 }
 
 function canEditDeckContent(deckId) {
@@ -1123,6 +1409,7 @@ async function refreshSharedCatalog() {
 
 async function bootstrapGuestSession() {
   clearWaitTimer();
+  resetVoteSummaryCache();
   sessionMode = 'guest';
   currentUser = null;
   currentUserProfile = null;
@@ -1139,6 +1426,7 @@ async function bootstrapGuestSession() {
 }
 
 async function bootstrapUserSession(user) {
+  resetVoteSummaryCache();
   sessionMode = 'user';
   currentUser = user;
   currentUserProfile = null;
@@ -1584,6 +1872,7 @@ function startTest(deckId, questionCount) {
   testCurrentIndex = 0;
   testAnswers = new Map();
   testShuffledMap = new Map();
+  testResultAnswers = [];
 
   showTestQuestion();
 }
@@ -1659,7 +1948,7 @@ function bindTestQuestionEvents(isMulti) {
     nextBtn.disabled = testSelectedIds.size === 0;
   });
 
-  nextBtn.addEventListener('click', () => {
+  nextBtn.addEventListener('click', async () => {
     // Save answer
     const question = testQuestions[testCurrentIndex];
     testAnswers.set(question.id, new Set(testSelectedIds));
@@ -1668,7 +1957,7 @@ function bindTestQuestionEvents(isMulti) {
     if (testCurrentIndex < testQuestions.length) {
       showTestQuestion();
     } else {
-      finishTest();
+      await finishTest();
     }
   });
 
@@ -1687,7 +1976,7 @@ function bindTestQuestionEvents(isMulti) {
   }
 }
 
-function finishTest() {
+async function finishTest() {
   let score = 0;
   const answers = testQuestions.map(q => {
     const selectedIds = testAnswers.get(q.id) || new Set();
@@ -1710,9 +1999,34 @@ function finishTest() {
 
   const deckMeta = storage.getDecks().find(d => d.id === currentDeckId);
   const deckName = deckMeta ? deckMeta.name : currentDeckId;
+  const voteConfig = getVoteConfigForDeck(currentDeckId);
+  let voteSummaryByQuestion = {};
+
+  if (voteConfig.enabled && testQuestions.length > 0) {
+    try {
+      const voteTarget = await ensureVoteSummaryForQuestions(
+        currentDeckId,
+        testQuestions.map((question) => question.id)
+      );
+      if (voteTarget) {
+        voteSummaryByQuestion = buildVoteSummaryByQuestion(voteTarget, testQuestions);
+      }
+    } catch (error) {
+      showNotification(`Nie udało się pobrać głosów społeczności: ${error.message}`, 'error');
+    }
+  }
+
+  testResultAnswers = answers;
 
   showView('test-result');
-  renderTestResult(deckName, { score, total: testQuestions.length, answers });
+  renderTestResult(deckName, {
+    score,
+    total: testQuestions.length,
+    answers,
+    voteSummaryByQuestion,
+    voteConfig,
+    deckDefaultSelectionMode: getDeckDefaultSelectionModeForDeckId(currentDeckId),
+  });
   bindTestResultEvents();
 }
 
@@ -1737,19 +2051,46 @@ function bindTestResultEvents() {
       navigateToDeckList();
     });
   }
+
+  bindVoteButtons(
+    currentDeckId,
+    testResultAnswers.map((entry) => entry.question)
+  );
 }
 
 // --- Browse Mode ---
 
-function navigateToBrowse(deckId, options = {}) {
+async function navigateToBrowse(deckId, options = {}) {
   currentDeckId = deckId;
   const deckMeta = storage.getDecks().find(d => d.id === deckId);
   const deckName = deckMeta ? deckMeta.name : deckId;
   const questions = getFilteredQuestions(deckId);
+  const voteConfig = getVoteConfigForDeck(deckId);
+  let voteSummaryByQuestion = {};
+
+  if (voteConfig.enabled && questions.length > 0) {
+    try {
+      const voteTarget = await ensureVoteSummaryForQuestions(
+        deckId,
+        questions.map((question) => question.id)
+      );
+      if (voteTarget) {
+        voteSummaryByQuestion = buildVoteSummaryByQuestion(voteTarget, questions);
+      }
+    } catch (error) {
+      showNotification(`Nie udało się pobrać głosów społeczności: ${error.message}`, 'error');
+    }
+  }
 
   showView('browse');
-  renderBrowse(deckName, questions, { canEdit: canEditDeckContent(deckId) });
+  renderBrowse(deckName, questions, {
+    canEdit: canEditDeckContent(deckId),
+    voteSummaryByQuestion,
+    voteConfig,
+    deckDefaultSelectionMode: getDeckDefaultSelectionModeForDeckId(deckId),
+  });
   bindBrowseEvents();
+  bindVoteButtons(deckId, questions);
 
   if (typeof options.searchQuery === 'string') {
     applyBrowseSearchQuery(options.searchQuery);
@@ -4381,20 +4722,37 @@ function bindQuestionEvents(isMultiSelect) {
   bindEditButton();
 }
 
-function showFeedback() {
+async function showFeedback() {
   studyPhase = 'feedback';
   const intervals = getButtonIntervals(currentCard, currentDeckSettings);
+  const selectionMode = getEffectiveSelectionModeForDeck(currentQuestion, currentDeckId);
+  const voteConfig = getVoteConfigForDeck(currentDeckId, { showMinus: selectionMode === 'multiple' });
+  let voteSummaryByAnswer = null;
+
+  if (voteConfig.enabled && !isFlashcard(currentQuestion)) {
+    try {
+      const voteTarget = await ensureVoteSummaryForQuestions(currentDeckId, [currentQuestion.id]);
+      if (voteTarget) {
+        const summaryByQuestion = buildVoteSummaryByQuestion(voteTarget, [currentQuestion]);
+        voteSummaryByAnswer = summaryByQuestion[currentQuestion.id] || null;
+      }
+    } catch (error) {
+      showNotification(`Nie udało się pobrać głosów społeczności: ${error.message}`, 'error');
+    }
+  }
 
   renderAnswerFeedback(
     currentQuestion,
     currentShuffledAnswers,
     selectedAnswerIds,
-    getEffectiveSelectionModeForDeck(currentQuestion, currentDeckId),
+    selectionMode,
     currentQuestion.explanation || null,
     intervals,
     appSettings.keybindings,
     currentCardFlagged,
-    canEditDeckContent(currentDeckId)
+    canEditDeckContent(currentDeckId),
+    voteSummaryByAnswer,
+    voteConfig
   );
 
   // Bind rating buttons
@@ -4405,6 +4763,7 @@ function showFeedback() {
     });
   });
 
+  bindVoteButtons(currentDeckId, [currentQuestion]);
   bindEditButton();
   bindFlagButton();
 }

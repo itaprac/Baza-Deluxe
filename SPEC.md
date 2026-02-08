@@ -115,6 +115,32 @@ Dodatkowe możliwości:
 - Pokazuje wyłącznie oznaczone pytania.
 - Umożliwia rozpoczęcie nauki Anki tylko na tej podgrupie.
 
+### 5.5. Głosy społeczności (poprawność odpowiedzi)
+
+- Funkcja działa dla talii:
+  - `Ogólne`,
+  - `Subskrybowane` z katalogu `Udostępnione`.
+- Głos dotyczy konkretnej odpowiedzi i jest zapisywany per:
+  `użytkownik + talia + pytanie + odpowiedź`.
+- Znaczenie głosów:
+  - `+1` = „ta odpowiedź powinna być poprawna”,
+  - `-1` = „ta odpowiedź powinna być błędna”.
+- W pytaniach `single` UI pokazuje tylko `+1`.
+- W pytaniach `multiple` UI pokazuje `+1` i `-1`.
+- Przełącznik głosu:
+  - brak głosu -> `+1` lub `-1`,
+  - klik aktywnego głosu usuwa głos (`0`),
+  - klik przeciwnego głosu zmienia głos.
+- Głosować mogą tylko użytkownicy zalogowani.
+- Liczniki `+N/-N` są widoczne także dla gości (jeśli Supabase jest skonfigurowany).
+- Widoczność liczników:
+  - `Anki`: po `Pokaż odpowiedź`,
+  - `Test`: w ekranie wyniku (sekcja przeglądu odpowiedzi),
+  - `Przeglądanie`: od razu przy odpowiedziach.
+- Głosy mają charakter informacyjny:
+  - nie zmieniają oficjalnego klucza odpowiedzi,
+  - nie wpływają na scoring testu ani ocenę SRS.
+
 ---
 
 ## 6. Import talii JSON

@@ -1,6 +1,12 @@
 // ui.js — DOM rendering and event handling
 
-import { shuffle, renderLatex, isFlashcard, normalizeSelectionMode } from './utils.js';
+import {
+  shuffle,
+  renderLatex,
+  isFlashcard,
+  normalizeSelectionMode,
+  getEffectiveQuestionSelectionMode,
+} from './utils.js';
 
 // --- Deck List View ---
 
@@ -11,6 +17,71 @@ function renderDeckScopeTabs(activeScope = 'public') {
       <button class="deck-scope-tab ${normalized === 'public' ? 'active' : ''}" data-scope="public">Ogólne</button>
       <button class="deck-scope-tab ${normalized === 'shared' ? 'active' : ''}" data-scope="shared">Udostępnione</button>
       <button class="deck-scope-tab ${normalized === 'private' ? 'active' : ''}" data-scope="private">Moje</button>
+    </div>
+  `;
+}
+
+function toVoteNumber(value, fallback = 0) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : fallback;
+}
+
+function normalizeVoteEntry(entry = null) {
+  return {
+    plusCount: Math.max(0, toVoteNumber(entry?.plusCount ?? entry?.plus_count, 0)),
+    minusCount: Math.max(0, toVoteNumber(entry?.minusCount ?? entry?.minus_count, 0)),
+    userVote: toVoteNumber(entry?.userVote ?? entry?.user_vote, 0),
+  };
+}
+
+function getVoteEntry(voteSummaryByAnswer, answerId) {
+  if (!voteSummaryByAnswer) return normalizeVoteEntry(null);
+  if (voteSummaryByAnswer instanceof Map) {
+    return normalizeVoteEntry(voteSummaryByAnswer.get(answerId));
+  }
+  if (typeof voteSummaryByAnswer === 'object') {
+    return normalizeVoteEntry(voteSummaryByAnswer[answerId]);
+  }
+  return normalizeVoteEntry(null);
+}
+
+function renderAnswerVoteControls(questionId, answerId, voteSummaryByAnswer, voteConfig = {}) {
+  const enabled = voteConfig?.enabled === true;
+  if (!enabled) return '';
+
+  const canVote = voteConfig?.canVote === true;
+  const showMinus = voteConfig?.showMinus === true;
+  const voteEntry = getVoteEntry(voteSummaryByAnswer, answerId);
+  const disabledAttr = canVote ? '' : ' aria-disabled="true"';
+  const title = canVote ? 'Zagłosuj na poprawność tej odpowiedzi.' : 'Zaloguj się, aby głosować.';
+
+  const plusClass = voteEntry.userVote === 1 ? ' active' : '';
+  const minusClass = voteEntry.userVote === -1 ? ' active' : '';
+  const wrapperClass = canVote ? 'answer-votes' : 'answer-votes disabled';
+  const minusHtml = showMinus
+    ? `
+      <button
+        class="vote-pill minus${minusClass}"
+        type="button"
+        data-vote-action="-1"
+        data-question-id="${escapeAttr(questionId)}"
+        data-answer-id="${escapeAttr(answerId)}"
+        title="${escapeAttr(title)}"${disabledAttr}
+      >-${voteEntry.minusCount}</button>
+    `
+    : '';
+
+  return `
+    <div class="${wrapperClass}" data-question-id="${escapeAttr(questionId)}" data-answer-id="${escapeAttr(answerId)}">
+      <button
+        class="vote-pill plus${plusClass}"
+        type="button"
+        data-vote-action="1"
+        data-question-id="${escapeAttr(questionId)}"
+        data-answer-id="${escapeAttr(answerId)}"
+        title="${escapeAttr(title)}"${disabledAttr}
+      >+${voteEntry.plusCount}</button>
+      ${minusHtml}
     </div>
   `;
 }
@@ -544,7 +615,9 @@ export function renderAnswerFeedback(
   intervals,
   keybindings = null,
   flagged = false,
-  canEdit = true
+  canEdit = true,
+  voteSummaryByAnswer = null,
+  voteConfig = null
 ) {
   const isMultiSelect = selectionMode === 'multiple';
   const flashcard = isFlashcard(question);
@@ -577,10 +650,18 @@ export function renderAnswerFeedback(
         icon = '<span class="answer-feedback-icon" style="color: var(--color-warning)">&#10003;</span>';
       }
 
+      const votesHtml = renderAnswerVoteControls(
+        question.id,
+        a.id,
+        voteSummaryByAnswer,
+        voteConfig
+      );
+
       return `
         <div class="answer-option ${stateClass}" data-answer-id="${escapeAttr(a.id)}">
           <div class="answer-indicator ${isMultiSelect ? 'checkbox' : ''}"></div>
           <div class="answer-text">${renderLatex(escapeHtml(a.text))}</div>
+          ${votesHtml}
           ${icon}
         </div>
       `;
@@ -1033,6 +1114,13 @@ export function renderTestResult(deckName, results) {
   document.getElementById('test-result-deck-name').textContent = deckName;
 
   const { score, total, answers } = results;
+  const voteSummaryByQuestion = results.voteSummaryByQuestion && typeof results.voteSummaryByQuestion === 'object'
+    ? results.voteSummaryByQuestion
+    : null;
+  const voteConfigBase = results.voteConfig && typeof results.voteConfig === 'object'
+    ? results.voteConfig
+    : { enabled: false, canVote: false };
+  const deckDefaultSelectionMode = normalizeSelectionMode(results.deckDefaultSelectionMode, 'multiple');
   const pct = total > 0 ? Math.round((score / total) * 100) : 0;
 
   let scoreClass = 'score-low';
@@ -1047,6 +1135,12 @@ export function renderTestResult(deckName, results) {
     const isCorrect = a.correct;
     const iconClass = isCorrect ? 'correct' : 'incorrect';
     const iconChar = isCorrect ? '&#10003;' : '&#10007;';
+
+    const questionSelectionMode = getEffectiveQuestionSelectionMode(a.question, deckDefaultSelectionMode);
+    const showMinus = questionSelectionMode === 'multiple';
+    const questionVotes = voteSummaryByQuestion && typeof voteSummaryByQuestion === 'object'
+      ? voteSummaryByQuestion[a.question.id] || null
+      : null;
 
     const detailHtml = a.question.answers.map(ans => {
       const wasSelected = a.selectedIds.has(ans.id);
@@ -1067,7 +1161,18 @@ export function renderTestResult(deckName, results) {
         icon = '<span class="test-review-answer-icon" style="color: transparent">&#8226;</span>';
       }
 
-      return `<div class="test-review-answer ${cssClass}">${icon}<span>${renderLatex(escapeHtml(ans.text))}</span></div>`;
+      const votesHtml = renderAnswerVoteControls(
+        a.question.id,
+        ans.id,
+        questionVotes,
+        {
+          enabled: voteConfigBase.enabled === true,
+          canVote: voteConfigBase.canVote === true,
+          showMinus,
+        }
+      );
+
+      return `<div class="test-review-answer ${cssClass}">${icon}<span>${renderLatex(escapeHtml(ans.text))}</span>${votesHtml}</div>`;
     }).join('');
 
     return `
@@ -1103,6 +1208,13 @@ export function renderTestResult(deckName, results) {
 
 export function renderBrowse(deckName, questions, options = {}) {
   const canEdit = options.canEdit !== false;
+  const voteSummaryByQuestion = options.voteSummaryByQuestion && typeof options.voteSummaryByQuestion === 'object'
+    ? options.voteSummaryByQuestion
+    : null;
+  const voteConfigBase = options.voteConfig && typeof options.voteConfig === 'object'
+    ? options.voteConfig
+    : { enabled: false, canVote: false };
+  const deckDefaultSelectionMode = normalizeSelectionMode(options.deckDefaultSelectionMode, 'multiple');
   document.getElementById('browse-deck-name').textContent = deckName;
 
   const toolbarHtml = `
@@ -1116,6 +1228,11 @@ export function renderBrowse(deckName, questions, options = {}) {
 
   const listHtml = questions.map((q, i) => {
     const flashcard = isFlashcard(q);
+    const questionSelectionMode = getEffectiveQuestionSelectionMode(q, deckDefaultSelectionMode);
+    const showMinus = questionSelectionMode === 'multiple';
+    const questionVotes = voteSummaryByQuestion && typeof voteSummaryByQuestion === 'object'
+      ? voteSummaryByQuestion[q.id] || null
+      : null;
 
     let answersHtml = '';
     if (!flashcard) {
@@ -1125,7 +1242,17 @@ export function renderBrowse(deckName, questions, options = {}) {
         const icon = isCorrect
           ? '<span class="browse-answer-icon" style="color: var(--color-success)">&#10003;</span>'
           : '<span class="browse-answer-icon" style="color: transparent">&#8226;</span>';
-        return `<div class="browse-answer ${cls}">${icon}<span>${renderLatex(escapeHtml(a.text))}</span></div>`;
+        const votesHtml = renderAnswerVoteControls(
+          q.id,
+          a.id,
+          questionVotes,
+          {
+            enabled: voteConfigBase.enabled === true,
+            canVote: voteConfigBase.canVote === true,
+            showMinus,
+          }
+        );
+        return `<div class="browse-answer ${cls}">${icon}<span class="browse-answer-text">${renderLatex(escapeHtml(a.text))}</span>${votesHtml}</div>`;
       }).join('');
     }
 

@@ -575,6 +575,247 @@ to authenticated
 using (public.current_app_role() in ('admin'::public.app_role, 'dev'::public.app_role))
 with check (public.current_app_role() in ('admin'::public.app_role, 'dev'::public.app_role));
 
+-- --- Community answer votes ---
+
+create table if not exists public.answer_votes (
+  target_scope text not null
+    check (target_scope in ('public', 'shared')),
+  target_deck_id text not null,
+  question_id text not null,
+  answer_id text not null,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  vote smallint not null
+    check (vote in (-1, 1)),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (target_scope, target_deck_id, question_id, answer_id, user_id)
+);
+
+create index if not exists answer_votes_target_question_idx
+on public.answer_votes (target_scope, target_deck_id, question_id);
+
+create index if not exists answer_votes_target_answer_idx
+on public.answer_votes (target_scope, target_deck_id, question_id, answer_id);
+
+create index if not exists answer_votes_user_target_question_idx
+on public.answer_votes (user_id, target_scope, target_deck_id, question_id);
+
+drop trigger if exists set_answer_votes_updated_at on public.answer_votes;
+create trigger set_answer_votes_updated_at
+before update on public.answer_votes
+for each row
+execute function public.set_updated_at_timestamp();
+
+alter table public.answer_votes enable row level security;
+
+create or replace function public.can_access_answer_vote_target(
+  p_target_scope text,
+  p_target_deck_id text,
+  p_user_id uuid default auth.uid()
+)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+  if p_target_scope = 'public' then
+    return coalesce(length(trim(p_target_deck_id)), 0) > 0;
+  end if;
+
+  if p_target_scope = 'shared' then
+    if exists (
+      select 1
+      from public.shared_decks sd
+      where sd.id = p_target_deck_id
+        and sd.is_published = true
+    ) then
+      return true;
+    end if;
+
+    if p_user_id is null then
+      return false;
+    end if;
+
+    if exists (
+      select 1
+      from public.shared_decks sd
+      where sd.id = p_target_deck_id
+        and sd.owner_user_id = p_user_id
+    ) then
+      return true;
+    end if;
+
+    if exists (
+      select 1
+      from public.shared_deck_subscriptions sds
+      where sds.shared_deck_id = p_target_deck_id
+        and sds.user_id = p_user_id
+    ) then
+      return true;
+    end if;
+
+    return false;
+  end if;
+
+  return false;
+end;
+$$;
+
+create or replace function public.set_answer_vote(
+  p_target_scope text,
+  p_target_deck_id text,
+  p_question_id text,
+  p_answer_id text,
+  p_vote smallint
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  actor_id uuid;
+begin
+  actor_id := auth.uid();
+
+  if actor_id is null then
+    raise exception 'Brak autoryzacji';
+  end if;
+
+  if p_target_scope not in ('public', 'shared') then
+    raise exception 'Nieprawidłowy target_scope';
+  end if;
+
+  if p_vote not in (-1, 0, 1) then
+    raise exception 'Nieprawidłowa wartość głosu';
+  end if;
+
+  if coalesce(length(trim(p_target_deck_id)), 0) = 0
+    or coalesce(length(trim(p_question_id)), 0) = 0
+    or coalesce(length(trim(p_answer_id)), 0) = 0 then
+    raise exception 'Brak wymaganych identyfikatorów głosu';
+  end if;
+
+  if not public.can_access_answer_vote_target(p_target_scope, p_target_deck_id, actor_id) then
+    raise exception 'Brak uprawnień do tej talii';
+  end if;
+
+  if p_vote = 0 then
+    delete from public.answer_votes av
+    where av.target_scope = p_target_scope
+      and av.target_deck_id = p_target_deck_id
+      and av.question_id = p_question_id
+      and av.answer_id = p_answer_id
+      and av.user_id = actor_id;
+    return;
+  end if;
+
+  insert into public.answer_votes (
+    target_scope,
+    target_deck_id,
+    question_id,
+    answer_id,
+    user_id,
+    vote
+  )
+  values (
+    p_target_scope,
+    p_target_deck_id,
+    p_question_id,
+    p_answer_id,
+    actor_id,
+    p_vote
+  )
+  on conflict (target_scope, target_deck_id, question_id, answer_id, user_id)
+  do update set
+    vote = excluded.vote,
+    updated_at = now();
+end;
+$$;
+
+create or replace function public.fetch_answer_vote_summary(
+  p_target_scope text,
+  p_target_deck_id text,
+  p_question_ids text[]
+)
+returns table(
+  question_id text,
+  answer_id text,
+  plus_count int,
+  minus_count int,
+  user_vote smallint
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if p_target_scope not in ('public', 'shared') then
+    raise exception 'Nieprawidłowy target_scope';
+  end if;
+
+  if not public.can_access_answer_vote_target(p_target_scope, p_target_deck_id, auth.uid()) then
+    raise exception 'Brak uprawnień do tej talii';
+  end if;
+
+  if p_question_ids is null or array_length(p_question_ids, 1) is null then
+    return;
+  end if;
+
+  return query
+  with selected_questions as (
+    select distinct qid
+    from unnest(p_question_ids) as qid
+    where qid is not null
+      and length(trim(qid)) > 0
+  ),
+  aggregated as (
+    select
+      av.question_id,
+      av.answer_id,
+      count(*) filter (where av.vote = 1)::int as plus_count,
+      count(*) filter (where av.vote = -1)::int as minus_count
+    from public.answer_votes av
+    join selected_questions sq on sq.qid = av.question_id
+    where av.target_scope = p_target_scope
+      and av.target_deck_id = p_target_deck_id
+    group by av.question_id, av.answer_id
+  ),
+  my_votes as (
+    select
+      av.question_id,
+      av.answer_id,
+      av.vote
+    from public.answer_votes av
+    join selected_questions sq on sq.qid = av.question_id
+    where av.target_scope = p_target_scope
+      and av.target_deck_id = p_target_deck_id
+      and av.user_id = auth.uid()
+  )
+  select
+    a.question_id,
+    a.answer_id,
+    a.plus_count,
+    a.minus_count,
+    coalesce(mv.vote, 0)::smallint as user_vote
+  from aggregated a
+  left join my_votes mv
+    on mv.question_id = a.question_id
+   and mv.answer_id = a.answer_id
+  order by a.question_id, a.answer_id;
+end;
+$$;
+
+revoke all on function public.can_access_answer_vote_target(text, text, uuid) from public;
+revoke all on function public.set_answer_vote(text, text, text, text, smallint) from public;
+revoke all on function public.fetch_answer_vote_summary(text, text, text[]) from public;
+
+grant execute on function public.can_access_answer_vote_target(text, text, uuid) to anon, authenticated;
+grant execute on function public.set_answer_vote(text, text, text, text, smallint) to authenticated;
+grant execute on function public.fetch_answer_vote_summary(text, text, text[]) to anon, authenticated;
+
 -- Bootstrap first developer (run after account registration)
 -- insert into public.user_roles (user_id, role)
 -- select id, 'dev'::public.app_role
