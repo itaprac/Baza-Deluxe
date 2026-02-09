@@ -1259,21 +1259,33 @@ async function seedPublicDecksFromBuiltInFiles() {
   }
 }
 
-async function syncPublicDecksForCurrentUser() {
+function filterBuiltInPublicRows(rows = []) {
+  return rows.filter((row) => row && isBuiltInDeckId(row.id));
+}
+
+async function syncPublicDecksForCurrentUser(options = {}) {
   if (!isSupabaseConfigured() || sessionMode !== 'user') return;
+  const fallbackToBuiltInsOnError = options.fallbackToBuiltInsOnError !== false;
   try {
     const includeHidden = canManagePublicDecks();
-    let rows = await fetchPublicDecks({ includeArchived: includeHidden });
-    if (rows.length === 0 && canManagePublicDecks()) {
+    let rows = filterBuiltInPublicRows(await fetchPublicDecks({ includeArchived: includeHidden }));
+    if (canManagePublicDecks() && rows.length < BUILT_IN_DECK_SOURCES.length) {
       await seedPublicDecksFromBuiltInFiles();
-      rows = await fetchPublicDecks({ includeArchived: includeHidden });
+      rows = filterBuiltInPublicRows(await fetchPublicDecks({ includeArchived: includeHidden }));
+    }
+
+    if (rows.length === 0) {
+      await loadBuiltInDecks();
+      return;
     }
 
     applyPublicDeckRowsToLocal(rows, { includeHidden });
     migrateDeckMetadata();
   } catch (error) {
     showNotification(`Nie udało się wczytać talii ogólnych z Supabase: ${error.message}`, 'error');
-    await loadBuiltInDecks();
+    if (fallbackToBuiltInsOnError) {
+      await loadBuiltInDecks();
+    }
   }
 }
 
@@ -1506,9 +1518,9 @@ async function bootstrapUserSession(user) {
   }
   migrateDeckMetadata();
   loadUserPreferences();
-  // Public decks should always come from local built-in JSON files.
-  // This keeps deck content identical between guest and logged-in sessions.
-  await loadBuiltInDecks();
+  // Logged-in sessions synchronize public decks from Supabase.
+  // Built-in files are used as a fallback/seed source when needed.
+  await syncPublicDecksForCurrentUser();
   await syncSubscribedDecksForCurrentUser();
   updateHeaderSessionState('user', {
     email: user.email || '',
@@ -3037,7 +3049,7 @@ function bindAdminPanelEvents() {
       btn.disabled = true;
       try {
         await unhidePublicDeck(deckId);
-        await syncPublicDecksForCurrentUser();
+        await syncPublicDecksForCurrentUser({ fallbackToBuiltInsOnError: false });
         showNotification('Talia została ponownie pokazana wszystkim użytkownikom.', 'success');
         adminPanelState.hiddenDecks = adminPanelState.hiddenDecks.filter((d) => d.id !== deckId);
         renderAdminPanelFromState();
@@ -4475,6 +4487,7 @@ function bindDeckListEvents() {
         if (!confirmed) return;
 
         try {
+          await pushPublicDeckToSupabase(deckId);
           if (isHiddenPublicDeck) {
             await unhidePublicDeck(deckId);
             showNotification('Talia ogólna została ponownie pokazana.', 'success');
@@ -4482,7 +4495,7 @@ function bindDeckListEvents() {
             await hidePublicDeck(deckId);
             showNotification('Talia ogólna została ukryta dla zwykłych użytkowników.', 'info');
           }
-          await syncPublicDecksForCurrentUser();
+          await syncPublicDecksForCurrentUser({ fallbackToBuiltInsOnError: false });
           navigateToDeckList('public');
         } catch (error) {
           showNotification(`Nie udało się zmienić widoczności talii: ${error.message}`, 'error');

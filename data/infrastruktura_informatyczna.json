@@ -1,79 +1,78 @@
 {
   "deck": {
     "id": "infrastruktura-informatyczna",
-    "name": "Infrastruktura Informatyczna – Egzamin Baza",
-    "group": "Semestr 5",
-    "description": "Pytania zamknięte TAK/NIE z egzaminu z Infrastruktury Informatycznej",
+    "name": "Infrastruktura Informatyczna – Egzamin",
+    "group": "semestr5",
+    "description": "Pytania z egzaminu z Infrastruktury Informatycznej",
     "version": 1,
     "categories": [
       {
-        "id": "dc",
-        "name": "1. Data Center / Sprzęt / Rack",
-        "questionCount": 6
+        "id": "sieci-strukturalne",
+        "name": "1. Sieci strukturalne / część fizyczna",
+        "questionCount": 2
       },
       {
-        "id": "siec",
-        "name": "2. Sieci / Okablowanie / P2P",
-        "questionCount": 8
+        "id": "infrastruktura-it",
+        "name": "2. Infrastruktura IT – podstawy",
+        "questionCount": 5
       },
       {
         "id": "dns",
-        "name": "3. DNS / Rekordy",
-        "questionCount": 8
+        "name": "3. DNS",
+        "questionCount": 9
       },
       {
-        "id": "http",
-        "name": "4. HTTP / HTTPS / Cookies",
+        "id": "www-http",
+        "name": "5. WWW / HTTP",
         "questionCount": 7
       },
       {
-        "id": "wirt",
-        "name": "5. Wirtualizacja / Kontenery",
-        "questionCount": 6
+        "id": "wirtualizacja-chmura",
+        "name": "6. Wirtualizacja / kontenery / chmura",
+        "questionCount": 15
       },
       {
-        "id": "cloud",
-        "name": "6. Cloud / SaaS / IaaS / FaaS",
-        "questionCount": 9
-      },
-      {
-        "id": "energia",
-        "name": "7. Energia / PUE / UPS / Cooling",
-        "questionCount": 8
-      },
-      {
-        "id": "dostepnosc",
-        "name": "8. Dostępność / SLA / RAID / ITIL",
-        "questionCount": 12
-      },
-      {
-        "id": "bezpieczenstwo",
-        "name": "9. Bezpieczeństwo / Firewall / IDS/IPS",
-        "questionCount": 8
-      },
-      {
-        "id": "monitoring",
-        "name": "10. Monitoring / S.M.A.R.T. / Grafana",
+        "id": "serwerownia",
+        "name": "7. Serwerownia",
         "questionCount": 3
       },
       {
-        "id": "backup",
-        "name": "11. Backup / Archiwizacja / Snapshot",
-        "questionCount": 9
+        "id": "zasilanie",
+        "name": "8. Zasilanie",
+        "questionCount": 8
       },
       {
-        "id": "dyski",
-        "name": "12. Dyski / IOPS / DWPD / TBW",
-        "questionCount": 5
+        "id": "dostepnosc-redundancja",
+        "name": "9. Dostępność i redundancja",
+        "questionCount": 12
+      },
+      {
+        "id": "monitoring",
+        "name": "10. Monitoring",
+        "questionCount": 3
+      },
+      {
+        "id": "kopie-zapasowe-storage",
+        "name": "11. Kopie zapasowe i storage",
+        "questionCount": 13
+      },
+      {
+        "id": "bezpieczenstwo",
+        "name": "12. Bezpieczeństwo",
+        "questionCount": 13
+      },
+      {
+        "id": "itil4",
+        "name": "13. ITIL 4",
+        "questionCount": 2
       }
-    ],
-    "defaultSelectionMode": "single"
+    ]
   },
   "questions": [
     {
       "id": "q1",
       "text": "Czy wysokość szafy / serwera Rack jest określana w U?",
-      "category": "dc",
+      "category": "sieci-strukturalne",
       "answers": [
         {
           "id": "a",
@@ -86,66 +85,12 @@
           "correct": false
         }
       ],
-      "explanation": "Jednostka U (1U = 1.75 cala / 44.45 mm) to standard określania wysokości urządzeń rack."
+      "explanation": "Jednostka U (1U = 44.45 mm) to standard określania wysokości urządzeń rack."
     },
     {
       "id": "q2",
-      "text": "Czy można stosować stackowanie przełączników (switchy)?",
-      "category": "siec",
-      "answers": [
-        {
-          "id": "a",
-          "text": "Tak",
-          "correct": true
-        },
-        {
-          "id": "b",
-          "text": "Nie",
-          "correct": false
-        }
-      ],
-      "explanation": "Stackowanie pozwala łączyć wiele switchy w jeden logiczny przełącznik."
-    },
-    {
-      "id": "q3",
-      "text": "Czy 3 równolegle połączone switche zwiększają dostępność sieci?",
-      "category": "siec",
-      "answers": [
-        {
-          "id": "a",
-          "text": "Tak",
-          "correct": true
-        },
-        {
-          "id": "b",
-          "text": "Nie",
-          "correct": false
-        }
-      ],
-      "explanation": "Połączenie równoległe zapewnia redundancję – awaria jednego nie wyłącza sieci."
-    },
-    {
-      "id": "q4",
-      "text": "Czy w punkcie spotkania (Meet-me room) spotykają się dostawcy usług, operatorzy i dostawcy treści?",
-      "category": "dc",
-      "answers": [
-        {
-          "id": "a",
-          "text": "Tak",
-          "correct": true
-        },
-        {
-          "id": "b",
-          "text": "Nie",
-          "correct": false
-        }
-      ],
-      "explanation": "Meet-me room to miejsce w DC, gdzie różni operatorzy wymieniają ruch sieciowy."
-    },
-    {
-      "id": "q5",
       "text": "Czy okablowanie poziome łączy szafę MDF bezpośrednio z gniazdem abonenckim?",
-      "category": "siec",
+      "category": "sieci-strukturalne",
       "answers": [
         {
           "id": "a",
@@ -161,9 +106,9 @@
       "explanation": "Okablowanie poziome łączy IDF (Intermediate Distribution Frame) z gniazdem abonenckim, nie MDF."
     },
     {
-      "id": "q6",
+      "id": "q3",
       "text": "Czy sieci strukturalne / bazy danych / zasilacze należą do infrastruktury IT?",
-      "category": "dc",
+      "category": "infrastruktura-it",
       "answers": [
         {
           "id": "a",
@@ -179,9 +124,9 @@
       "explanation": "Wszystkie te elementy są częścią infrastruktury informatycznej."
     },
     {
-      "id": "q7",
+      "id": "q4",
       "text": "Czy zasilacz impulsowy/awaryjny jest elementem infrastruktury IT?",
-      "category": "dc",
+      "category": "infrastruktura-it",
       "answers": [
         {
           "id": "a",
@@ -197,9 +142,9 @@
       "explanation": "Zasilacze awaryjne (UPS) to kluczowy element infrastruktury IT."
     },
     {
-      "id": "q8",
+      "id": "q5",
       "text": "Czy skrót TCO oznacza Total Cost of Ownership (Całkowity Koszt Posiadania)?",
-      "category": "dc",
+      "category": "infrastruktura-it",
       "answers": [
         {
           "id": "a",
@@ -215,9 +160,9 @@
       "explanation": "TCO obejmuje wszystkie koszty związane z posiadaniem i utrzymaniem systemu."
     },
     {
-      "id": "q9",
+      "id": "q6",
       "text": "Czy Hot-swap umożliwia wymianę elementu serwera (np. dysku) przy włączonym zasilaniu?",
-      "category": "dc",
+      "category": "infrastruktura-it",
       "answers": [
         {
           "id": "a",
@@ -233,9 +178,9 @@
       "explanation": "Hot-swap pozwala wymieniać komponenty bez wyłączania urządzenia."
     },
     {
-      "id": "q10",
+      "id": "q7",
       "text": "Czy usługi sieciowe oferuje tylko i wyłącznie serwer?",
-      "category": "siec",
+      "category": "infrastruktura-it",
       "answers": [
         {
           "id": "a",
@@ -251,7 +196,7 @@
       "explanation": "Usługi sieciowe mogą oferować także routery, urządzenia P2P i inne urządzenia."
     },
     {
-      "id": "q11",
+      "id": "q8",
       "text": "Czy rekord MX w adresie domeny jest obowiązkowy?",
       "category": "dns",
       "answers": [
@@ -269,7 +214,7 @@
       "explanation": "Rekord MX jest potrzebny tylko jeśli domena ma odbierać pocztę e-mail."
     },
     {
-      "id": "q12",
+      "id": "q9",
       "text": "Czy rekord SOA zawiera adres e-mail administratora domeny?",
       "category": "dns",
       "answers": [
@@ -287,7 +232,7 @@
       "explanation": "Rekord SOA (Start of Authority) zawiera m.in. adres e-mail admina strefy."
     },
     {
-      "id": "q13",
+      "id": "q10",
       "text": "Czy w rekordzie SOA adres e-mail administratora zapisuje się z użyciem znaku '@'?",
       "category": "dns",
       "answers": [
@@ -302,10 +247,10 @@
           "correct": true
         }
       ],
-      "explanation": "W rekordzie SOA zamiast '@' używa się pierwszej kropki w adresie (np. admin.example.com)."
+      "explanation": "W rekordzie SOA zamiast '@' używa się pierwszej kropki w adresie (np. hostmaster.firma.pl = hostmaster@firma.pl)."
     },
     {
-      "id": "q14",
+      "id": "q11",
       "text": "Czy rekord SOA zawiera numer seryjny strefy DNS?",
       "category": "dns",
       "answers": [
@@ -323,7 +268,7 @@
       "explanation": "Numer seryjny w SOA informuje serwery Slave o zmianach w strefie."
     },
     {
-      "id": "q15",
+      "id": "q12",
       "text": "Czy rekord A służy do mapowania nazwy na adres IPv6?",
       "category": "dns",
       "answers": [
@@ -341,44 +286,8 @@
       "explanation": "Rekord A mapuje na IPv4. Dla IPv6 służy rekord AAAA."
     },
     {
-      "id": "q16",
-      "text": "Czy rekord AAAA mapuje nazwę domeny na adres IPv6?",
-      "category": "dns",
-      "answers": [
-        {
-          "id": "a",
-          "text": "Tak",
-          "correct": true
-        },
-        {
-          "id": "b",
-          "text": "Nie",
-          "correct": false
-        }
-      ],
-      "explanation": "Rekord AAAA to odpowiednik rekordu A dla adresów IPv6."
-    },
-    {
-      "id": "q17",
-      "text": "Czy rekord SOA zawiera parametry czasu odświeżania strefy DNS?",
-      "category": "dns",
-      "answers": [
-        {
-          "id": "a",
-          "text": "Tak",
-          "correct": true
-        },
-        {
-          "id": "b",
-          "text": "Nie",
-          "correct": false
-        }
-      ],
-      "explanation": "SOA zawiera m.in. Refresh, Retry, Expire i Minimum TTL."
-    },
-    {
-      "id": "q18",
-      "text": "Czy dla jednej strefy DNS można skonfigurować wielu serwerów Slave?",
+      "id": "q13",
+      "text": "Czy dla jednej strefy DNS można skonfigurować więcej niż jeden serwer zapasowy (Slave)?",
       "category": "dns",
       "answers": [
         {
@@ -395,9 +304,93 @@
       "explanation": "Można mieć wiele serwerów Slave dla redundancji i wydajności."
     },
     {
-      "id": "q19",
+      "id": "q14",
+      "text": "Dany jest rekord SOA:\nSOA ns1.firma.pl hostmaster.firma.pl 2023102501 3600 900 1209600 300\n\nJaki jest adres e-mail administratora?",
+      "category": "dns",
+      "answers": [
+        {
+          "id": "a",
+          "text": "hostmaster@firma.pl",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "ns1@firma.pl",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "hostmaster.firma.pl",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "admin@firma.pl",
+          "correct": false
+        }
+      ],
+      "explanation": "W rekordzie SOA pierwsza kropka w drugim polu zamieniana jest na '@', więc hostmaster.firma.pl = hostmaster@firma.pl."
+    },
+    {
+      "id": "q15",
+      "text": "Dany jest rekord SOA:\nSOA ns1.firma.pl hostmaster.firma.pl 2023102501 3600 900 1209600 300\n\nJaki jest numer seryjny strefy?",
+      "category": "dns",
+      "answers": [
+        {
+          "id": "a",
+          "text": "3600",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "2023102501",
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": "1209600",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "300",
+          "correct": false
+        }
+      ],
+      "explanation": "Numer seryjny (Serial) to pierwsza wartość liczbowa po polach nazw – 2023102501."
+    },
+    {
+      "id": "q16",
+      "text": "Dany jest rekord SOA:\nSOA ns1.firma.pl hostmaster.firma.pl 2023102501 3600 900 1209600 300\n\nW jakiej kolejności występują parametry liczbowe?",
+      "category": "dns",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Serial, Refresh, Retry, Expire, Minimum",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Refresh, Serial, Retry, Expire, Minimum",
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": "Serial, Retry, Refresh, Expire, Minimum",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "Serial, Refresh, Expire, Retry, Minimum",
+          "correct": false
+        }
+      ],
+      "explanation": "Kolejność parametrów w SOA: Serial, Refresh, Retry, Expire, Minimum (TTL)."
+    },
+    {
+      "id": "q17",
       "text": "Czy HTTP to protokół bezstanowy?",
-      "category": "http",
+      "category": "www-http",
       "answers": [
         {
           "id": "a",
@@ -413,9 +406,9 @@
       "explanation": "Każde zapytanie HTTP jest niezależne – serwer nie pamięta poprzednich."
     },
     {
-      "id": "q20",
+      "id": "q18",
       "text": "Czy ciasteczka (cookies) umożliwiają personalizację wyników serwera?",
-      "category": "http",
+      "category": "www-http",
       "answers": [
         {
           "id": "a",
@@ -431,9 +424,9 @@
       "explanation": "Cookies pozwalają serwerowi rozpoznać użytkownika i dostosować odpowiedź."
     },
     {
-      "id": "q21",
+      "id": "q19",
       "text": "Czy ciasteczka cookies pozwalają na personalizowanie danych użytkownika?",
-      "category": "http",
+      "category": "www-http",
       "answers": [
         {
           "id": "a",
@@ -449,9 +442,9 @@
       "explanation": "Cookies przechowują dane sesyjne umożliwiające personalizację."
     },
     {
-      "id": "q22",
+      "id": "q20",
       "text": "Czy w nagłówku cookies można zmienić treść zapytania HTTP?",
-      "category": "http",
+      "category": "www-http",
       "answers": [
         {
           "id": "a",
@@ -467,9 +460,9 @@
       "explanation": "Cookies to dane sesyjne – nie zmieniają struktury zapytania HTTP."
     },
     {
-      "id": "q23",
+      "id": "q21",
       "text": "Czy protokół HTTPS zapewnia szyfrowanie transmisji?",
-      "category": "http",
+      "category": "www-http",
       "answers": [
         {
           "id": "a",
@@ -485,9 +478,9 @@
       "explanation": "HTTPS używa TLS/SSL do szyfrowania komunikacji."
     },
     {
-      "id": "q24",
-      "text": "Czy HTTP jest protokołem bezstanowym?",
-      "category": "http",
+      "id": "q22",
+      "text": "Czy mniejsza wartość parametru RTT (Round Trip Time) oznacza szybszą komunikację w sieci?",
+      "category": "www-http",
       "answers": [
         {
           "id": "a",
@@ -500,12 +493,12 @@
           "correct": false
         }
       ],
-      "explanation": "HTTP nie przechowuje stanu między zapytaniami."
+      "explanation": "RTT – mniejszy czas = szybsza odpowiedź."
     },
     {
-      "id": "q25",
+      "id": "q23",
       "text": "Czy cookies są przechowywane po stronie klienta?",
-      "category": "http",
+      "category": "www-http",
       "answers": [
         {
           "id": "a",
@@ -521,9 +514,9 @@
       "explanation": "Cookies zapisywane są w przeglądarce użytkownika (po stronie klienta)."
     },
     {
-      "id": "q26",
+      "id": "q24",
       "text": "Czy hypervisor pełni rolę pośrednika między fizycznymi zasobami hosta a maszynami wirtualnymi?",
-      "category": "wirt",
+      "category": "wirtualizacja-chmura",
       "answers": [
         {
           "id": "a",
@@ -539,9 +532,9 @@
       "explanation": "Hypervisor zarządza przydziałem zasobów fizycznych do maszyn wirtualnych."
     },
     {
-      "id": "q27",
+      "id": "q25",
       "text": "Czy hypervisor typu 2 (np. VirtualBox) przesyła polecenia bezpośrednio do procesora z pominięciem systemu hosta?",
-      "category": "wirt",
+      "category": "wirtualizacja-chmura",
       "answers": [
         {
           "id": "a",
@@ -557,9 +550,9 @@
       "explanation": "Hypervisor typu 2 działa na systemie operacyjnym hosta – polecenia przechodzą przez OS."
     },
     {
-      "id": "q28",
+      "id": "q26",
       "text": "Czy wirtualizator jest niezbędny do działania konteneryzacji?",
-      "category": "wirt",
+      "category": "wirtualizacja-chmura",
       "answers": [
         {
           "id": "a",
@@ -575,9 +568,9 @@
       "explanation": "Konteneryzacja działa bezpośrednio na jądrze systemu hosta, bez hypervisora."
     },
     {
-      "id": "q29",
+      "id": "q27",
       "text": "Czy Google Cloud posiada usługi typu FaaS?",
-      "category": "cloud",
+      "category": "wirtualizacja-chmura",
       "answers": [
         {
           "id": "a",
@@ -593,9 +586,9 @@
       "explanation": "Google Cloud Functions to usługa FaaS (Function as a Service)."
     },
     {
-      "id": "q30",
+      "id": "q28",
       "text": "Czy firma Google oferuje usługi w modelu SaaS?",
-      "category": "cloud",
+      "category": "wirtualizacja-chmura",
       "answers": [
         {
           "id": "a",
@@ -611,9 +604,9 @@
       "explanation": "Np. Gmail, Google Docs to usługi SaaS od Google."
     },
     {
-      "id": "q31",
+      "id": "q29",
       "text": "Czy w modelu SaaS to dostawca bierze na siebie pełną odpowiedzialność za administrowanie infrastrukturą i samą usługą?",
-      "category": "cloud",
+      "category": "wirtualizacja-chmura",
       "answers": [
         {
           "id": "a",
@@ -629,9 +622,9 @@
       "explanation": "W SaaS dostawca zarządza wszystkim – od infrastruktury po aplikację."
     },
     {
-      "id": "q32",
+      "id": "q30",
       "text": "Czy model SaaS pozwala użytkownikowi na sterowanie (konfigurację) aplikacją?",
-      "category": "cloud",
+      "category": "wirtualizacja-chmura",
       "answers": [
         {
           "id": "a",
@@ -644,12 +637,12 @@
           "correct": false
         }
       ],
-      "explanation": "Użytkownik może konfigurować aplikację SaaS, ale nie zarządza infrastrukturą."
+      "explanation": "Użytkownik może konfigurować aplikację SaaS w zakresie funkcji aplikacji."
     },
     {
-      "id": "q33",
+      "id": "q31",
       "text": "Czy model IaaS pozwala użytkownikowi na sterowanie systemem operacyjnym i aplikacją?",
-      "category": "cloud",
+      "category": "wirtualizacja-chmura",
       "answers": [
         {
           "id": "a",
@@ -665,9 +658,9 @@
       "explanation": "W IaaS użytkownik zarządza OS, middleware i aplikacjami."
     },
     {
-      "id": "q34",
+      "id": "q32",
       "text": "Czy hypervisor typu 1 działa bezpośrednio na sprzęcie fizycznym?",
-      "category": "wirt",
+      "category": "wirtualizacja-chmura",
       "answers": [
         {
           "id": "a",
@@ -683,9 +676,9 @@
       "explanation": "Hypervisor typu 1 (bare-metal) działa bez pośrednictwa systemu operacyjnego."
     },
     {
-      "id": "q35",
+      "id": "q33",
       "text": "Czy hypervisor typu 2 wymaga systemu hosta?",
-      "category": "wirt",
+      "category": "wirtualizacja-chmura",
       "answers": [
         {
           "id": "a",
@@ -701,9 +694,9 @@
       "explanation": "Hypervisor typu 2 (hosted) wymaga systemu operacyjnego jako bazy."
     },
     {
-      "id": "q36",
+      "id": "q34",
       "text": "Czy kontenery współdzielą jądro systemu operacyjnego hosta?",
-      "category": "wirt",
+      "category": "wirtualizacja-chmura",
       "answers": [
         {
           "id": "a",
@@ -719,9 +712,9 @@
       "explanation": "Kontenery korzystają z jądra hosta, w odróżnieniu od pełnych VM."
     },
     {
-      "id": "q37",
+      "id": "q35",
       "text": "Czy Google Cloud oferuje usługi PaaS?",
-      "category": "cloud",
+      "category": "wirtualizacja-chmura",
       "answers": [
         {
           "id": "a",
@@ -737,9 +730,9 @@
       "explanation": "Np. Google App Engine to usługa PaaS."
     },
     {
-      "id": "q38",
+      "id": "q36",
       "text": "Czy użytkownik ma dostęp do systemu operacyjnego w modelu SaaS?",
-      "category": "cloud",
+      "category": "wirtualizacja-chmura",
       "answers": [
         {
           "id": "a",
@@ -755,9 +748,9 @@
       "explanation": "W SaaS użytkownik korzysta tylko z aplikacji – nie ma dostępu do OS."
     },
     {
-      "id": "q39",
+      "id": "q37",
       "text": "Czy użytkownik odpowiada za system operacyjny w modelu IaaS?",
-      "category": "cloud",
+      "category": "wirtualizacja-chmura",
       "answers": [
         {
           "id": "a",
@@ -773,9 +766,9 @@
       "explanation": "W IaaS użytkownik sam instaluje i zarządza systemem operacyjnym."
     },
     {
-      "id": "q40",
+      "id": "q38",
       "text": "Czy w modelu FaaS użytkownik zarządza serwerem?",
-      "category": "cloud",
+      "category": "wirtualizacja-chmura",
       "answers": [
         {
           "id": "a",
@@ -791,9 +784,9 @@
       "explanation": "FaaS to model serverless – dostawca zarządza infrastrukturą."
     },
     {
-      "id": "q41",
-      "text": "Czy technologia Free Cooling obniża wskaźnik PUE?",
-      "category": "energia",
+      "id": "q39",
+      "text": "Czy można stackować przełączniki (switche)?",
+      "category": "serwerownia",
       "answers": [
         {
           "id": "a",
@@ -806,30 +799,48 @@
           "correct": false
         }
       ],
-      "explanation": "Free Cooling zmniejsza zużycie energii na chłodzenie, co obniża PUE."
+      "explanation": "Stackowanie pozwala łączyć wiele switchy w jeden logiczny przełącznik."
+    },
+    {
+      "id": "q40",
+      "text": "Czy 3 równolegle połączone switche zwiększają dostępność sieci?",
+      "category": "serwerownia",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Tak",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Nie",
+          "correct": false
+        }
+      ],
+      "explanation": "Połączenie równoległe zapewnia redundancję – awaria jednego nie wyłącza sieci."
+    },
+    {
+      "id": "q41",
+      "text": "Czy w punkcie spotkania (Meet-me room) spotykają się dostawcy usług, operatorzy i dostawcy treści?",
+      "category": "serwerownia",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Tak",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Nie",
+          "correct": false
+        }
+      ],
+      "explanation": "Meet-me room to miejsce w DC, gdzie różni operatorzy wymieniają ruch sieciowy."
     },
     {
       "id": "q42",
-      "text": "Czy wskaźnik PUE określa efektywność zużycia energii w centrum danych?",
-      "category": "energia",
-      "answers": [
-        {
-          "id": "a",
-          "text": "Tak",
-          "correct": true
-        },
-        {
-          "id": "b",
-          "text": "Nie",
-          "correct": false
-        }
-      ],
-      "explanation": "PUE = całkowita energia DC / energia IT. Im bliżej 1.0, tym lepiej."
-    },
-    {
-      "id": "q43",
       "text": "Czy UPS-y należą do infrastruktury informatycznej?",
-      "category": "energia",
+      "category": "zasilanie",
       "answers": [
         {
           "id": "a",
@@ -845,9 +856,9 @@
       "explanation": "UPS (Uninterruptible Power Supply) to kluczowy element infrastruktury DC."
     },
     {
-      "id": "q44",
+      "id": "q43",
       "text": "Czy UPS to jedyne źródło zasilania w Data Center?",
-      "category": "energia",
+      "category": "zasilanie",
       "answers": [
         {
           "id": "a",
@@ -860,12 +871,12 @@
           "correct": true
         }
       ],
-      "explanation": "DC korzysta też z zasilania sieciowego, generatorów diesla itp."
+      "explanation": "DC korzysta też z agregatów prądotwórczych i zasilania z sieci miejskiej."
     },
     {
-      "id": "q45",
+      "id": "q44",
       "text": "Czy UPS Online zapewnia 0 ms czasu przełączenia na baterię?",
-      "category": "energia",
+      "category": "zasilanie",
       "answers": [
         {
           "id": "a",
@@ -881,9 +892,45 @@
       "explanation": "UPS Online (double-conversion) stale zasila z baterii – brak czasu przełączenia."
     },
     {
+      "id": "q45",
+      "text": "Czy technologia Free Cooling obniża wskaźnik PUE?",
+      "category": "zasilanie",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Tak",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Nie",
+          "correct": false
+        }
+      ],
+      "explanation": "Free Cooling zmniejsza zużycie energii na chłodzenie, co obniża PUE."
+    },
+    {
       "id": "q46",
+      "text": "Czy wskaźnik PUE określa efektywność zużycia energii w centrum danych?",
+      "category": "zasilanie",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Tak",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Nie",
+          "correct": false
+        }
+      ],
+      "explanation": "PUE = całkowita energia DC / energia IT. Im bliżej 1.0, tym lepiej."
+    },
+    {
+      "id": "q47",
       "text": "Czy wskaźnik PUE określa całkowite zużycie energii centrum danych?",
-      "category": "energia",
+      "category": "zasilanie",
       "answers": [
         {
           "id": "a",
@@ -899,9 +946,9 @@
       "explanation": "PUE to stosunek (ratio) – określa efektywność, nie całkowite zużycie."
     },
     {
-      "id": "q47",
+      "id": "q48",
       "text": "Czy niższy PUE oznacza bardziej energooszczędne Data Center?",
-      "category": "energia",
+      "category": "zasilanie",
       "answers": [
         {
           "id": "a",
@@ -917,9 +964,9 @@
       "explanation": "Im PUE bliższe 1.0, tym mniej energii zużywanej na systemy pomocnicze."
     },
     {
-      "id": "q48",
+      "id": "q49",
       "text": "Czy Free Cooling zmniejsza zapotrzebowanie na chłodzenie mechaniczne?",
-      "category": "energia",
+      "category": "zasilanie",
       "answers": [
         {
           "id": "a",
@@ -935,9 +982,9 @@
       "explanation": "Free Cooling wykorzystuje powietrze zewnętrzne zamiast klimatyzacji."
     },
     {
-      "id": "q49",
+      "id": "q50",
       "text": "Czy zduplikowane elementy poprawiają dostępność systemu?",
-      "category": "dostepnosc",
+      "category": "dostepnosc-redundancja",
       "answers": [
         {
           "id": "a",
@@ -953,9 +1000,9 @@
       "explanation": "Redundancja (duplikacja) zwiększa dostępność przez eliminację SPOF."
     },
     {
-      "id": "q50",
+      "id": "q51",
       "text": "Czy umowa SLA może zawierać zapisy o karach finansowych?",
-      "category": "dostepnosc",
+      "category": "dostepnosc-redundancja",
       "answers": [
         {
           "id": "a",
@@ -971,9 +1018,9 @@
       "explanation": "SLA często zawiera kary za niedotrzymanie gwarantowanych parametrów."
     },
     {
-      "id": "q51",
-      "text": "Czy SLA na poziomie 99.99% jest uznawane za HA (High Availability)?",
-      "category": "dostepnosc",
+      "id": "q52",
+      "text": "Czy SLA na poziomie 99.99% jest uznawane za HA - High Availability (Wysoką Dostępność)?",
+      "category": "dostepnosc-redundancja",
       "answers": [
         {
           "id": "a",
@@ -989,9 +1036,9 @@
       "explanation": "99.99% to tzw. 'cztery dziewiątki' – ok. 52 min niedostępności rocznie."
     },
     {
-      "id": "q52",
+      "id": "q53",
       "text": "Czy RAID 0 chroni przed utratą danych w przypadku awarii dysku?",
-      "category": "dostepnosc",
+      "category": "dostepnosc-redundancja",
       "answers": [
         {
           "id": "a",
@@ -1004,12 +1051,12 @@
           "correct": true
         }
       ],
-      "explanation": "RAID 0 (striping) nie zapewnia redundancji – awaria jednego dysku = utrata danych."
+      "explanation": "RAID 0 (striping) zwiększa tylko wydajność – nie zapewnia redundancji."
     },
     {
-      "id": "q53",
+      "id": "q54",
       "text": "Czy RAID 6 nadal działa po jednoczesnej utracie 2 dysków?",
-      "category": "dostepnosc",
+      "category": "dostepnosc-redundancja",
       "answers": [
         {
           "id": "a",
@@ -1025,9 +1072,9 @@
       "explanation": "RAID 6 używa podwójnej parzystości i toleruje awarię 2 dysków."
     },
     {
-      "id": "q54",
+      "id": "q55",
       "text": "Czy dostępność systemu liczy się jako stosunek czasu bezawaryjnego do całkowitego czasu pracy?",
-      "category": "dostepnosc",
+      "category": "dostepnosc-redundancja",
       "answers": [
         {
           "id": "a",
@@ -1043,9 +1090,9 @@
       "explanation": "Dostępność = MTBF / (MTBF + MTTR) lub uptime / total time."
     },
     {
-      "id": "q55",
+      "id": "q56",
       "text": "Czy połączenie szeregowe maszyn zwiększa dostępność bardziej niż równoległe?",
-      "category": "dostepnosc",
+      "category": "dostepnosc-redundancja",
       "answers": [
         {
           "id": "a",
@@ -1061,9 +1108,27 @@
       "explanation": "Połączenie równoległe zwiększa dostępność, szeregowe ją zmniejsza."
     },
     {
-      "id": "q56",
-      "text": "Czy SLA określa dostępność usług IT?",
-      "category": "dostepnosc",
+      "id": "q57",
+      "text": "Czy dostępność (SLA) to miara odsetka czasu, w którym system działa poprawnie i jest wolny od awarii?",
+      "category": "dostepnosc-redundancja",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Tak",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Nie",
+          "correct": false
+        }
+      ],
+      "explanation": "SLA mierzy procent czasu bezawaryjnej pracy systemu."
+    },
+    {
+      "id": "q58",
+      "text": "Czy umowa SLA definiuje warunki i gwarancje dotyczące dostępności usług IT?",
+      "category": "dostepnosc-redundancja",
       "answers": [
         {
           "id": "a",
@@ -1079,9 +1144,9 @@
       "explanation": "SLA (Service Level Agreement) definiuje m.in. gwarantowaną dostępność."
     },
     {
-      "id": "q57",
+      "id": "q59",
       "text": "Czy system szeregowy ma mniejszą dostępność niż równoległy?",
-      "category": "dostepnosc",
+      "category": "dostepnosc-redundancja",
       "answers": [
         {
           "id": "a",
@@ -1097,9 +1162,9 @@
       "explanation": "W systemie szeregowym awaria jednego elementu wyłącza cały system."
     },
     {
-      "id": "q58",
+      "id": "q60",
       "text": "Czy SLA może definiować maksymalny czas niedostępności usługi?",
-      "category": "dostepnosc",
+      "category": "dostepnosc-redundancja",
       "answers": [
         {
           "id": "a",
@@ -1115,151 +1180,35 @@
       "explanation": "SLA określa m.in. maksymalny dopuszczalny downtime."
     },
     {
-      "id": "q59",
-      "text": "Czy system IDS zabezpiecza przed awarią sprzętową?",
-      "category": "bezpieczenstwo",
-      "answers": [
-        {
-          "id": "a",
-          "text": "Tak",
-          "correct": false
-        },
-        {
-          "id": "b",
-          "text": "Nie",
-          "correct": true
-        }
-      ],
-      "explanation": "IDS (Intrusion Detection System) wykrywa ataki sieciowe, nie awarie sprzętu."
-    },
-    {
-      "id": "q60",
-      "text": "Czy system IPS blokuje podejrzany ruch w trakcie wykrycia ataku?",
-      "category": "bezpieczenstwo",
-      "answers": [
-        {
-          "id": "a",
-          "text": "Tak",
-          "correct": true
-        },
-        {
-          "id": "b",
-          "text": "Nie",
-          "correct": false
-        }
-      ],
-      "explanation": "IPS (Intrusion Prevention System) aktywnie blokuje zagrożenia."
-    },
-    {
       "id": "q61",
-      "text": "Czy protokół ICMP posiada wbudowane mechanizmy uwierzytelniania?",
-      "category": "bezpieczenstwo",
+      "text": "Jaka jest dostępność systemu (SLA), jeżeli DB: 99.99% SLA, HTTP: 99.99% SLA (połączenie szeregowe)?",
+      "category": "dostepnosc-redundancja",
       "answers": [
         {
           "id": "a",
-          "text": "Tak",
+          "text": "99.99%",
           "correct": false
         },
         {
           "id": "b",
-          "text": "Nie",
+          "text": "99.98%",
           "correct": true
+        },
+        {
+          "id": "c",
+          "text": "99.97%",
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": "100%",
+          "correct": false
         }
       ],
-      "explanation": "ICMP nie ma wbudowanego uwierzytelniania – jest podatny na spoofing."
+      "explanation": "Połączenie szeregowe: 0.9999 × 0.9999 = 0.9998 = 99.98%."
     },
     {
       "id": "q62",
-      "text": "Czy firewall może filtrować ruch na 3 warstwie OSI?",
-      "category": "bezpieczenstwo",
-      "answers": [
-        {
-          "id": "a",
-          "text": "Tak",
-          "correct": true
-        },
-        {
-          "id": "b",
-          "text": "Nie",
-          "correct": false
-        }
-      ],
-      "explanation": "Firewall L3 filtruje na podstawie adresów IP (warstwa sieciowa)."
-    },
-    {
-      "id": "q63",
-      "text": "Czy firewall może być bezstanowy (stateless)?",
-      "category": "bezpieczenstwo",
-      "answers": [
-        {
-          "id": "a",
-          "text": "Tak",
-          "correct": true
-        },
-        {
-          "id": "b",
-          "text": "Nie",
-          "correct": false
-        }
-      ],
-      "explanation": "Firewall stateless analizuje każdy pakiet niezależnie, bez śledzenia sesji."
-    },
-    {
-      "id": "q64",
-      "text": "Czy firewall stanowy analizuje stan połączenia?",
-      "category": "bezpieczenstwo",
-      "answers": [
-        {
-          "id": "a",
-          "text": "Tak",
-          "correct": true
-        },
-        {
-          "id": "b",
-          "text": "Nie",
-          "correct": false
-        }
-      ],
-      "explanation": "Firewall stateful śledzi stan sesji TCP i podejmuje decyzje na tej podstawie."
-    },
-    {
-      "id": "q65",
-      "text": "Czy firewall może działać w 7 warstwie modelu OSI?",
-      "category": "bezpieczenstwo",
-      "answers": [
-        {
-          "id": "a",
-          "text": "Tak",
-          "correct": true
-        },
-        {
-          "id": "b",
-          "text": "Nie",
-          "correct": false
-        }
-      ],
-      "explanation": "Firewall aplikacyjny (WAF) działa w warstwie 7 (aplikacji)."
-    },
-    {
-      "id": "q66",
-      "text": "Czy IDS reaguje aktywnie na wykryty atak?",
-      "category": "bezpieczenstwo",
-      "answers": [
-        {
-          "id": "a",
-          "text": "Tak",
-          "correct": false
-        },
-        {
-          "id": "b",
-          "text": "Nie",
-          "correct": true
-        }
-      ],
-      "explanation": "IDS tylko wykrywa i raportuje – aktywne blokowanie to zadanie IPS."
-    },
-    {
-      "id": "q67",
       "text": "Czy technologia S.M.A.R.T. pozwala odczytać parametry i szacowany czas działania dysku?",
       "category": "monitoring",
       "answers": [
@@ -1277,7 +1226,7 @@
       "explanation": "S.M.A.R.T. monitoruje stan zdrowia dysku i przewiduje awarie."
     },
     {
-      "id": "q68",
+      "id": "q63",
       "text": "Czy narzędzie Grafana służy do wizualizacji danych z monitoringu?",
       "category": "monitoring",
       "answers": [
@@ -1295,8 +1244,8 @@
       "explanation": "Grafana tworzy dashboardy i wykresy z danych monitoringowych."
     },
     {
-      "id": "q69",
-      "text": "Czy narzędzie Grafana służy do przechowywania danych z monitoringu?",
+      "id": "q64",
+      "text": "Czy narzędzie Grafana służy do przechowywania zebranych danych z monitoringu?",
       "category": "monitoring",
       "answers": [
         {
@@ -1313,9 +1262,9 @@
       "explanation": "Grafana tylko wizualizuje dane – do przechowywania służą np. Prometheus, InfluxDB."
     },
     {
-      "id": "q70",
+      "id": "q65",
       "text": "Czy snapshot (migawka) jest pełnoprawnym backupem danych?",
-      "category": "backup",
+      "category": "kopie-zapasowe-storage",
       "answers": [
         {
           "id": "a",
@@ -1328,12 +1277,12 @@
           "correct": true
         }
       ],
-      "explanation": "Snapshot to punkt w czasie, nie pełny backup – zależy od oryginalnych danych."
+      "explanation": "Snapshot to punkt w czasie, nie pełny backup – zależy od danych na dysku źródłowym."
     },
     {
-      "id": "q71",
+      "id": "q66",
       "text": "Czy zasada 3-2-1-1-0 jest rozszerzeniem zasady 3-2-1?",
-      "category": "backup",
+      "category": "kopie-zapasowe-storage",
       "answers": [
         {
           "id": "a",
@@ -1349,9 +1298,9 @@
       "explanation": "Dodaje: 1 kopia offline/air-gapped i 0 błędów weryfikacji."
     },
     {
-      "id": "q72",
-      "text": "Czy zasada 3-2-1-1-0 zabezpiecza przed ransomware?",
-      "category": "backup",
+      "id": "q67",
+      "text": "Czy zasada 3-2-1-1-0 zabezpiecza przed atakami ransomware?",
+      "category": "kopie-zapasowe-storage",
       "answers": [
         {
           "id": "a",
@@ -1367,9 +1316,9 @@
       "explanation": "Kopia offline (air-gapped) jest odporna na atak ransomware."
     },
     {
-      "id": "q73",
+      "id": "q68",
       "text": "Czy deduplikacja to po prostu usuwanie identycznych plików?",
-      "category": "backup",
+      "category": "kopie-zapasowe-storage",
       "answers": [
         {
           "id": "a",
@@ -1382,12 +1331,12 @@
           "correct": true
         }
       ],
-      "explanation": "Deduplikacja eliminuje powtarzające się bloki danych, nie tylko całe pliki."
+      "explanation": "Deduplikacja działa na poziomie bloków danych, usuwa powtarzające się fragmenty wewnątrz plików."
     },
     {
-      "id": "q74",
-      "text": "Czy w archiwizacji danych stosuje się mirroring?",
-      "category": "backup",
+      "id": "q69",
+      "text": "Czy w archiwizacji danych stosuje się mirroring (lustrzane odbicie)?",
+      "category": "kopie-zapasowe-storage",
       "answers": [
         {
           "id": "a",
@@ -1400,12 +1349,12 @@
           "correct": true
         }
       ],
-      "explanation": "Mirroring to replikacja na żywo – archiwizacja to długoterminowe przechowywanie."
+      "explanation": "Archiwizacja to składowanie długoterminowe, mirroring to redundancja bieżąca."
     },
     {
-      "id": "q75",
-      "text": "Czy przywrócenie kopii różnicowej wymaga kopii pełnej i ostatniej różnicowej?",
-      "category": "backup",
+      "id": "q70",
+      "text": "Czy przywrócenie kopii różnicowej wymaga posiadania ostatniej kopii różnicowej oraz kopii pełnej?",
+      "category": "kopie-zapasowe-storage",
       "answers": [
         {
           "id": "a",
@@ -1421,9 +1370,9 @@
       "explanation": "Kopia różnicowa zawiera zmiany od ostatniego pełnego backupu."
     },
     {
-      "id": "q76",
-      "text": "Czy snapshot może być elementem strategii backupu?",
-      "category": "backup",
+      "id": "q71",
+      "text": "Czy wskaźnik DWPD (Drive Writes Per Day) określa ile razy dziennie można zapisać całą pojemność dysku?",
+      "category": "kopie-zapasowe-storage",
       "answers": [
         {
           "id": "a",
@@ -1436,30 +1385,12 @@
           "correct": false
         }
       ],
-      "explanation": "Snapshoty mogą uzupełniać strategię backupu, choć nie zastępują pełnych kopii."
+      "explanation": "DWPD to metryka wytrzymałości SSD na zapis."
     },
     {
-      "id": "q77",
-      "text": "Czy mirroring chroni przed przypadkowym usunięciem danych?",
-      "category": "backup",
-      "answers": [
-        {
-          "id": "a",
-          "text": "Tak",
-          "correct": false
-        },
-        {
-          "id": "b",
-          "text": "Nie",
-          "correct": true
-        }
-      ],
-      "explanation": "Mirroring replikuje wszystko – w tym usunięcia. Nie chroni przed błędami użytkownika."
-    },
-    {
-      "id": "q78",
-      "text": "Czy deduplikacja zmniejsza zużycie przestrzeni dyskowej?",
-      "category": "backup",
+      "id": "q72",
+      "text": "Czy jeżeli TBW (Total Bytes Written) na dysku SSD zostanie przekroczone, to traci on gwarancję?",
+      "category": "kopie-zapasowe-storage",
       "answers": [
         {
           "id": "a",
@@ -1472,48 +1403,12 @@
           "correct": false
         }
       ],
-      "explanation": "Deduplikacja eliminuje duplikaty bloków, oszczędzając miejsce."
+      "explanation": "TBW to limit zapisu – przekroczenie kończy gwarancję."
     },
     {
-      "id": "q79",
-      "text": "Czy wskaźnik DWPD określa ile razy dziennie można zapisać całą pojemność dysku?",
-      "category": "dyski",
-      "answers": [
-        {
-          "id": "a",
-          "text": "Tak",
-          "correct": true
-        },
-        {
-          "id": "b",
-          "text": "Nie",
-          "correct": false
-        }
-      ],
-      "explanation": "DWPD (Drive Writes Per Day) to metryka wytrzymałości SSD."
-    },
-    {
-      "id": "q80",
-      "text": "Czy przekroczenie TBW powoduje utratę gwarancji SSD?",
-      "category": "dyski",
-      "answers": [
-        {
-          "id": "a",
-          "text": "Tak",
-          "correct": true
-        },
-        {
-          "id": "b",
-          "text": "Nie",
-          "correct": false
-        }
-      ],
-      "explanation": "TBW (Total Bytes Written) to limit zapisu – przekroczenie kończy gwarancję."
-    },
-    {
-      "id": "q81",
-      "text": "Czy wyższy parametr IOPS oznacza szybszy dysk SSD?",
-      "category": "dyski",
+      "id": "q73",
+      "text": "Czy wyższa wartość parametru IOPS oznacza, że dysk SSD jest szybszy?",
+      "category": "kopie-zapasowe-storage",
       "answers": [
         {
           "id": "a",
@@ -1529,9 +1424,9 @@
       "explanation": "IOPS (Input/Output Operations Per Second) – wyższy = więcej operacji na sekundę."
     },
     {
-      "id": "q82",
-      "text": "Czy mniejszy RTT oznacza szybszą komunikację?",
-      "category": "dyski",
+      "id": "q74",
+      "text": "Czy snapshot może być elementem strategii backupu?",
+      "category": "kopie-zapasowe-storage",
       "answers": [
         {
           "id": "a",
@@ -1544,12 +1439,48 @@
           "correct": false
         }
       ],
-      "explanation": "RTT (Round-Trip Time) – mniejszy czas = szybsza odpowiedź."
+      "explanation": "Snapshoty mogą uzupełniać strategię backupu, choć nie zastępują pełnych kopii."
     },
     {
-      "id": "q83",
+      "id": "q75",
+      "text": "Czy mirroring chroni przed przypadkowym usunięciem danych?",
+      "category": "kopie-zapasowe-storage",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Tak",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Nie",
+          "correct": true
+        }
+      ],
+      "explanation": "Mirroring replikuje wszystko – w tym usunięcia. Nie chroni przed błędami użytkownika."
+    },
+    {
+      "id": "q76",
+      "text": "Czy deduplikacja zmniejsza zużycie przestrzeni dyskowej?",
+      "category": "kopie-zapasowe-storage",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Tak",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Nie",
+          "correct": false
+        }
+      ],
+      "explanation": "Deduplikacja eliminuje duplikaty bloków, oszczędzając miejsce."
+    },
+    {
+      "id": "q77",
       "text": "Czy DWPD wpływa na żywotność dysku SSD?",
-      "category": "dyski",
+      "category": "kopie-zapasowe-storage",
       "answers": [
         {
           "id": "a",
@@ -1565,9 +1496,27 @@
       "explanation": "Wyższy DWPD oznacza większą wytrzymałość dysku na zapis."
     },
     {
-      "id": "q84",
-      "text": "Czy sieci P2P rozsyłają pliki pomiędzy użytkownikami?",
-      "category": "siec",
+      "id": "q78",
+      "text": "Czy system IDS zabezpiecza przed awarią sprzętową?",
+      "category": "bezpieczenstwo",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Tak",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Nie",
+          "correct": true
+        }
+      ],
+      "explanation": "IDS (Intrusion Detection System) wykrywa ataki sieciowe, nie awarie sprzętu."
+    },
+    {
+      "id": "q79",
+      "text": "Czy system IPS blokuje podejrzany ruch w trakcie wykrycia ataku?",
+      "category": "bezpieczenstwo",
       "answers": [
         {
           "id": "a",
@@ -1580,12 +1529,30 @@
           "correct": false
         }
       ],
-      "explanation": "W sieciach P2P użytkownicy wymieniają pliki bezpośrednio między sobą."
+      "explanation": "IPS (Intrusion Prevention System) aktywnie blokuje zagrożenia."
     },
     {
-      "id": "q85",
-      "text": "Czy w komunikacji P2P może pośredniczyć serwer?",
-      "category": "siec",
+      "id": "q80",
+      "text": "Czy protokół ICMP (np. ping) posiada wbudowane mechanizmy uwierzytelniania?",
+      "category": "bezpieczenstwo",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Tak",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Nie",
+          "correct": true
+        }
+      ],
+      "explanation": "ICMP nie ma wbudowanego uwierzytelniania – jest podatny na spoofing."
+    },
+    {
+      "id": "q81",
+      "text": "Czy zapora sieciowa (firewall) może filtrować ruch na 3 warstwie modelu OSI/ISO?",
+      "category": "bezpieczenstwo",
       "answers": [
         {
           "id": "a",
@@ -1598,12 +1565,12 @@
           "correct": false
         }
       ],
-      "explanation": "Serwer może pełnić rolę trackera lub pośrednika w sieci P2P."
+      "explanation": "Firewall L3 filtruje na podstawie adresów IP (warstwa sieciowa)."
     },
     {
-      "id": "q86",
-      "text": "Czy sieci P2P wymagają centralnego serwera?",
-      "category": "siec",
+      "id": "q82",
+      "text": "Czy sieci P2P potrzebują centralnego serwera do działania?",
+      "category": "bezpieczenstwo",
       "answers": [
         {
           "id": "a",
@@ -1619,9 +1586,45 @@
       "explanation": "P2P jest zdecentralizowane – nie wymaga centralnego serwera."
     },
     {
-      "id": "q87",
-      "text": "Czy protokół SMTP zapewnia uwierzytelnianie?",
-      "category": "siec",
+      "id": "q83",
+      "text": "Czy w sieciach P2P pliki są rozsyłane po komputerach innych użytkowników?",
+      "category": "bezpieczenstwo",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Tak",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Nie",
+          "correct": false
+        }
+      ],
+      "explanation": "W sieciach P2P użytkownicy wymieniają pliki bezpośrednio między sobą."
+    },
+    {
+      "id": "q84",
+      "text": "Czy w komunikacji typu P2P może pośredniczyć serwer?",
+      "category": "bezpieczenstwo",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Tak",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Nie",
+          "correct": false
+        }
+      ],
+      "explanation": "Serwer może pełnić rolę trackera lub pośrednika w sieci P2P."
+    },
+    {
+      "id": "q85",
+      "text": "Czy protokół SMTP zapewnia mechanizmy uwierzytelniania?",
+      "category": "bezpieczenstwo",
       "answers": [
         {
           "id": "a",
@@ -1637,9 +1640,63 @@
       "explanation": "SMTP AUTH pozwala na uwierzytelnianie nadawcy wiadomości e-mail."
     },
     {
+      "id": "q86",
+      "text": "Czy firewall może być bezstanowy (stateless)?",
+      "category": "bezpieczenstwo",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Tak",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Nie",
+          "correct": false
+        }
+      ],
+      "explanation": "Firewall stateless analizuje każdy pakiet niezależnie, bez śledzenia sesji."
+    },
+    {
+      "id": "q87",
+      "text": "Czy firewall stanowy analizuje stan połączenia?",
+      "category": "bezpieczenstwo",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Tak",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Nie",
+          "correct": false
+        }
+      ],
+      "explanation": "Firewall stateful śledzi stan sesji TCP i podejmuje decyzje na tej podstawie."
+    },
+    {
       "id": "q88",
-      "text": "Czy ITIL 4 definiuje procesy w trybie nakazowym?",
-      "category": "dostepnosc",
+      "text": "Czy firewall może działać w 7 warstwie modelu OSI?",
+      "category": "bezpieczenstwo",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Tak",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Nie",
+          "correct": false
+        }
+      ],
+      "explanation": "Firewall aplikacyjny (WAF) działa w warstwie 7 (aplikacji)."
+    },
+    {
+      "id": "q89",
+      "text": "Czy IDS reaguje aktywnie na wykryty atak?",
+      "category": "bezpieczenstwo",
       "answers": [
         {
           "id": "a",
@@ -1652,12 +1709,48 @@
           "correct": true
         }
       ],
-      "explanation": "ITIL 4 to framework dobrych praktyk – nie narzuca, a rekomenduje."
+      "explanation": "IDS tylko wykrywa i raportuje – aktywne blokowanie to zadanie IPS."
     },
     {
-      "id": "q89",
-      "text": "Czy Post-Incident Review jest wymagany w ITIL?",
-      "category": "dostepnosc",
+      "id": "q90",
+      "text": "Czy ICMP działa w 3 warstwie modelu OSI?",
+      "category": "bezpieczenstwo",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Tak",
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": "Nie",
+          "correct": false
+        }
+      ],
+      "explanation": "ICMP to protokół warstwy 3 (sieciowej) modelu OSI."
+    },
+    {
+      "id": "q91",
+      "text": "Czy ITIL 4 definiuje procesy w trybie nakazowym (sztywne reguły)?",
+      "category": "itil4",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Tak",
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": "Nie",
+          "correct": true
+        }
+      ],
+      "explanation": "ITIL 4 to zestaw rekomendacji/dobrych praktyk, nie sztywnych reguł."
+    },
+    {
+      "id": "q92",
+      "text": "Czy analiza po awarii (Post-incident review) jest wymagana/obowiązkowa w ramach ITIL?",
+      "category": "itil4",
       "answers": [
         {
           "id": "a",
