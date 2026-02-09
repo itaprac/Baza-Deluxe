@@ -2,9 +2,10 @@
   "deck": {
     "id": "infrastruktura-informatyczna",
     "name": "Infrastruktura Informatyczna – Egzamin",
-    "group": "semestr5",
+    "group": "Semestr 5",
     "description": "Pytania z egzaminu z Infrastruktury Informatycznej",
     "version": 1,
+    "defaultSelectionMode": "single",
     "categories": [
       {
         "id": "sieci-strukturalne",
