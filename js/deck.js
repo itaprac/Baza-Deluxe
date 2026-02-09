@@ -208,6 +208,27 @@ export function getDeckStats(deckId, settings = DEFAULT_SETTINGS, includeFlagged
   const now = Date.now();
   const today = startOfDay(now);
   const allCards = storage.peekCards(deckId);
+  if (allCards.length === 0) {
+    const deckMeta = storage.getDecks().find((d) => d.id === deckId) || null;
+    const fallbackQuestionCount = Number.isFinite(deckMeta?.questionCount)
+      ? Math.max(0, Math.floor(deckMeta.questionCount))
+      : 0;
+    const fallbackNewAvailable = Math.min(
+      fallbackQuestionCount,
+      Math.max(0, Number(settings?.newCardsPerDay) || 0)
+    );
+    return {
+      dueToday: 0,
+      dueReview: 0,
+      dueLearning: 0,
+      learningTotal: 0,
+      newAvailable: fallbackNewAvailable,
+      totalNew: fallbackQuestionCount,
+      totalCards: fallbackQuestionCount,
+      learned: 0,
+      flagged: 0,
+    };
+  }
 
   let flaggedCount = 0;
   let dueReview = 0;

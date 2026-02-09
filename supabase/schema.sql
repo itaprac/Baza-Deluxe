@@ -575,6 +575,64 @@ to authenticated
 using (public.current_app_role() in ('admin'::public.app_role, 'dev'::public.app_role))
 with check (public.current_app_role() in ('admin'::public.app_role, 'dev'::public.app_role));
 
+-- --- Public deck visibility overrides (static public deck source + DB hide/show) ---
+
+create table if not exists public.public_deck_visibility (
+  deck_id text primary key,
+  is_hidden boolean not null default true,
+  updated_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists public_deck_visibility_is_hidden_idx
+on public.public_deck_visibility (is_hidden);
+
+drop trigger if exists set_public_deck_visibility_updated_at on public.public_deck_visibility;
+create trigger set_public_deck_visibility_updated_at
+before update on public.public_deck_visibility
+for each row
+execute function public.set_updated_at_timestamp();
+
+alter table public.public_deck_visibility enable row level security;
+
+drop policy if exists "public_deck_visibility_read_all" on public.public_deck_visibility;
+create policy "public_deck_visibility_read_all"
+on public.public_deck_visibility
+for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "public_deck_visibility_insert_admin_dev" on public.public_deck_visibility;
+create policy "public_deck_visibility_insert_admin_dev"
+on public.public_deck_visibility
+for insert
+to authenticated
+with check (public.current_app_role() in ('admin'::public.app_role, 'dev'::public.app_role));
+
+drop policy if exists "public_deck_visibility_update_admin_dev" on public.public_deck_visibility;
+create policy "public_deck_visibility_update_admin_dev"
+on public.public_deck_visibility
+for update
+to authenticated
+using (public.current_app_role() in ('admin'::public.app_role, 'dev'::public.app_role))
+with check (public.current_app_role() in ('admin'::public.app_role, 'dev'::public.app_role));
+
+drop policy if exists "public_deck_visibility_delete_admin_dev" on public.public_deck_visibility;
+create policy "public_deck_visibility_delete_admin_dev"
+on public.public_deck_visibility
+for delete
+to authenticated
+using (public.current_app_role() in ('admin'::public.app_role, 'dev'::public.app_role));
+
+-- Backfill hidden state from legacy public_decks.is_archived
+insert into public.public_deck_visibility (deck_id, is_hidden)
+select pd.id, true
+from public.public_decks pd
+where pd.is_archived = true
+on conflict (deck_id) do update
+set is_hidden = excluded.is_hidden;
+
 -- --- Community answer votes ---
 
 create table if not exists public.answer_votes (

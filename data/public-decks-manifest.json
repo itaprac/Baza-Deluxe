@@ -1,0 +1,284 @@
+{
+  "generatedAt": "2026-02-09T20:34:15.649Z",
+  "decks": [
+    {
+      "id": "ai-egzamin",
+      "file": "/data/ai-egzamin.json",
+      "name": "Aplikacje Internetowe",
+      "description": "Pytania z Aplikacji Internetowych",
+      "questionCount": 28,
+      "version": 1,
+      "group": "Semestr 5",
+      "defaultSelectionMode": "single"
+    },
+    {
+      "id": "gk-egzamin",
+      "file": "/data/gk-egzamin.json",
+      "name": "Grafika Komputerowa",
+      "description": "Pytania z grafiki komputerowej",
+      "questionCount": 107,
+      "version": 1,
+      "group": "Semestr 4",
+      "defaultSelectionMode": "multiple"
+    },
+    {
+      "id": "gk2-egzamin",
+      "file": "/data/gk2-egzamin.json",
+      "name": "Grafika Komputerowa 2",
+      "description": "Pytania z grafiki komputerowej 23.06.2025 Egzamin",
+      "questionCount": 49,
+      "version": 1,
+      "group": "Semestr 4",
+      "defaultSelectionMode": "multiple"
+    },
+    {
+      "id": "gry-egzamin",
+      "file": "/data/gry-egzamin.json",
+      "name": "Gry Komputerowe",
+      "description": "Są to pytania wygenerowane przez Gemini na bazie wykładów",
+      "questionCount": 162,
+      "version": 1,
+      "group": "Semestr 5",
+      "defaultSelectionMode": "single"
+    },
+    {
+      "id": "ii-egzamin",
+      "file": "/data/ii-egzamin.json",
+      "name": "Infrastruktura Informatyczna",
+      "description": "Pytania z Infrastruktury Informatycznej",
+      "questionCount": 104,
+      "version": 1,
+      "group": "Semestr 5",
+      "categories": [
+        {
+          "id": "cat-01",
+          "name": "1. Sieci strukturalne / czesc fizyczna",
+          "questionCount": 15
+        },
+        {
+          "id": "cat-02",
+          "name": "2. Infrastruktura IT - podstawy",
+          "questionCount": 9
+        },
+        {
+          "id": "cat-03",
+          "name": "3. DNS",
+          "questionCount": 9
+        },
+        {
+          "id": "cat-04",
+          "name": "4. Anonimowosc w sieci",
+          "questionCount": 5
+        },
+        {
+          "id": "cat-05",
+          "name": "5. WWW / HTTP",
+          "questionCount": 12
+        },
+        {
+          "id": "cat-06",
+          "name": "6. Wirtualizacja / kontenery / chmura",
+          "questionCount": 9
+        },
+        {
+          "id": "cat-07",
+          "name": "7. Serwerownia",
+          "questionCount": 8
+        },
+        {
+          "id": "cat-08",
+          "name": "8. Zasilanie",
+          "questionCount": 5
+        },
+        {
+          "id": "cat-09",
+          "name": "9. Dostepnosc i redundancja",
+          "questionCount": 6
+        },
+        {
+          "id": "cat-10",
+          "name": "10. Monitoring",
+          "questionCount": 4
+        },
+        {
+          "id": "cat-11",
+          "name": "11. Kopie zapasowe i storage",
+          "questionCount": 7
+        },
+        {
+          "id": "cat-12",
+          "name": "12. Bezpieczenstwo",
+          "questionCount": 9
+        },
+        {
+          "id": "cat-13",
+          "name": "13. ITIL 4",
+          "questionCount": 6
+        }
+      ],
+      "defaultSelectionMode": "multiple"
+    },
+    {
+      "id": "infrastruktura-informatyczna",
+      "file": "/data/infrastruktura_informatyczna.json",
+      "name": "Infrastruktura Informatyczna – Egzamin",
+      "description": "Pytania z egzaminu z Infrastruktury Informatycznej",
+      "questionCount": 92,
+      "version": 1,
+      "group": "Semestr 5",
+      "categories": [
+        {
+          "id": "sieci-strukturalne",
+          "name": "1. Sieci strukturalne / część fizyczna",
+          "questionCount": 2
+        },
+        {
+          "id": "infrastruktura-it",
+          "name": "2. Infrastruktura IT – podstawy",
+          "questionCount": 5
+        },
+        {
+          "id": "dns",
+          "name": "3. DNS",
+          "questionCount": 9
+        },
+        {
+          "id": "www-http",
+          "name": "5. WWW / HTTP",
+          "questionCount": 7
+        },
+        {
+          "id": "wirtualizacja-chmura",
+          "name": "6. Wirtualizacja / kontenery / chmura",
+          "questionCount": 15
+        },
+        {
+          "id": "serwerownia",
+          "name": "7. Serwerownia",
+          "questionCount": 3
+        },
+        {
+          "id": "zasilanie",
+          "name": "8. Zasilanie",
+          "questionCount": 8
+        },
+        {
+          "id": "dostepnosc-redundancja",
+          "name": "9. Dostępność i redundancja",
+          "questionCount": 12
+        },
+        {
+          "id": "monitoring",
+          "name": "10. Monitoring",
+          "questionCount": 3
+        },
+        {
+          "id": "kopie-zapasowe-storage",
+          "name": "11. Kopie zapasowe i storage",
+          "questionCount": 13
+        },
+        {
+          "id": "bezpieczenstwo",
+          "name": "12. Bezpieczeństwo",
+          "questionCount": 13
+        },
+        {
+          "id": "itil4",
+          "name": "13. ITIL 4",
+          "questionCount": 2
+        }
+      ],
+      "defaultSelectionMode": "single"
+    },
+    {
+      "id": "io-egzamin",
+      "file": "/data/io-egzamin.json",
+      "name": "Inżynieria Oprogramowania",
+      "description": "Pytania z inżynierii oprogramowania",
+      "questionCount": 90,
+      "version": 1,
+      "group": "Semestr 4",
+      "defaultSelectionMode": "single"
+    },
+    {
+      "id": "ipz-egzamin",
+      "file": "/data/ipz-egzamin.json",
+      "name": "IPZ",
+      "description": "Pytania z IPZ",
+      "questionCount": 120,
+      "version": 1,
+      "group": "Semestr 5",
+      "defaultSelectionMode": "single"
+    },
+    {
+      "id": "kcm-egzamin",
+      "file": "/data/kcm-egzamin.json",
+      "name": "Komunikacja człowiek maszyna",
+      "description": "Pytania z komunikacja człowiek maszyna",
+      "questionCount": 66,
+      "version": 1,
+      "group": "Semestr 5",
+      "defaultSelectionMode": "multiple"
+    },
+    {
+      "id": "poi-egzamin",
+      "file": "/data/poi-egzamin.json",
+      "name": "Podstawy ochrony informacji",
+      "description": "Pytania z Podstaw ochrony informacji",
+      "questionCount": 173,
+      "version": 1,
+      "group": "Semestr 5",
+      "defaultSelectionMode": "single"
+    },
+    {
+      "id": "si-egzamin",
+      "file": "/data/si-egzamin.json",
+      "name": "Sztuczna inteligencja",
+      "description": "Pytania ze Sztuczna inteligencja (Bez Logiki)",
+      "questionCount": 221,
+      "version": 1,
+      "group": "Semestr 5",
+      "defaultSelectionMode": "single"
+    },
+    {
+      "id": "td-egzamin",
+      "file": "/data/td-egzamin.json",
+      "name": "Transmisja Danych",
+      "description": "Wszystkie dotychczas pytania z Transmisji danych",
+      "questionCount": 116,
+      "version": 1,
+      "group": "Semestr 4",
+      "defaultSelectionMode": "multiple"
+    },
+    {
+      "id": "td2-egzamin",
+      "file": "/data/td2-egzamin.json",
+      "name": "Transmisja Danych 2",
+      "description": "Pytania z Transmisji danych z egzaminu z dnia 26.06.2025",
+      "questionCount": 49,
+      "version": 1,
+      "group": "Semestr 4",
+      "defaultSelectionMode": "multiple"
+    },
+    {
+      "id": "zi-egzamin",
+      "file": "/data/zi-egzamin.json",
+      "name": "Zarządzanie informacją",
+      "description": "Pytania z Zarządzania informacją",
+      "questionCount": 88,
+      "version": 1,
+      "group": "Semestr 4",
+      "defaultSelectionMode": "multiple"
+    },
+    {
+      "id": "zi2-egzamin",
+      "file": "/data/zi2-egzamin.json",
+      "name": "Zarządzanie informacją 2",
+      "description": "Pytania z Zarządzania informacją 2",
+      "questionCount": 86,
+      "version": 1,
+      "group": "Semestr 5",
+      "defaultSelectionMode": "multiple"
+    }
+  ]
+}

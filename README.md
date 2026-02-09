@@ -49,6 +49,7 @@ Aplikacja działa pod adresem:
 ```env
 BAZUNIA_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 BAZUNIA_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+BAZUNIA_PUBLIC_DECK_PROVIDER=static
 ```
 
 4. Włącz provider `Email` (opcjonalnie też `Google`) w Supabase Auth.
@@ -100,7 +101,15 @@ Wymagania importu:
 docker compose logs -f web
 docker compose restart web
 docker compose down
+node scripts/generate-public-decks-manifest.js
 ```
+
+## Publiczne talie (Ogólne)
+
+- Źródłem prawdy są pliki `data/*.json` oraz `data/public-decks-manifest.json`.
+- Manifest generujesz poleceniem `node scripts/generate-public-decks-manifest.js`.
+- Widoczność `Ukryj/Pokaż` jest trzymana osobno w Supabase (`public_deck_visibility`).
+- Treść talii ogólnych jest tylko do odczytu w aplikacji.
 
 ## Dokumentacja w aplikacji
 

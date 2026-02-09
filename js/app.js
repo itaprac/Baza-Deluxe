@@ -58,9 +58,8 @@ import {
   fetchAdminUsers,
   setUserRole,
   fetchPublicDecks,
-  upsertPublicDeck,
-  hidePublicDeck,
-  unhidePublicDeck,
+  fetchPublicDeckVisibility,
+  setPublicDeckVisibility,
   fetchMyProfile,
   updateMyUsername,
   searchSharedDecks,
@@ -73,6 +72,7 @@ import {
   setAnswerVote,
   isAnswerVoteRpcReady,
 } from './supabase.js';
+import { PUBLIC_DECK_PROVIDER } from './supabase-config.js';
 
 // --- App State ---
 
@@ -133,8 +133,8 @@ const BUILT_IN_DECK_SOURCES = [
   { id: 'ii-egzamin', file: '/data/ii-egzamin.json' },
   { id: 'infrastruktura-informatyczna', file: '/data/infrastruktura_informatyczna.json' },
 ];
-const BUILT_IN_DECK_ID_SET = new Set(BUILT_IN_DECK_SOURCES.map((item) => item.id));
-const BUILT_IN_DECK_IDS = [...BUILT_IN_DECK_ID_SET];
+const PUBLIC_DECK_MANIFEST_URL = '/data/public-decks-manifest.json';
+const FALLBACK_PUBLIC_DECK_IDS = BUILT_IN_DECK_SOURCES.map((item) => item.id);
 const DECK_ID_RE = /^[a-z0-9_-]+$/i;
 const USERNAME_RE = /^[a-z0-9_.-]{3,24}$/;
 const ADMIN_USERS_PAGE_SIZE = 12;
@@ -176,6 +176,9 @@ let authSubscription = null;
 let authEventsBound = false;
 let authMode = 'login'; // 'login' | 'signup' | 'reset'
 let userMenuOpen = false;
+let publicDeckManifest = [];
+let publicDeckManifestById = new Map();
+let knownPublicDeckIdSet = new Set(FALLBACK_PUBLIC_DECK_IDS);
 let adminPanelState = {
   users: [],
   hiddenDecks: [],
@@ -193,6 +196,7 @@ let sharedCatalogState = {
 };
 let sharedSearchRequestSeq = 0;
 let mySubscriptionDeckIds = new Set();
+let publicDeckVisibilityErrorNotified = false;
 
 // Test mode state
 let testQuestions = [];
@@ -245,11 +249,24 @@ function getAvailableDeckGroups(scope = 'private') {
   return Array.from(groups).sort((a, b) => collator.compare(a, b));
 }
 
+function getPublicDeckIds() {
+  return [...knownPublicDeckIdSet];
+}
+
+function refreshKnownPublicDeckIds(manifestDecks = []) {
+  const ids = Array.isArray(manifestDecks)
+    ? manifestDecks
+      .map((deckRow) => String(deckRow?.id || '').trim())
+      .filter((id) => id.length > 0)
+    : [];
+  knownPublicDeckIdSet = new Set(ids.length > 0 ? ids : FALLBACK_PUBLIC_DECK_IDS);
+}
+
 function getUniqueDeckId(base) {
   const candidateBase = slugifyDeckId(base) || `talia-${Date.now().toString(36)}`;
   const allDecks = storage.getDecks();
   const taken = new Set(allDecks.map((d) => String(d.id || '').toLowerCase()));
-  for (const builtInId of BUILT_IN_DECK_IDS) {
+  for (const builtInId of getPublicDeckIds()) {
     taken.add(String(builtInId).toLowerCase());
   }
 
@@ -265,12 +282,12 @@ function getUniqueDeckId(base) {
 function isDeckIdTaken(deckId) {
   const normalized = String(deckId || '').toLowerCase();
   if (!normalized) return false;
-  if (BUILT_IN_DECK_IDS.some((id) => id.toLowerCase() === normalized)) return true;
+  if (getPublicDeckIds().some((id) => id.toLowerCase() === normalized)) return true;
   return storage.getDecks().some((d) => String(d.id || '').toLowerCase() === normalized);
 }
 
 function isBuiltInDeckId(deckId) {
-  return typeof deckId === 'string' && BUILT_IN_DECK_ID_SET.has(deckId);
+  return typeof deckId === 'string' && knownPublicDeckIdSet.has(deckId);
 }
 
 function getDeckScope(deckMeta) {
@@ -288,7 +305,7 @@ function isDeckReadOnlyContent(deckMeta) {
   if (!deckMeta || typeof deckMeta !== 'object') return false;
   const scope = getDeckScope(deckMeta);
   if (scope === 'public') {
-    return !canManagePublicDecks();
+    return true;
   }
   if (scope === 'subscribed') {
     return true;
@@ -626,7 +643,7 @@ function canEditDeckContent(deckId) {
   if (!deckMeta) return false;
   const scope = getDeckScope(deckMeta);
   if (scope === 'public') {
-    return canManagePublicDecks();
+    return false;
   }
   if (scope === 'subscribed') {
     return false;
@@ -1089,50 +1106,11 @@ function showAuthPanel(message = '', type = 'info', mode = 'login') {
   showAuthMessage(message, type);
 }
 
-function shouldSyncPublicDeck(deckId) {
-  if (sessionMode !== 'user' || !canManagePublicDecks()) return false;
-  const deckMeta = getDeckMeta(deckId);
-  return getDeckScope(deckMeta) === 'public';
-}
-
 function shouldSyncSharedDeck(deckId) {
   if (sessionMode !== 'user' || !currentUser) return false;
   const deckMeta = getDeckMeta(deckId);
   if (!deckMeta) return false;
   return getDeckScope(deckMeta) === 'private' && deckMeta.isShared === true;
-}
-
-function buildPublicDeckPayload(deckId) {
-  const deckMeta = getDeckMeta(deckId);
-  if (!deckMeta) return null;
-
-  const questions = storage.getQuestions(deckId);
-  return {
-    id: deckMeta.id,
-    name: deckMeta.name || deckMeta.id,
-    description: deckMeta.description || '',
-    deck_group: normalizeDeckGroup(deckMeta.group) || null,
-    categories: Array.isArray(deckMeta.categories) ? deckMeta.categories : null,
-    questions,
-    question_count: questions.length,
-    version: Number(deckMeta.version) || 1,
-    source: deckMeta.source || 'public-db',
-    is_archived: deckMeta.adminOnly === true,
-    updated_by: currentUser?.id || null,
-  };
-}
-
-async function pushPublicDeckToSupabase(deckId) {
-  const payload = buildPublicDeckPayload(deckId);
-  if (!payload) return;
-  await upsertPublicDeck(payload);
-}
-
-function syncPublicDeckToSupabaseAsync(deckId) {
-  if (!shouldSyncPublicDeck(deckId)) return;
-  pushPublicDeckToSupabase(deckId).catch((error) => {
-    showNotification(`Nie udało się zsynchronizować talii ogólnej: ${error.message}`, 'error');
-  });
 }
 
 function buildSharedDeckPayload(deckId) {
@@ -1178,7 +1156,6 @@ function syncSharedDeckToSupabaseAsync(deckId) {
 }
 
 function syncOwnedDeckToSupabaseAsync(deckId) {
-  syncPublicDeckToSupabaseAsync(deckId);
   syncSharedDeckToSupabaseAsync(deckId);
 }
 
@@ -1279,113 +1256,263 @@ function applyPublicDeckRowsToLocal(rows = [], options = {}) {
   storage.saveDecks([...publicDecks, ...privateDecks]);
 }
 
-async function seedPublicDecksFromBuiltInFiles(existingRows = []) {
-  if (!canManagePublicDecks()) return;
-  const existingRowById = new Map(
-    (Array.isArray(existingRows) ? existingRows : [])
-      .filter((row) => row && typeof row.id === 'string')
-      .map((row) => [row.id, row])
-  );
-  const existingArchiveMap = new Map(
-    (Array.isArray(existingRows) ? existingRows : [])
-      .filter((row) => row && typeof row.id === 'string')
-      .map((row) => [row.id, row.is_archived === true])
-  );
-  const sameJSON = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
-  const isBuiltInRowDifferent = (existingRow, payload) => {
-    if (!existingRow) return true;
+function normalizeManifestDeckEntry(entry = null) {
+  if (!entry || typeof entry !== 'object') return null;
+  const id = String(entry.id || '').trim();
+  const file = String(entry.file || '').trim();
+  if (!id || !file) return null;
 
-    const existingName = String(existingRow.name || '');
-    const existingDescription = String(existingRow.description || '');
-    const existingGroup = normalizeDeckGroup(existingRow.deck_group) || null;
-    const existingCategories = Array.isArray(existingRow.categories) ? existingRow.categories : null;
-    const existingVersion = Number(existingRow.version) || 1;
-    const existingQuestionCount = Number.isFinite(existingRow.question_count)
-      ? existingRow.question_count
-      : (Array.isArray(existingRow.questions) ? existingRow.questions.length : 0);
-    const existingQuestions = Array.isArray(existingRow.questions) ? existingRow.questions : [];
-    const existingArchived = existingRow.is_archived === true;
-    const existingSource = String(existingRow.source || '');
-
-    return (
-      existingName !== payload.name
-      || existingDescription !== payload.description
-      || existingGroup !== payload.deck_group
-      || !sameJSON(existingCategories, payload.categories)
-      || existingVersion !== payload.version
-      || existingQuestionCount !== payload.question_count
-      || !sameJSON(existingQuestions, payload.questions)
-      || existingArchived !== (payload.is_archived === true)
-      || existingSource !== payload.source
-    );
+  const normalized = {
+    id,
+    file,
+    name: String(entry.name || id),
+    description: String(entry.description || ''),
+    questionCount: Number.isFinite(entry.questionCount) ? Math.max(0, Math.floor(entry.questionCount)) : 0,
+    version: Number(entry.version) || 1,
   };
+  const group = normalizeDeckGroup(entry.group);
+  if (group) normalized.group = group;
+  if (Array.isArray(entry.categories)) normalized.categories = entry.categories;
+  const defaultSelectionMode = normalizeSelectionMode(entry.defaultSelectionMode, null);
+  if (defaultSelectionMode) normalized.defaultSelectionMode = defaultSelectionMode;
+  return normalized;
+}
 
-  for (const builtIn of BUILT_IN_DECK_SOURCES) {
-    try {
-      const response = await fetch(builtIn.file);
-      if (!response.ok) continue;
-      const data = await response.json();
-      if (!data || typeof data !== 'object' || !data.deck || !Array.isArray(data.questions)) continue;
-      const deckDefaultSelectionMode = normalizeSelectionMode(data.deck.defaultSelectionMode, null);
-      const normalizedQuestions = applyDeckDefaultSelectionModeToQuestions(
-        data.questions,
-        deckDefaultSelectionMode
-      );
+async function loadPublicDeckManifest(options = {}) {
+  const force = options.force === true;
+  if (!force && publicDeckManifest.length > 0) return publicDeckManifest;
 
-      const payload = {
-        id: data.deck.id,
-        name: data.deck.name || data.deck.id,
-        description: data.deck.description || '',
-        deck_group: normalizeDeckGroup(data.deck.group) || null,
-        categories: Array.isArray(data.deck.categories) ? data.deck.categories : null,
-        questions: normalizedQuestions,
-        question_count: normalizedQuestions.length,
-        version: Number(data.deck.version) || 1,
-        source: 'builtin',
-        is_archived: existingArchiveMap.get(data.deck.id) === true,
-        updated_by: currentUser?.id || null,
-      };
+  const response = await fetch(PUBLIC_DECK_MANIFEST_URL, { cache: 'no-store' });
+  if (!response.ok) {
+    throw new Error(`Manifest publicznych talii: HTTP ${response.status}`);
+  }
+  const raw = await response.json();
+  const rawDecks = Array.isArray(raw?.decks) ? raw.decks : [];
+  const nextManifest = rawDecks
+    .map((entry) => normalizeManifestDeckEntry(entry))
+    .filter((entry) => entry !== null);
 
-      const existingRow = existingRowById.get(payload.id) || null;
-      if (!isBuiltInRowDifferent(existingRow, payload)) {
-        continue;
-      }
-      await upsertPublicDeck(payload);
-    } catch {
-      // Optional source file can be missing, skip silently.
+  if (nextManifest.length === 0) {
+    throw new Error('Manifest publicznych talii jest pusty lub nieprawidłowy.');
+  }
+
+  publicDeckManifest = nextManifest;
+  publicDeckManifestById = new Map(nextManifest.map((entry) => [entry.id, entry]));
+  refreshKnownPublicDeckIds(nextManifest);
+  return publicDeckManifest;
+}
+
+function getPublicDeckManifestEntry(deckId) {
+  const id = String(deckId || '').trim();
+  if (!id) return null;
+  return publicDeckManifestById.get(id) || null;
+}
+
+async function fetchPublicDeckVisibilityMap() {
+  if (!isSupabaseConfigured()) {
+    return new Map();
+  }
+  const rows = await fetchPublicDeckVisibility();
+  const map = new Map();
+  for (const row of rows) {
+    const deckId = String(row?.deck_id || '').trim();
+    if (!deckId) continue;
+    map.set(deckId, {
+      isHidden: row.is_hidden === true,
+      updatedAt: row.updated_at || null,
+      updatedBy: row.updated_by || null,
+    });
+  }
+  return map;
+}
+
+function applyPublicDeckManifestToLocal(manifestDecks = [], visibilityMap = new Map(), options = {}) {
+  const includeHidden = options.includeHidden === true;
+  const currentDecks = storage.getDecks();
+  const privateDecks = currentDecks.filter((deckMeta) => getDeckScope(deckMeta) !== 'public');
+  const currentPublicDecks = currentDecks.filter((deckMeta) => getDeckScope(deckMeta) === 'public');
+  const existingPublicById = new Map(currentPublicDecks.map((deckMeta) => [deckMeta.id, deckMeta]));
+
+  const nextPublicDecks = [];
+  const manifestIdSet = new Set();
+  for (const entry of manifestDecks) {
+    manifestIdSet.add(entry.id);
+    const visibility = visibilityMap.get(entry.id);
+    const hidden = visibility?.isHidden === true;
+    if (hidden && !includeHidden) continue;
+
+    const existing = existingPublicById.get(entry.id);
+    const deckMeta = {
+      id: entry.id,
+      name: entry.name || entry.id,
+      description: entry.description || '',
+      questionCount: Number.isFinite(entry.questionCount) ? entry.questionCount : 0,
+      importedAt: existing?.importedAt || Date.now(),
+      version: Number(entry.version) || 1,
+      scope: 'public',
+      source: 'builtin-manifest',
+      readOnlyContent: true,
+      adminOnly: hidden,
+    };
+    if (entry.group) deckMeta.group = entry.group;
+    if (Array.isArray(entry.categories)) deckMeta.categories = entry.categories;
+    if (entry.defaultSelectionMode) deckMeta.defaultSelectionMode = entry.defaultSelectionMode;
+    nextPublicDecks.push(deckMeta);
+  }
+
+  for (const deckMeta of currentPublicDecks) {
+    if (!manifestIdSet.has(deckMeta.id)) {
+      storage.clearDeckData(deckMeta.id);
     }
   }
+
+  storage.saveDecks([...nextPublicDecks, ...privateDecks]);
+}
+
+async function ensurePublicDeckLoaded(deckId) {
+  const deckMeta = getDeckMeta(deckId);
+  if (!deckMeta || getDeckScope(deckMeta) !== 'public') return true;
+
+  const existingQuestions = storage.peekQuestions(deckId);
+  let manifestEntry = getPublicDeckManifestEntry(deckId);
+  if (existingQuestions.length > 0) {
+    if (!manifestEntry) {
+      try {
+        if (publicDeckManifestById.size === 0) {
+          await loadPublicDeckManifest();
+        }
+        manifestEntry = getPublicDeckManifestEntry(deckId);
+      } catch {
+        // Manifest może być chwilowo niedostępny. Jeśli dane są już lokalnie, pozwalamy wejść do talii.
+      }
+    }
+    const defaultMode = normalizeSelectionMode(
+      deckMeta.defaultSelectionMode,
+      manifestEntry?.defaultSelectionMode || null
+    );
+    const normalizedExistingQuestions = applyDeckDefaultSelectionModeToQuestions(existingQuestions, defaultMode);
+    if (normalizedExistingQuestions !== existingQuestions) {
+      storage.saveQuestions(deckId, normalizedExistingQuestions);
+      mergeCardsForQuestions(deckId, normalizedExistingQuestions);
+    } else if (storage.peekCards(deckId).length === 0) {
+      mergeCardsForQuestions(deckId, existingQuestions);
+    }
+    return true;
+  }
+
+  if (!manifestEntry) {
+    if (publicDeckManifestById.size === 0) {
+      await loadPublicDeckManifest();
+    }
+    manifestEntry = getPublicDeckManifestEntry(deckId);
+  }
+  if (!manifestEntry) {
+    throw new Error(`Brak talii "${deckId}" w manifeście.`);
+  }
+
+  const response = await fetch(manifestEntry.file, { cache: 'no-store' });
+  if (!response.ok) {
+    throw new Error(`Nie udało się pobrać talii ${deckId} (HTTP ${response.status}).`);
+  }
+
+  const data = await response.json();
+  if (!data || typeof data !== 'object' || !Array.isArray(data.questions)) {
+    throw new Error(`Nieprawidłowy format danych talii ${deckId}.`);
+  }
+  const deckDefaultSelectionMode = normalizeSelectionMode(
+    data.deck?.defaultSelectionMode,
+    manifestEntry.defaultSelectionMode || null
+  );
+  const normalizedQuestions = applyDeckDefaultSelectionModeToQuestions(
+    data.questions,
+    deckDefaultSelectionMode
+  );
+  storage.saveQuestions(deckId, normalizedQuestions);
+  mergeCardsForQuestions(deckId, normalizedQuestions);
+
+  const decks = storage.getDecks();
+  const idx = decks.findIndex((d) => d.id === deckId);
+  if (idx >= 0) {
+    const nextMeta = {
+      ...decks[idx],
+      questionCount: normalizedQuestions.length,
+      version: Number(data.deck?.version) || Number(manifestEntry.version) || 1,
+    };
+    if (deckDefaultSelectionMode) {
+      nextMeta.defaultSelectionMode = deckDefaultSelectionMode;
+    }
+    decks[idx] = nextMeta;
+    storage.saveDecks(decks);
+  }
+
+  return true;
 }
 
 function filterBuiltInPublicRows(rows = []) {
   return rows.filter((row) => row && isBuiltInDeckId(row.id));
 }
 
-async function syncPublicDecksForCurrentUser(options = {}) {
-  if (!isSupabaseConfigured() || sessionMode !== 'user') return;
+async function syncPublicDecksFromSupabaseLegacy(options = {}) {
+  if (!isSupabaseConfigured()) {
+    await loadBuiltInDecks();
+    return;
+  }
   const fallbackToBuiltInsOnError = options.fallbackToBuiltInsOnError !== false;
-  const syncBuiltInFromFiles = options.syncBuiltInFromFiles === true;
   try {
     const includeHidden = canManagePublicDecks();
-    let rows = filterBuiltInPublicRows(await fetchPublicDecks({ includeArchived: includeHidden }));
-    if (canManagePublicDecks() && syncBuiltInFromFiles) {
-      // Built-in JSON files are the canonical source of public deck content/metadata.
-      // Keep Supabase rows in sync while preserving current hidden state.
-      await seedPublicDecksFromBuiltInFiles(rows);
-      rows = filterBuiltInPublicRows(await fetchPublicDecks({ includeArchived: true }));
-    }
-
+    const rows = filterBuiltInPublicRows(await fetchPublicDecks({ includeArchived: includeHidden }));
     if (rows.length === 0) {
       await loadBuiltInDecks();
       return;
     }
-
     applyPublicDeckRowsToLocal(rows, { includeHidden });
     migrateDeckMetadata();
   } catch (error) {
     showNotification(`Nie udało się wczytać talii ogólnych z Supabase: ${error.message}`, 'error');
     if (fallbackToBuiltInsOnError) {
       await loadBuiltInDecks();
+    }
+  }
+}
+
+async function syncPublicDecksFromManifest(options = {}) {
+  const includeHidden = canManagePublicDecks();
+  const forceManifestReload = options.forceManifestReload === true;
+  const manifestDecks = await loadPublicDeckManifest({ force: forceManifestReload });
+  let visibilityMap = new Map();
+  try {
+    visibilityMap = await fetchPublicDeckVisibilityMap();
+    publicDeckVisibilityErrorNotified = false;
+  } catch (error) {
+    if (!publicDeckVisibilityErrorNotified) {
+      showNotification(`Nie udało się pobrać widoczności talii ogólnych: ${error.message}`, 'error');
+      publicDeckVisibilityErrorNotified = true;
+    }
+  }
+  applyPublicDeckManifestToLocal(manifestDecks, visibilityMap, { includeHidden });
+  migrateDeckMetadata();
+}
+
+async function syncPublicDecksForCurrentUser(options = {}) {
+  const provider = options.providerOverride === 'supabase' || options.providerOverride === 'static'
+    ? options.providerOverride
+    : PUBLIC_DECK_PROVIDER;
+  const allowFallback = options.allowFallback !== false;
+
+  if (provider === 'supabase') {
+    await syncPublicDecksFromSupabaseLegacy({
+      ...options,
+      fallbackToBuiltInsOnError: allowFallback,
+    });
+    return;
+  }
+
+  try {
+    await syncPublicDecksFromManifest(options);
+  } catch (error) {
+    showNotification(`Nie udało się wczytać manifestu talii ogólnych: ${error.message}`, 'error');
+    if (allowFallback) {
+      await syncPublicDecksFromSupabaseLegacy({ ...options, fallbackToBuiltInsOnError: true });
     }
   }
 }
@@ -1594,7 +1721,10 @@ async function bootstrapGuestSession() {
   loadUserPreferences();
   updateHeaderSessionState('guest');
   closeUserMenu();
-  await loadBuiltInDecks();
+  await syncPublicDecksForCurrentUser({
+    providerOverride: PUBLIC_DECK_PROVIDER,
+    allowFallback: true,
+  });
   navigateToDeckList();
 }
 
@@ -1619,9 +1749,10 @@ async function bootstrapUserSession(user) {
   }
   migrateDeckMetadata();
   loadUserPreferences();
-  // Logged-in sessions synchronize public decks from Supabase.
-  // Built-in files are used as a fallback/seed source when needed.
-  await syncPublicDecksForCurrentUser({ syncBuiltInFromFiles: canManagePublicDecks() });
+  await syncPublicDecksForCurrentUser({
+    providerOverride: PUBLIC_DECK_PROVIDER,
+    allowFallback: true,
+  });
   await syncSubscribedDecksForCurrentUser();
   updateHeaderSessionState('user', {
     email: user.email || '',
@@ -1768,6 +1899,7 @@ function pruneNonBuiltInPublicDecks() {
 function navigateToDeckList(scope = activeDeckScope, options = {}) {
   const skipSubscribedSync = options.skipSubscribedSync === true;
   const skipSharedRefresh = options.skipSharedRefresh === true;
+  const skipPublicSync = options.skipPublicSync === true;
 
   if (scope === 'public' || scope === 'private' || scope === 'shared') {
     if (scope !== activeDeckScope && scope === 'private') {
@@ -1810,6 +1942,15 @@ function navigateToDeckList(scope = activeDeckScope, options = {}) {
     return;
   }
 
+  if (activeDeckScope === 'public' && !skipPublicSync) {
+    syncPublicDecksForCurrentUser({ allowFallback: false }).then(() => {
+      const deckListView = document.getElementById('view-deck-list');
+      if (activeDeckScope === 'public' && deckListView?.classList.contains('active')) {
+        navigateToDeckList('public', { skipPublicSync: true });
+      }
+    }).catch(() => {});
+  }
+
   if (activeDeckScope === 'private' && sessionMode === 'user' && !skipSubscribedSync) {
     syncSubscribedDecksForCurrentUser().then(() => {
       const deckListView = document.getElementById('view-deck-list');
@@ -1842,7 +1983,7 @@ function navigateToDeckList(scope = activeDeckScope, options = {}) {
     sessionMode,
     showPrivateLocked,
     deckListMode: appSettings.deckListMode,
-    canEditPublicDecks: canManagePublicDecks(),
+    canTogglePublicDeckVisibility: canManagePublicDecks(),
     showPrivateArchived,
     hasArchivedPrivate,
   });
@@ -2983,12 +3124,19 @@ async function navigateToAdminPanel() {
   }
 
   try {
-    const [users, decks] = await Promise.all([
+    const [users, manifestDecks, visibilityMap] = await Promise.all([
       fetchAdminUsers(),
-      fetchPublicDecks({ includeArchived: true }),
+      loadPublicDeckManifest({ force: true }),
+      fetchPublicDeckVisibilityMap(),
     ]);
     adminPanelState.users = users;
-    adminPanelState.hiddenDecks = decks.filter((deckRow) => deckRow.is_archived === true);
+    adminPanelState.hiddenDecks = manifestDecks
+      .filter((deckRow) => visibilityMap.get(deckRow.id)?.isHidden === true)
+      .map((deckRow) => ({
+        id: deckRow.id,
+        name: deckRow.name || deckRow.id,
+        updated_at: visibilityMap.get(deckRow.id)?.updatedAt || null,
+      }));
     adminPanelState.usersPage = 1;
     adminPanelState.hiddenPage = 1;
     renderAdminPanelFromState();
@@ -3130,6 +3278,7 @@ function bindAdminPanelEvents() {
           });
           if (!canAccessAdminPanel()) {
             showNotification('Twoja rola została zmieniona. Dostęp do panelu admina został odebrany.', 'info');
+            await syncPublicDecksForCurrentUser({ allowFallback: true });
             navigateToDeckList('public');
             return;
           }
@@ -3149,11 +3298,8 @@ function bindAdminPanelEvents() {
       if (!deckId) return;
       btn.disabled = true;
       try {
-        await unhidePublicDeck(deckId);
-        await syncPublicDecksForCurrentUser({
-          fallbackToBuiltInsOnError: false,
-          syncBuiltInFromFiles: false,
-        });
+        await setPublicDeckVisibility(deckId, false);
+        await syncPublicDecksForCurrentUser({ allowFallback: false });
         showNotification('Talia została ponownie pokazana wszystkim użytkownikom.', 'success');
         adminPanelState.hiddenDecks = adminPanelState.hiddenDecks.filter((d) => d.id !== deckId);
         renderAdminPanelFromState();
@@ -4053,9 +4199,12 @@ function bindGlobalEvents() {
       source: 'user-import',
       readOnlyContent: false,
       privateDeckLimit: MAX_PRIVATE_DECKS_PER_USER,
-      reservedDeckIds: storage.getDecks()
-        .filter((d) => getDeckScope(d) !== 'private')
-        .map((d) => d.id),
+      reservedDeckIds: [...new Set([
+        ...getPublicDeckIds(),
+        ...storage.getDecks()
+          .filter((d) => getDeckScope(d) !== 'private')
+          .map((d) => d.id),
+      ])],
     });
     if (result.valid) {
       showNotification(
@@ -4183,6 +4332,14 @@ async function exportDeckToJSON(deckId) {
     showNotification('Nie znaleziono talii do eksportu.', 'error');
     return;
   }
+  if (getDeckScope(deckMeta) === 'public') {
+    try {
+      await ensurePublicDeckLoaded(deckId);
+    } catch (error) {
+      showNotification(`Nie udało się załadować talii do eksportu: ${error.message}`, 'error');
+      return;
+    }
+  }
 
   const questions = storage.getQuestions(deckId);
   if (!Array.isArray(questions) || questions.length === 0) {
@@ -4299,6 +4456,14 @@ async function copyDeckToPrivate(options = {}) {
 async function copyDeckFromLocal(deckId) {
   const deckMeta = getDeckMeta(deckId);
   if (!deckMeta) return;
+  if (getDeckScope(deckMeta) === 'public') {
+    try {
+      await ensurePublicDeckLoaded(deckId);
+    } catch (error) {
+      showNotification(`Nie udało się załadować talii do kopiowania: ${error.message}`, 'error');
+      return;
+    }
+  }
   await copyDeckToPrivate({
     name: deckMeta.name || deckMeta.id,
     description: deckMeta.description || '',
@@ -4513,10 +4678,18 @@ function bindDeckListEvents() {
   });
 
   document.querySelectorAll('.deck-card[data-openable="1"]').forEach((cardEl) => {
-    cardEl.addEventListener('click', () => {
+    cardEl.addEventListener('click', async () => {
       const deckId = cardEl.dataset.deckId;
       if (!deckId) return;
       const deckMeta = storage.getDecks().find(d => d.id === deckId);
+      if (deckMeta && getDeckScope(deckMeta) === 'public') {
+        try {
+          await ensurePublicDeckLoaded(deckId);
+        } catch (error) {
+          showNotification(`Nie udało się załadować talii: ${error.message}`, 'error');
+          return;
+        }
+      }
       if (deckMeta && deckMeta.categories) {
         navigateToCategorySelect(deckId);
       } else {
@@ -4527,8 +4700,19 @@ function bindDeckListEvents() {
 
   // Settings buttons on deck cards
   document.querySelectorAll('.btn-deck-settings').forEach(btn => {
-    btn.addEventListener('click', () => {
-      navigateToSettings(btn.dataset.deckId, 'deck-list');
+    btn.addEventListener('click', async () => {
+      const deckId = String(btn.dataset.deckId || '').trim();
+      if (!deckId) return;
+      const deckMeta = getDeckMeta(deckId);
+      if (deckMeta && getDeckScope(deckMeta) === 'public') {
+        try {
+          await ensurePublicDeckLoaded(deckId);
+        } catch (error) {
+          showNotification(`Nie udało się załadować talii: ${error.message}`, 'error');
+          return;
+        }
+      }
+      navigateToSettings(deckId, 'deck-list');
     });
   });
 
@@ -4591,18 +4775,14 @@ function bindDeckListEvents() {
         if (!confirmed) return;
 
         try {
-          await pushPublicDeckToSupabase(deckId);
           if (isHiddenPublicDeck) {
-            await unhidePublicDeck(deckId);
+            await setPublicDeckVisibility(deckId, false);
             showNotification('Talia ogólna została ponownie pokazana.', 'success');
           } else {
-            await hidePublicDeck(deckId);
+            await setPublicDeckVisibility(deckId, true);
             showNotification('Talia ogólna została ukryta dla zwykłych użytkowników.', 'info');
           }
-          await syncPublicDecksForCurrentUser({
-            fallbackToBuiltInsOnError: false,
-            syncBuiltInFromFiles: false,
-          });
+          await syncPublicDecksForCurrentUser({ allowFallback: false });
           navigateToDeckList('public');
         } catch (error) {
           showNotification(`Nie udało się zmienić widoczności talii: ${error.message}`, 'error');

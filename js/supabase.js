@@ -148,6 +148,14 @@ const PUBLIC_DECK_COLUMNS = [
   'updated_at',
 ].join(',');
 
+const PUBLIC_DECK_VISIBILITY_COLUMNS = [
+  'deck_id',
+  'is_hidden',
+  'updated_by',
+  'created_at',
+  'updated_at',
+].join(',');
+
 const USER_PROFILE_COLUMNS = [
   'user_id',
   'username',
@@ -227,6 +235,53 @@ export async function hidePublicDeck(deckId) {
 
 export async function unhidePublicDeck(deckId) {
   return restorePublicDeck(deckId);
+}
+
+export async function fetchPublicDeckVisibility() {
+  const client = ensureClient();
+  const { data, error } = await client
+    .from('public_deck_visibility')
+    .select(PUBLIC_DECK_VISIBILITY_COLUMNS)
+    .order('deck_id', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function setPublicDeckVisibility(deckId, isHidden) {
+  const normalizedId = String(deckId || '').trim();
+  if (!normalizedId) throw new Error('Brak identyfikatora talii.');
+
+  const hidden = isHidden === true;
+  const client = ensureClient();
+  if (!hidden) {
+    const { error } = await client
+      .from('public_deck_visibility')
+      .delete()
+      .eq('deck_id', normalizedId);
+    if (error) throw error;
+    return null;
+  }
+
+  const {
+    data: { user },
+    error: authError,
+  } = await client.auth.getUser();
+  if (authError) throw authError;
+
+  const payload = {
+    deck_id: normalizedId,
+    is_hidden: true,
+    updated_by: user?.id || null,
+  };
+
+  const { data, error } = await client
+    .from('public_deck_visibility')
+    .upsert(payload, { onConflict: 'deck_id' })
+    .select(PUBLIC_DECK_VISIBILITY_COLUMNS)
+    .single();
+
+  if (error) throw error;
+  return data;
 }
 
 // --- User profile (username) ---

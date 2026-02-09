@@ -111,7 +111,7 @@ export function renderDeckList(decks, statsMap, options = {}) {
   const sessionMode = options.sessionMode === 'user' ? 'user' : 'guest';
   const showPrivateLocked = !!options.showPrivateLocked;
   const deckListMode = options.deckListMode === 'classic' ? 'classic' : 'compact';
-  const canEditPublicDecks = options.canEditPublicDecks === true;
+  const canTogglePublicDeckVisibility = options.canTogglePublicDeckVisibility === true;
   const showPrivateArchived = options.showPrivateArchived === true;
   const hasArchivedPrivate = options.hasArchivedPrivate === true;
   const tabsHtml = renderDeckScopeTabs(activeScope);
@@ -182,7 +182,7 @@ export function renderDeckList(decks, statsMap, options = {}) {
     const isArchivedPrivateDeck = isOwnPrivateDeck && deck.isArchived === true;
     const isUnavailableSubscription = isSubscribedDeck && deck.subscriptionStatus === 'unavailable';
     const readOnlyContent = isPublicDeck
-      ? !canEditPublicDecks
+      ? true
       : (isSubscribedDeck || deck.readOnlyContent === true);
 
     const isSharedOwnDeck = isOwnPrivateDeck && deck.isShared === true && !isArchivedPrivateDeck;
@@ -208,7 +208,7 @@ export function renderDeckList(decks, statsMap, options = {}) {
       ? '<div class="deck-card-readonly-hint">Autor wyłączył udostępnianie. Możesz dalej uczyć się na ostatniej zsynchronizowanej wersji.</div>'
       : '';
     const canOpenDeck = !isArchivedPrivateDeck;
-    const canShowVisibilityToggle = isPublicDeck && !readOnlyContent;
+    const canShowVisibilityToggle = isPublicDeck && canTogglePublicDeckVisibility;
     const canShowArchiveToggle = isOwnPrivateDeck;
     const canShowShareToggle = isOwnPrivateDeck && !isArchivedPrivateDeck;
     const ownerLine = isSubscribedDeck && deck.ownerUsername
