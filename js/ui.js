@@ -1304,6 +1304,9 @@ export function renderBrowse(deckName, questions, options = {}) {
     ? options.voteConfig
     : { enabled: false, canVote: false };
   const deckDefaultSelectionMode = normalizeSelectionMode(options.deckDefaultSelectionMode, 'multiple');
+  const flaggedSet = options.flaggedQuestionIds instanceof Set
+    ? options.flaggedQuestionIds
+    : new Set(Array.isArray(options.flaggedQuestionIds) ? options.flaggedQuestionIds : []);
   setDeckHeaderLabel('browse-deck-name', deckName, options.categoryName || '');
 
   const toolbarHtml = `
@@ -1317,6 +1320,7 @@ export function renderBrowse(deckName, questions, options = {}) {
 
   const listHtml = questions.map((q, i) => {
     const flashcard = isFlashcard(q);
+    const isQuestionFlagged = flaggedSet.has(q.id);
     const questionSelectionMode = getEffectiveQuestionSelectionMode(q, deckDefaultSelectionMode);
     const showMinus = questionSelectionMode === 'multiple';
     const questionVotes = voteSummaryByQuestion && typeof voteSummaryByQuestion === 'object'
@@ -1349,6 +1353,10 @@ export function renderBrowse(deckName, questions, options = {}) {
       ? `<div class="browse-item-explanation"><strong>Wyjaśnienie:</strong> ${renderLatex(escapeHtml(q.explanation))}</div>`
       : '';
 
+    const flagTooltip = isQuestionFlagged
+      ? 'Usuń oznaczenie pytania'
+      : 'Oznacz pytanie flagą';
+    const flagBtn = `<button class="btn-flag-question btn-browse-flag${isQuestionFlagged ? ' flagged' : ''}" data-question-id="${escapeAttr(q.id)}" data-flagged="${isQuestionFlagged ? '1' : '0'}" ${tooltipAttrs(flagTooltip)} aria-label="${flagTooltip}">${isQuestionFlagged ? '&#x1F6A9;' : '&#x2691;'}</button>`;
     const editBtn = canEdit
       ? `<button class="btn-edit-question browse-edit-btn" data-question-index="${i}" ${tooltipAttrs('Edytuj treść pytania')} aria-label="Edytuj treść pytania">&#9998;</button>`
       : '';
@@ -1357,7 +1365,10 @@ export function renderBrowse(deckName, questions, options = {}) {
       <div class="browse-item" data-search-text="${escapeAttr(q.text.toLowerCase())}" data-question-index="${i}">
         <div class="browse-item-header">
           <div class="browse-item-number">${flashcard ? 'Fiszka' : 'Pytanie'} ${i + 1}</div>
-          ${editBtn}
+          <div class="browse-item-controls">
+            ${flagBtn}
+            ${editBtn}
+          </div>
         </div>
         <div class="browse-item-question">${renderLatex(escapeHtml(q.text))}</div>
         ${answersHtml ? `<div class="browse-item-answers">${answersHtml}</div>` : ''}

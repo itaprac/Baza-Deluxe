@@ -2560,6 +2560,7 @@ async function navigateToBrowse(deckId, options = {}) {
   const deckMeta = storage.getDecks().find(d => d.id === deckId);
   const deckName = deckMeta ? deckMeta.name : deckId;
   const questions = getFilteredQuestions(deckId);
+  const flaggedQuestionIds = deck.getFlaggedQuestionIds(deckId, questions.map((question) => question.id));
   let voteConfig = getVoteConfigForDeck(deckId);
   let voteSummaryByQuestion = {};
 
@@ -2589,6 +2590,7 @@ async function navigateToBrowse(deckId, options = {}) {
     voteConfig,
     deckDefaultSelectionMode: getDeckDefaultSelectionModeForDeckId(deckId),
     categoryName: getCategoryLabelForDeck(deckMeta, currentCategory),
+    flaggedQuestionIds,
   });
   bindBrowseEvents();
   bindVoteButtons(deckId, questions);
@@ -2646,6 +2648,44 @@ function bindBrowseEvents() {
       openBrowseEditor(index);
     });
   });
+
+  document.querySelectorAll('.btn-browse-flag').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      handleBrowseFlagToggle(btn);
+    });
+  });
+}
+
+function updateBrowseFlagButtonState(button, flagged) {
+  if (!button) return;
+  button.classList.toggle('flagged', flagged);
+  button.setAttribute('data-flagged', flagged ? '1' : '0');
+  button.innerHTML = flagged ? '&#x1F6A9;' : '&#x2691;';
+  const tooltip = flagged ? 'Usuń oznaczenie pytania' : 'Oznacz pytanie flagą';
+  button.setAttribute('data-tooltip', tooltip);
+  button.setAttribute('aria-label', tooltip);
+}
+
+function handleBrowseFlagToggle(button) {
+  if (!currentDeckId || !button) return;
+  const questionId = String(button.dataset.questionId || '').trim();
+  if (!questionId) return;
+
+  const nextFlagged = button.dataset.flagged !== '1';
+  let updated = deck.setCardFlagged(currentDeckId, questionId, nextFlagged);
+  if (!updated) {
+    // Defensive repair in case card state is missing for this deck.
+    const questions = storage.getQuestions(currentDeckId);
+    if (questions.length > 0) {
+      mergeCardsForQuestions(currentDeckId, questions);
+      updated = deck.setCardFlagged(currentDeckId, questionId, nextFlagged);
+    }
+  }
+  if (!updated) return;
+
+  updateBrowseFlagButtonState(button, nextFlagged);
+  showNotification(nextFlagged ? 'Pytanie oznaczone.' : 'Oznaczenie usunięte.', 'info');
 }
 
 function openBrowseEditor(index) {
