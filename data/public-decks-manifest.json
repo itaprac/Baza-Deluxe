@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-10T14:15:39.387Z",
+  "generatedAt": "2026-02-10T14:19:32.629Z",
   "decks": [
     {
       "id": "ai-egzamin",
@@ -129,8 +129,8 @@
       "name": "Infrastruktura Informatyczna – Egzamin",
       "description": "Pytania z egzaminu z Infrastruktury Informatycznej",
       "questionCount": 92,
-      "version": 1,
-      "contentHash": "c69d2180b112802c37200aef6ada3d368b581d32d75cce422189ceacdab2bad2",
+      "version": 2,
+      "contentHash": "c73be1d2a267cdfd20d357ee29c95e75d047884f7178441d9191491ebf4efee5",
       "group": "Semestr 5",
       "categories": [
         {

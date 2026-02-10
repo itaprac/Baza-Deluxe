@@ -4,7 +4,7 @@
     "name": "Infrastruktura Informatyczna – Egzamin",
     "group": "Semestr 5",
     "description": "Pytania z egzaminu z Infrastruktury Informatycznej",
-    "version": 1,
+    "version": 2,
     "defaultSelectionMode": "single",
     "categories": [
       {
