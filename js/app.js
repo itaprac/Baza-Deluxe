@@ -25,6 +25,7 @@ import {
   renderQuestionEditor,
   renderUserProfile,
   renderAdminPanel,
+  setDeckHeaderLabel,
   formatKeyName,
   updateStudyCounts,
   updateProgress,
@@ -208,6 +209,7 @@ let testShuffledAnswers = null;
 let testSelectedIds = new Set();
 let testShuffledMap = new Map(); // index → shuffled answers array
 let testResultAnswers = [];
+let testCurrentFlagged = false;
 let voteRpcUnavailableNotified = false;
 
 // Community vote cache:
@@ -1898,6 +1900,14 @@ function handleKeyDown(e) {
 
   // Test mode shortcuts
   if (activeView.id === 'view-test') {
+    if (e.key === 'f' || e.key === 'F') {
+      const flagBtn = document.getElementById('btn-test-flag-question');
+      if (flagBtn) {
+        e.preventDefault();
+        flagBtn.click();
+        return;
+      }
+    }
     const nextBtn = document.getElementById('btn-test-next');
     if (nextBtn) {
       const num = parseInt(e.key);
@@ -2064,6 +2074,14 @@ function navigateToDeckList(scope = activeDeckScope, options = {}) {
 
 // --- Category Select ---
 
+function getCategoryLabelForDeck(deckMeta, categoryId = currentCategory) {
+  if (!categoryId || !Array.isArray(deckMeta?.categories)) return '';
+  const category = deckMeta.categories.find((cat) => cat.id === categoryId);
+  if (!category) return '';
+  const label = String(category.name || category.id || '').trim();
+  return label.replace(/^\d+\.\s*/, '').trim();
+}
+
 function getFilteredQuestionIds(deckId) {
   if (!currentCategory) return null; // null means all questions
   const questions = storage.getQuestions(deckId);
@@ -2113,7 +2131,9 @@ function navigateToStudy(deckId, flaggedOnly = false) {
   ) {
     currentDeckSettings = getSettingsForDeck(deckId);
     const deckMeta = storage.getDecks().find(d => d.id === deckId);
-    document.getElementById('study-deck-name').textContent = deckMeta ? deckMeta.name : deckId;
+    const deckName = deckMeta ? deckMeta.name : deckId;
+    const categoryName = getCategoryLabelForDeck(deckMeta, currentSessionCategory || currentCategory);
+    setDeckHeaderLabel('study-deck-name', deckName, categoryName);
     showView('study');
     updateProgress(studiedCount, sessionTotal);
     if (currentCard) {
@@ -2131,7 +2151,9 @@ function navigateToStudy(deckId, flaggedOnly = false) {
   currentSessionCategory = currentCategory;
 
   const deckMeta = storage.getDecks().find(d => d.id === deckId);
-  document.getElementById('study-deck-name').textContent = deckMeta ? deckMeta.name : deckId;
+  const deckName = deckMeta ? deckMeta.name : deckId;
+  const categoryName = getCategoryLabelForDeck(deckMeta, currentSessionCategory || currentCategory);
+  setDeckHeaderLabel('study-deck-name', deckName, categoryName);
 
   showView('study');
   startStudySession();
@@ -2143,7 +2165,9 @@ function navigateToComplete(deckId) {
   const deckMeta = storage.getDecks().find(d => d.id === deckId);
   const todayStats = deck.getTodayStats(deckId);
   showView('complete');
-  renderSessionComplete(todayStats, deckMeta ? deckMeta.name : deckId);
+  renderSessionComplete(todayStats, deckMeta ? deckMeta.name : deckId, {
+    categoryName: getCategoryLabelForDeck(deckMeta, currentSessionCategory || currentCategory),
+  });
   bindCompleteEvents();
 }
 
@@ -2225,7 +2249,10 @@ function navigateToModeSelect(deckId) {
   }
 
   showView('mode-select');
-  renderModeSelect(deckName, stats, { canEdit: canEditDeckContent(deckId) });
+  renderModeSelect(deckName, stats, {
+    canEdit: canEditDeckContent(deckId),
+    categoryName: getCategoryLabelForDeck(deckMeta, currentCategory),
+  });
   bindModeSelectEvents(deckId, stats);
 }
 
@@ -2255,7 +2282,7 @@ function navigateToTestConfig(deckId) {
   const deckName = deckMeta ? deckMeta.name : deckId;
   const questions = getFilteredQuestions(deckId).filter(q => !isFlashcard(q));
 
-  document.getElementById('test-deck-name').textContent = deckName;
+  setDeckHeaderLabel('test-deck-name', deckName, getCategoryLabelForDeck(deckMeta, currentCategory));
   document.getElementById('test-counter').textContent = '';
   document.getElementById('test-progress').style.width = '0%';
 
@@ -2320,6 +2347,7 @@ function showTestQuestion() {
   const storedShuffle = testShuffledMap.get(testCurrentIndex) || null;
   // Restore previous selection if any
   const previousSelection = testAnswers.get(question.id) || null;
+  testCurrentFlagged = deck.getFlaggedQuestionIds(currentDeckId, [question.id]).includes(question.id);
 
   testShuffledAnswers = renderTestQuestion(
     question,
@@ -2328,7 +2356,8 @@ function showTestQuestion() {
     selectionMode,
     appSettings.shuffleAnswers,
     storedShuffle,
-    previousSelection
+    previousSelection,
+    testCurrentFlagged
   );
 
   // Store shuffle order for this index
@@ -2338,10 +2367,10 @@ function showTestQuestion() {
 
   testSelectedIds = previousSelection ? new Set(previousSelection) : new Set();
 
-  bindTestQuestionEvents(isMulti);
+  bindTestQuestionEvents(isMulti, question);
 }
 
-function bindTestQuestionEvents(isMulti) {
+function bindTestQuestionEvents(isMulti, question) {
   const answersList = document.getElementById('test-answers-list');
   const nextBtn = document.getElementById('btn-test-next');
 
@@ -2395,6 +2424,45 @@ function bindTestQuestionEvents(isMulti) {
       showTestQuestion();
     });
   }
+
+  const flagBtn = document.getElementById('btn-test-flag-question');
+  if (flagBtn && question?.id) {
+    flagBtn.addEventListener('click', () => {
+      handleTestFlagToggle(question.id);
+    });
+  }
+}
+
+function updateTestFlagButton(flagged) {
+  const flagBtn = document.getElementById('btn-test-flag-question');
+  if (!flagBtn) return;
+  flagBtn.classList.toggle('flagged', flagged);
+  flagBtn.innerHTML = flagged ? '&#x1F6A9;' : '&#x2691;';
+  const tooltipText = flagged
+    ? 'Usuń oznaczenie pytania (skrót: F)'
+    : 'Oznacz pytanie flagą (skrót: F)';
+  const ariaLabel = flagged
+    ? 'Usuń oznaczenie pytania'
+    : 'Oznacz pytanie flagą';
+  flagBtn.setAttribute('data-tooltip', tooltipText);
+  flagBtn.setAttribute('aria-label', ariaLabel);
+}
+
+function handleTestFlagToggle(questionId) {
+  if (!currentDeckId || !questionId) return;
+  testCurrentFlagged = !testCurrentFlagged;
+  let updated = deck.setCardFlagged(currentDeckId, questionId, testCurrentFlagged);
+  if (!updated) {
+    // Defensive repair in case cards were not initialized for this deck yet.
+    const questions = storage.getQuestions(currentDeckId);
+    if (questions.length > 0) {
+      mergeCardsForQuestions(currentDeckId, questions);
+      updated = deck.setCardFlagged(currentDeckId, questionId, testCurrentFlagged);
+    }
+  }
+  if (!updated) return;
+  updateTestFlagButton(testCurrentFlagged);
+  showNotification(testCurrentFlagged ? 'Pytanie oznaczone.' : 'Oznaczenie usunięte.', 'info');
 }
 
 async function finishTest() {
@@ -2452,6 +2520,7 @@ async function finishTest() {
     voteSummaryByQuestion,
     voteConfig,
     deckDefaultSelectionMode: getDeckDefaultSelectionModeForDeckId(currentDeckId),
+    categoryName: getCategoryLabelForDeck(deckMeta, currentCategory),
   });
   bindTestResultEvents();
 }
@@ -2519,6 +2588,7 @@ async function navigateToBrowse(deckId, options = {}) {
     voteSummaryByQuestion,
     voteConfig,
     deckDefaultSelectionMode: getDeckDefaultSelectionModeForDeckId(deckId),
+    categoryName: getCategoryLabelForDeck(deckMeta, currentCategory),
   });
   bindBrowseEvents();
   bindVoteButtons(deckId, questions);
@@ -5601,7 +5671,9 @@ function navigateToFlaggedBrowse(deckId) {
   const flaggedQuestions = allQuestions.filter(q => flaggedSet.has(q.id));
 
   showView('browse');
-  renderFlaggedBrowse(deckName, flaggedQuestions);
+  renderFlaggedBrowse(deckName, flaggedQuestions, {
+    categoryName: getCategoryLabelForDeck(deckMeta, currentCategory),
+  });
   bindFlaggedBrowseEvents(deckId);
 }
 

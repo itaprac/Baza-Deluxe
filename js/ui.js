@@ -103,6 +103,24 @@ function renderAnswerVoteControls(questionId, answerId, voteSummaryByAnswer, vot
   `;
 }
 
+export function setDeckHeaderLabel(elementId, deckName, categoryName = '') {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+
+  const safeDeckName = String(deckName || '').trim();
+  const safeCategoryName = String(categoryName || '').trim();
+
+  if (!safeCategoryName) {
+    el.textContent = safeDeckName;
+    return;
+  }
+
+  el.innerHTML = `
+    <span class="deck-name-main">${escapeHtml(safeDeckName)}</span>
+    <span class="deck-name-subcategory">${escapeHtml(`${safeCategoryName} (kategoria)`)}</span>
+  `;
+}
+
 export function renderDeckList(decks, statsMap, options = {}) {
   const container = document.getElementById('deck-list-container');
   const activeScope = options.activeScope === 'private' || options.activeScope === 'shared'
@@ -781,8 +799,8 @@ export function renderAnswerFeedback(
 
 // --- Session Complete ---
 
-export function renderSessionComplete(todayStats, deckName) {
-  document.getElementById('complete-deck-name').textContent = deckName;
+export function renderSessionComplete(todayStats, deckName, options = {}) {
+  setDeckHeaderLabel('complete-deck-name', deckName, options.categoryName || '');
   const total = todayStats.againCount + todayStats.hardCount + todayStats.goodCount + todayStats.easyCount;
   const maxCount = Math.max(todayStats.againCount, todayStats.hardCount, todayStats.goodCount, todayStats.easyCount, 1);
 
@@ -1021,7 +1039,7 @@ export function showPrompt(options = {}) {
 // --- Category Select ---
 
 export function renderCategorySelect(deckName, categories, statsMap) {
-  document.getElementById('category-select-deck-name').textContent = deckName;
+  setDeckHeaderLabel('category-select-deck-name', deckName);
 
   const totalQuestions = categories.reduce((sum, c) => sum + c.questionCount, 0);
   const totalDue = Object.values(statsMap).reduce((sum, s) => sum + s.due, 0);
@@ -1059,7 +1077,7 @@ export function renderCategorySelect(deckName, categories, statsMap) {
 // --- Mode Select ---
 
 export function renderModeSelect(deckName, deckStats, options = {}) {
-  document.getElementById('mode-select-deck-name').textContent = deckName;
+  setDeckHeaderLabel('mode-select-deck-name', deckName, options.categoryName || '');
 
   const canStartAnki = (Number(deckStats.totalCards) || 0) > 0;
   const flaggedCount = deckStats.flagged || 0;
@@ -1122,11 +1140,24 @@ export function renderTestConfig(totalQuestions) {
 
 // --- Test Question ---
 
-export function renderTestQuestion(question, num, total, selectionMode = 'multiple', shouldShuffle = true, preShuffledAnswers = null, previousSelection = null) {
+export function renderTestQuestion(
+  question,
+  num,
+  total,
+  selectionMode = 'multiple',
+  shouldShuffle = true,
+  preShuffledAnswers = null,
+  previousSelection = null,
+  flagged = false
+) {
   const isMulti = selectionMode === 'multiple';
   const shuffledAnswers = preShuffledAnswers || (shouldShuffle ? shuffle(question.answers) : [...question.answers]);
   const hint = isMulti ? '(Zaznacz wszystkie poprawne)' : '(Wybierz jedną odpowiedź)';
   const indicatorType = isMulti ? 'checkbox' : '';
+  const flagTooltip = flagged
+    ? 'Usuń oznaczenie pytania (skrót: F)'
+    : 'Oznacz pytanie flagą (skrót: F)';
+  const flagAria = flagged ? 'Usuń oznaczenie pytania' : 'Oznacz pytanie flagą';
 
   document.getElementById('test-counter').textContent = `${num} / ${total}`;
   const pct = total > 0 ? Math.round((num / total) * 100) : 0;
@@ -1138,7 +1169,12 @@ export function renderTestQuestion(question, num, total, selectionMode = 'multip
 
   document.getElementById('test-content').innerHTML = `
     <div class="question-card">
-      <div class="question-number">Pytanie ${num} z ${total}</div>
+      <div class="question-card-topbar">
+        <div class="question-number">Pytanie ${num} z ${total}</div>
+        <div class="question-card-topbar-actions">
+          <button class="btn-flag-question${flagged ? ' flagged' : ''}" id="btn-test-flag-question" ${tooltipAttrs(flagTooltip)} aria-label="${flagAria}">${flagged ? '&#x1F6A9;' : '&#x2691;'}</button>
+        </div>
+      </div>
       <div class="question-text">${renderLatex(escapeHtml(question.text))}</div>
       <div class="question-hint">${hint}</div>
       <div class="answers-list" id="test-answers-list">
@@ -1164,7 +1200,7 @@ export function renderTestQuestion(question, num, total, selectionMode = 'multip
 // --- Test Result ---
 
 export function renderTestResult(deckName, results) {
-  document.getElementById('test-result-deck-name').textContent = deckName;
+  setDeckHeaderLabel('test-result-deck-name', deckName, results.categoryName || '');
 
   const { score, total, answers } = results;
   const voteSummaryByQuestion = results.voteSummaryByQuestion && typeof results.voteSummaryByQuestion === 'object'
@@ -1268,7 +1304,7 @@ export function renderBrowse(deckName, questions, options = {}) {
     ? options.voteConfig
     : { enabled: false, canVote: false };
   const deckDefaultSelectionMode = normalizeSelectionMode(options.deckDefaultSelectionMode, 'multiple');
-  document.getElementById('browse-deck-name').textContent = deckName;
+  setDeckHeaderLabel('browse-deck-name', deckName, options.categoryName || '');
 
   const toolbarHtml = `
     <div class="browse-toolbar">
@@ -1558,8 +1594,8 @@ export function renderBrowseEditor(question, index, deckDefaultSelectionMode = '
 
 // --- Flagged Browse ---
 
-export function renderFlaggedBrowse(deckName, flaggedQuestions) {
-  document.getElementById('browse-deck-name').textContent = deckName;
+export function renderFlaggedBrowse(deckName, flaggedQuestions, options = {}) {
+  setDeckHeaderLabel('browse-deck-name', deckName, options.categoryName || '');
 
   const headerHtml = `
     <div class="flagged-header">

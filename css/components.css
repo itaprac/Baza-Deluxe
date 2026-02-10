@@ -3393,6 +3393,18 @@
     align-items: flex-start;
   }
 
+  .study-header .deck-name {
+    position: static;
+    transform: none;
+    align-items: flex-start;
+    text-align: left;
+    max-width: 100%;
+  }
+
+  .study-header .deck-name .deck-name-subcategory {
+    white-space: normal;
+  }
+
   .mode-select-grid {
     grid-template-columns: 1fr;
   }
