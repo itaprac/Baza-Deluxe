@@ -197,6 +197,7 @@ let sharedCatalogState = {
 let sharedSearchRequestSeq = 0;
 let mySubscriptionDeckIds = new Set();
 let publicDeckVisibilityErrorNotified = false;
+let publicDeckLoadStateById = new Map();
 
 // Test mode state
 let testQuestions = [];
@@ -1308,6 +1309,43 @@ function getPublicDeckManifestEntry(deckId) {
   return publicDeckManifestById.get(id) || null;
 }
 
+function setPublicDeckCardLoadingState(deckId, isLoading) {
+  const id = String(deckId || '').trim();
+  if (!id) return;
+  document.querySelectorAll('.deck-card[data-deck-id]').forEach((cardEl) => {
+    if (String(cardEl.dataset.deckId || '').trim() !== id) return;
+    cardEl.classList.toggle('is-loading', isLoading);
+    if (isLoading) {
+      cardEl.setAttribute('aria-busy', 'true');
+    } else {
+      cardEl.removeAttribute('aria-busy');
+    }
+  });
+}
+
+function markPublicDeckLoadingStart(deckId) {
+  const id = String(deckId || '').trim();
+  if (!id) return;
+  const nextCount = (publicDeckLoadStateById.get(id) || 0) + 1;
+  publicDeckLoadStateById.set(id, nextCount);
+  if (nextCount === 1) {
+    setPublicDeckCardLoadingState(id, true);
+  }
+}
+
+function markPublicDeckLoadingDone(deckId) {
+  const id = String(deckId || '').trim();
+  if (!id) return;
+  const currentCount = publicDeckLoadStateById.get(id) || 0;
+  const nextCount = currentCount - 1;
+  if (nextCount > 0) {
+    publicDeckLoadStateById.set(id, nextCount);
+    return;
+  }
+  publicDeckLoadStateById.delete(id);
+  setPublicDeckCardLoadingState(id, false);
+}
+
 async function fetchPublicDeckVisibilityMap() {
   if (!isSupabaseConfigured()) {
     return new Map();
@@ -1372,80 +1410,83 @@ function applyPublicDeckManifestToLocal(manifestDecks = [], visibilityMap = new 
 async function ensurePublicDeckLoaded(deckId) {
   const deckMeta = getDeckMeta(deckId);
   if (!deckMeta || getDeckScope(deckMeta) !== 'public') return true;
-
-  const existingQuestions = storage.peekQuestions(deckId);
-  let manifestEntry = getPublicDeckManifestEntry(deckId);
-  if (existingQuestions.length > 0) {
-    if (!manifestEntry) {
-      try {
-        if (publicDeckManifestById.size === 0) {
-          await loadPublicDeckManifest();
+  markPublicDeckLoadingStart(deckId);
+  try {
+    const existingQuestions = storage.peekQuestions(deckId);
+    let manifestEntry = getPublicDeckManifestEntry(deckId);
+    if (existingQuestions.length > 0) {
+      if (!manifestEntry) {
+        try {
+          if (publicDeckManifestById.size === 0) {
+            await loadPublicDeckManifest();
+          }
+          manifestEntry = getPublicDeckManifestEntry(deckId);
+        } catch {
+          // Manifest może być chwilowo niedostępny. Jeśli dane są już lokalnie, pozwalamy wejść do talii.
         }
-        manifestEntry = getPublicDeckManifestEntry(deckId);
-      } catch {
-        // Manifest może być chwilowo niedostępny. Jeśli dane są już lokalnie, pozwalamy wejść do talii.
       }
+      const defaultMode = normalizeSelectionMode(
+        deckMeta.defaultSelectionMode,
+        manifestEntry?.defaultSelectionMode || null
+      );
+      const normalizedExistingQuestions = applyDeckDefaultSelectionModeToQuestions(existingQuestions, defaultMode);
+      if (normalizedExistingQuestions !== existingQuestions) {
+        storage.saveQuestions(deckId, normalizedExistingQuestions);
+        mergeCardsForQuestions(deckId, normalizedExistingQuestions);
+      } else if (storage.peekCards(deckId).length === 0) {
+        mergeCardsForQuestions(deckId, existingQuestions);
+      }
+      return true;
     }
-    const defaultMode = normalizeSelectionMode(
-      deckMeta.defaultSelectionMode,
-      manifestEntry?.defaultSelectionMode || null
+
+    if (!manifestEntry) {
+      if (publicDeckManifestById.size === 0) {
+        await loadPublicDeckManifest();
+      }
+      manifestEntry = getPublicDeckManifestEntry(deckId);
+    }
+    if (!manifestEntry) {
+      throw new Error(`Brak talii "${deckId}" w manifeście.`);
+    }
+
+    const response = await fetch(manifestEntry.file, { cache: 'no-store' });
+    if (!response.ok) {
+      throw new Error(`Nie udało się pobrać talii ${deckId} (HTTP ${response.status}).`);
+    }
+
+    const data = await response.json();
+    if (!data || typeof data !== 'object' || !Array.isArray(data.questions)) {
+      throw new Error(`Nieprawidłowy format danych talii ${deckId}.`);
+    }
+    const deckDefaultSelectionMode = normalizeSelectionMode(
+      data.deck?.defaultSelectionMode,
+      manifestEntry.defaultSelectionMode || null
     );
-    const normalizedExistingQuestions = applyDeckDefaultSelectionModeToQuestions(existingQuestions, defaultMode);
-    if (normalizedExistingQuestions !== existingQuestions) {
-      storage.saveQuestions(deckId, normalizedExistingQuestions);
-      mergeCardsForQuestions(deckId, normalizedExistingQuestions);
-    } else if (storage.peekCards(deckId).length === 0) {
-      mergeCardsForQuestions(deckId, existingQuestions);
+    const normalizedQuestions = applyDeckDefaultSelectionModeToQuestions(
+      data.questions,
+      deckDefaultSelectionMode
+    );
+    storage.saveQuestions(deckId, normalizedQuestions);
+    mergeCardsForQuestions(deckId, normalizedQuestions);
+
+    const decks = storage.getDecks();
+    const idx = decks.findIndex((d) => d.id === deckId);
+    if (idx >= 0) {
+      const nextMeta = {
+        ...decks[idx],
+        questionCount: normalizedQuestions.length,
+        version: Number(data.deck?.version) || Number(manifestEntry.version) || 1,
+      };
+      if (deckDefaultSelectionMode) {
+        nextMeta.defaultSelectionMode = deckDefaultSelectionMode;
+      }
+      decks[idx] = nextMeta;
+      storage.saveDecks(decks);
     }
     return true;
+  } finally {
+    markPublicDeckLoadingDone(deckId);
   }
-
-  if (!manifestEntry) {
-    if (publicDeckManifestById.size === 0) {
-      await loadPublicDeckManifest();
-    }
-    manifestEntry = getPublicDeckManifestEntry(deckId);
-  }
-  if (!manifestEntry) {
-    throw new Error(`Brak talii "${deckId}" w manifeście.`);
-  }
-
-  const response = await fetch(manifestEntry.file, { cache: 'no-store' });
-  if (!response.ok) {
-    throw new Error(`Nie udało się pobrać talii ${deckId} (HTTP ${response.status}).`);
-  }
-
-  const data = await response.json();
-  if (!data || typeof data !== 'object' || !Array.isArray(data.questions)) {
-    throw new Error(`Nieprawidłowy format danych talii ${deckId}.`);
-  }
-  const deckDefaultSelectionMode = normalizeSelectionMode(
-    data.deck?.defaultSelectionMode,
-    manifestEntry.defaultSelectionMode || null
-  );
-  const normalizedQuestions = applyDeckDefaultSelectionModeToQuestions(
-    data.questions,
-    deckDefaultSelectionMode
-  );
-  storage.saveQuestions(deckId, normalizedQuestions);
-  mergeCardsForQuestions(deckId, normalizedQuestions);
-
-  const decks = storage.getDecks();
-  const idx = decks.findIndex((d) => d.id === deckId);
-  if (idx >= 0) {
-    const nextMeta = {
-      ...decks[idx],
-      questionCount: normalizedQuestions.length,
-      version: Number(data.deck?.version) || Number(manifestEntry.version) || 1,
-    };
-    if (deckDefaultSelectionMode) {
-      nextMeta.defaultSelectionMode = deckDefaultSelectionMode;
-    }
-    decks[idx] = nextMeta;
-    storage.saveDecks(decks);
-  }
-
-  return true;
 }
 
 function filterBuiltInPublicRows(rows = []) {
@@ -1943,12 +1984,14 @@ function navigateToDeckList(scope = activeDeckScope, options = {}) {
   }
 
   if (activeDeckScope === 'public' && !skipPublicSync) {
-    syncPublicDecksForCurrentUser({ allowFallback: false }).then(() => {
-      const deckListView = document.getElementById('view-deck-list');
-      if (activeDeckScope === 'public' && deckListView?.classList.contains('active')) {
-        navigateToDeckList('public', { skipPublicSync: true });
-      }
-    }).catch(() => {});
+    syncPublicDecksForCurrentUser({ allowFallback: false })
+      .catch(() => {})
+      .finally(() => {
+        const deckListView = document.getElementById('view-deck-list');
+        if (activeDeckScope === 'public' && deckListView?.classList.contains('active')) {
+          navigateToDeckList('public', { skipPublicSync: true });
+        }
+      });
   }
 
   if (activeDeckScope === 'private' && sessionMode === 'user' && !skipSubscribedSync) {
@@ -1986,6 +2029,8 @@ function navigateToDeckList(scope = activeDeckScope, options = {}) {
     canTogglePublicDeckVisibility: canManagePublicDecks(),
     showPrivateArchived,
     hasArchivedPrivate,
+    isLoading: activeDeckScope === 'public' && !skipPublicSync,
+    loadingText: 'Ładowanie talii ogólnych...',
   });
   bindDeckListEvents();
 }

@@ -114,7 +114,17 @@ export function renderDeckList(decks, statsMap, options = {}) {
   const canTogglePublicDeckVisibility = options.canTogglePublicDeckVisibility === true;
   const showPrivateArchived = options.showPrivateArchived === true;
   const hasArchivedPrivate = options.hasArchivedPrivate === true;
+  const isLoading = options.isLoading === true;
+  const loadingText = String(options.loadingText || 'Ładowanie...');
   const tabsHtml = renderDeckScopeTabs(activeScope);
+  const loadingBannerHtml = isLoading
+    ? `
+      <div class="deck-list-loading" role="status" aria-live="polite">
+        <span class="deck-list-loading-spinner" aria-hidden="true"></span>
+        <span class="deck-list-loading-text">${escapeHtml(loadingText)}</span>
+      </div>
+    `
+    : '';
   const privateArchiveToggleHtml = activeScope === 'private' && sessionMode === 'user' && (hasArchivedPrivate || showPrivateArchived)
     ? `<button class="btn btn-secondary" id="btn-toggle-private-archived">${showPrivateArchived ? 'Pokaż aktywne' : 'Pokaż archiwalne'}</button>`
     : '';
@@ -131,6 +141,7 @@ export function renderDeckList(decks, statsMap, options = {}) {
   if (showPrivateLocked) {
     container.innerHTML = `
       ${tabsHtml}
+      ${loadingBannerHtml}
       <div class="private-locked-panel">
         <div class="private-locked-title">Moje talie są dostępne po zalogowaniu</div>
         <div class="private-locked-text">
@@ -155,6 +166,7 @@ export function renderDeckList(decks, statsMap, options = {}) {
     container.innerHTML = `
       ${tabsHtml}
       ${privateActionsHtml}
+      ${loadingBannerHtml}
       <div class="empty-state">
         <div class="empty-state-icon">&#128218;</div>
         <div class="empty-state-title">${emptyTitle}</div>
@@ -446,6 +458,7 @@ export function renderDeckList(decks, statsMap, options = {}) {
     container.innerHTML = `
       ${tabsHtml}
       ${privateActionsHtml}
+      ${loadingBannerHtml}
       <div class="deck-groups deck-private-sections">
         <section class="deck-subsection">
           <div class="deck-subsection-header">
@@ -467,6 +480,7 @@ export function renderDeckList(decks, statsMap, options = {}) {
   container.innerHTML = `
     ${tabsHtml}
     ${privateActionsHtml}
+    ${loadingBannerHtml}
     <div class="deck-groups">
       ${groupsHtml}
     </div>

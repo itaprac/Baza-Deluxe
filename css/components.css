@@ -319,6 +319,41 @@
   gap: 12px;
 }
 
+.deck-list-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-bg-warm);
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+}
+
+.deck-list-loading-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(0, 0, 0, 0.16);
+  border-top-color: var(--color-primary);
+  border-radius: 999px;
+  animation: deck-loading-spin 0.8s linear infinite;
+}
+
+.deck-list-loading-text {
+  text-transform: uppercase;
+}
+
+@keyframes deck-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .deck-groups {
   display: flex;
   flex-direction: column;
@@ -385,6 +420,33 @@
   flex-direction: column;
   height: 100%;
   z-index: 1;
+}
+
+.deck-card.is-loading {
+  pointer-events: none;
+}
+
+.deck-card.is-loading::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(245, 242, 238, 0.72);
+  z-index: 2;
+}
+
+.deck-card.is-loading::after {
+  content: 'Ładowanie talii...';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
 }
 
 .deck-card:hover {

@@ -107,7 +107,8 @@ node scripts/generate-public-decks-manifest.js
 ## Publiczne talie (Ogólne)
 
 - Źródłem prawdy są pliki `data/*.json` oraz `data/public-decks-manifest.json`.
-- Manifest generujesz poleceniem `node scripts/generate-public-decks-manifest.js`.
+- Na Vercel manifest generuje się automatycznie podczas deploya (`vercel.json` -> `buildCommand`).
+- Lokalnie możesz go odtworzyć ręcznie poleceniem `node scripts/generate-public-decks-manifest.js`.
 - Widoczność `Ukryj/Pokaż` jest trzymana osobno w Supabase (`public_deck_visibility`).
 - Treść talii ogólnych jest tylko do odczytu w aplikacji.
 
