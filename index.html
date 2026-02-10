@@ -90,7 +90,15 @@
 
     <!-- === DECK LIST VIEW === -->
     <div id="view-deck-list" class="view active">
-      <div id="deck-list-container" class="deck-list"></div>
+      <div id="deck-list-container" class="deck-list">
+        <div class="deck-list-loading boot" role="status" aria-live="polite">
+          <span class="deck-list-loading-spinner" aria-hidden="true"></span>
+          <span class="deck-list-loading-text">Ładowanie talii ogólnych...</span>
+        </div>
+        <div class="deck-list-progress boot" aria-hidden="true">
+          <span class="deck-list-progress-bar"></span>
+        </div>
+      </div>
     </div>
 
     <!-- === STUDY SESSION VIEW === -->

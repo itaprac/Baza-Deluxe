@@ -116,6 +116,7 @@ export function renderDeckList(decks, statsMap, options = {}) {
   const hasArchivedPrivate = options.hasArchivedPrivate === true;
   const isLoading = options.isLoading === true;
   const loadingText = String(options.loadingText || 'Ładowanie...');
+  const blockContentWhileLoading = options.blockContentWhileLoading === true;
   const tabsHtml = renderDeckScopeTabs(activeScope);
   const loadingBannerHtml = isLoading
     ? `
@@ -140,6 +141,15 @@ export function renderDeckList(decks, statsMap, options = {}) {
       </div>
     `
     : '';
+
+  if (isLoading && blockContentWhileLoading) {
+    container.innerHTML = `
+      ${tabsHtml}
+      ${privateActionsHtml}
+      ${loadingBannerHtml}
+    `;
+    return;
+  }
 
   if (showPrivateLocked) {
     container.innerHTML = `

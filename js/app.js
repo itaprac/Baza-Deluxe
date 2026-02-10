@@ -198,6 +198,7 @@ let sharedSearchRequestSeq = 0;
 let mySubscriptionDeckIds = new Set();
 let publicDeckVisibilityErrorNotified = false;
 let publicDeckLoadStateById = new Map();
+let publicDeckInitialSyncDone = false;
 
 // Test mode state
 let testQuestions = [];
@@ -1757,6 +1758,7 @@ async function bootstrapGuestSession() {
   currentUserRole = 'user';
   mySubscriptionDeckIds = new Set();
   activeDeckScope = 'public';
+  publicDeckInitialSyncDone = false;
   await storage.initGuest();
   migrateDeckMetadata();
   loadUserPreferences();
@@ -1772,6 +1774,7 @@ async function bootstrapUserSession(user) {
   currentUserProfile = null;
   currentUserRole = 'user';
   activeDeckScope = 'public';
+  publicDeckInitialSyncDone = false;
   await storage.initForUser(user.id);
   try {
     const [role, profile] = await Promise.all([
@@ -1979,6 +1982,7 @@ function navigateToDeckList(scope = activeDeckScope, options = {}) {
     syncPublicDecksForCurrentUser({ allowFallback: true })
       .catch(() => {})
       .finally(() => {
+        publicDeckInitialSyncDone = true;
         const deckListView = document.getElementById('view-deck-list');
         if (activeDeckScope === 'public' && deckListView?.classList.contains('active')) {
           navigateToDeckList('public', { skipPublicSync: true });
@@ -2023,6 +2027,7 @@ function navigateToDeckList(scope = activeDeckScope, options = {}) {
     hasArchivedPrivate,
     isLoading: activeDeckScope === 'public' && !skipPublicSync,
     loadingText: 'Ładowanie talii ogólnych...',
+    blockContentWhileLoading: activeDeckScope === 'public' && !skipPublicSync && !publicDeckInitialSyncDone,
   });
   bindDeckListEvents();
 }
