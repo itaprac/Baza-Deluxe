@@ -2128,9 +2128,19 @@ function navigateToModeSelect(deckId) {
   const deckSettings = getSettingsForDeck(deckId);
   let stats;
   if (currentCategory) {
-    const allCards = storage.getCards(deckId);
-    const filteredIds = getFilteredQuestionIds(deckId);
+    const allQuestions = storage.getQuestions(deckId);
+    const filteredQuestions = allQuestions.filter((q) => q.category === currentCategory);
+    const filteredIds = filteredQuestions.map((q) => q.id);
     const filteredSet = new Set(filteredIds);
+
+    // Defensive repair: if questions exist but cards are missing/corrupted,
+    // rebuild card state to avoid locking mode cards for categorized decks.
+    let allCards = storage.getCards(deckId);
+    if (allQuestions.length > 0 && allCards.length === 0) {
+      mergeCardsForQuestions(deckId, allQuestions);
+      allCards = storage.getCards(deckId);
+    }
+
     const catCards = allCards.filter(c => filteredSet.has(c.questionId));
     const flaggedCount = catCards.filter(c => isFlagged(c)).length;
     const cards = appSettings.flaggedInAnki ? catCards : catCards.filter(c => !isFlagged(c));
@@ -2139,24 +2149,49 @@ function navigateToModeSelect(deckId) {
     const dueReview = cards.filter(c => isReviewCard(c) && c.dueDate <= now).length;
     const dueLearning = cards.filter(c => (isLearningCard(c) || isRelearningCard(c)) && c.dueDate <= now).length;
     const learningTotal = cards.filter(c => isLearningCard(c) || isRelearningCard(c)).length;
-    const totalNew = cards.filter(c => isNewCard(c)).length;
+    const totalNewFromCards = cards.filter(c => isNewCard(c)).length;
+    const fallbackTotal = filteredQuestions.length;
+    const totalNew = totalNewFromCards > 0 ? totalNewFromCards : (cards.length === 0 ? fallbackTotal : 0);
     const newCardsToday = allCards.filter(c => {
       if (c.firstStudiedDate == null) return false;
       const d = new Date(c.firstStudiedDate); d.setHours(0,0,0,0);
       return d.getTime() === todayMs;
     }).length;
     const newAvailable = Math.min(totalNew, Math.max(0, deckSettings.newCardsPerDay - newCardsToday));
+    const totalCards = cards.length > 0 ? cards.length : fallbackTotal;
     stats = {
       dueToday: dueReview + dueLearning,
       dueReview,
       dueLearning,
       learningTotal,
       newAvailable,
-      totalCards: cards.length,
+      totalCards,
       flagged: flaggedCount,
     };
   } else {
     stats = deck.getDeckStats(deckId, deckSettings, appSettings.flaggedInAnki);
+    if ((stats.totalCards || 0) === 0) {
+      const questionsCount = storage.getQuestions(deckId).length;
+      if (questionsCount > 0) {
+        const allCards = storage.getCards(deckId);
+        const today = new Date(); today.setHours(0, 0, 0, 0); const todayMs = today.getTime();
+        const newCardsToday = allCards.filter((c) => {
+          if (c.firstStudiedDate == null) return false;
+          const d = new Date(c.firstStudiedDate); d.setHours(0, 0, 0, 0);
+          return d.getTime() === todayMs;
+        }).length;
+        const fallbackNewAvailable = Math.min(
+          questionsCount,
+          Math.max(0, deckSettings.newCardsPerDay - newCardsToday)
+        );
+        stats = {
+          ...stats,
+          totalCards: questionsCount,
+          totalNew: Math.max(Number(stats.totalNew) || 0, questionsCount),
+          newAvailable: Math.max(Number(stats.newAvailable) || 0, fallbackNewAvailable),
+        };
+      }
+    }
   }
 
   showView('mode-select');
