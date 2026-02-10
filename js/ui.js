@@ -1061,7 +1061,7 @@ export function renderCategorySelect(deckName, categories, statsMap) {
 export function renderModeSelect(deckName, deckStats, options = {}) {
   document.getElementById('mode-select-deck-name').textContent = deckName;
 
-  const hasDue = deckStats.dueToday > 0 || deckStats.newAvailable > 0 || (deckStats.learningTotal || 0) > 0;
+  const canStartAnki = (Number(deckStats.totalCards) || 0) > 0;
   const flaggedCount = deckStats.flagged || 0;
   const canEdit = options.canEdit === true;
   const browseDesc = canEdit
@@ -1077,7 +1077,7 @@ export function renderModeSelect(deckName, deckStats, options = {}) {
 
   document.getElementById('mode-select-content').innerHTML = `
     <div class="mode-select-grid">
-      <div class="mode-card ${!hasDue ? 'disabled' : ''}" data-mode="anki">
+      <div class="mode-card ${!canStartAnki ? 'disabled' : ''}" data-mode="anki">
         <div class="mode-card-icon">&#x1F4DA;</div>
         <div class="mode-card-name">Anki</div>
         <div class="mode-card-desc">Nauka z powtarzaniem rozłożonym (SM-2)</div>
