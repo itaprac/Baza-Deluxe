@@ -1756,12 +1756,12 @@
         {
           "id": "a",
           "text": "Tak",
-          "correct": true
+          "correct": false
         },
         {
           "id": "b",
           "text": "Nie",
-          "correct": false
+          "correct": true
         }
       ],
       "explanation": "Przegląd po incydencie to ważna praktyka w zarządzaniu incydentami ITIL."
