@@ -117,7 +117,7 @@ export function setDeckHeaderLabel(elementId, deckName, categoryName = '') {
 
   el.innerHTML = `
     <span class="deck-name-main">${escapeHtml(safeDeckName)}</span>
-    <span class="deck-name-subcategory">${escapeHtml(`${safeCategoryName} (kategoria)`)}</span>
+    <span class="deck-name-subcategory">${escapeHtml(safeCategoryName)}</span>
   `;
 }
 
