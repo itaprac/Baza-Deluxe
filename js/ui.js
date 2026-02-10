@@ -123,6 +123,9 @@ export function renderDeckList(decks, statsMap, options = {}) {
         <span class="deck-list-loading-spinner" aria-hidden="true"></span>
         <span class="deck-list-loading-text">${escapeHtml(loadingText)}</span>
       </div>
+      <div class="deck-list-progress" aria-hidden="true">
+        <span class="deck-list-progress-bar"></span>
+      </div>
     `
     : '';
   const privateArchiveToggleHtml = activeScope === 'private' && sessionMode === 'user' && (hasArchivedPrivate || showPrivateArchived)

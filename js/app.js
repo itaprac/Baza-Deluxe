@@ -1762,10 +1762,6 @@ async function bootstrapGuestSession() {
   loadUserPreferences();
   updateHeaderSessionState('guest');
   closeUserMenu();
-  await syncPublicDecksForCurrentUser({
-    providerOverride: PUBLIC_DECK_PROVIDER,
-    allowFallback: true,
-  });
   navigateToDeckList();
 }
 
@@ -1790,17 +1786,13 @@ async function bootstrapUserSession(user) {
   }
   migrateDeckMetadata();
   loadUserPreferences();
-  await syncPublicDecksForCurrentUser({
-    providerOverride: PUBLIC_DECK_PROVIDER,
-    allowFallback: true,
-  });
-  await syncSubscribedDecksForCurrentUser();
   updateHeaderSessionState('user', {
     email: user.email || '',
     username: currentUserProfile?.username || '',
   });
   closeUserMenu();
   navigateToDeckList();
+  syncSubscribedDecksForCurrentUser().catch(() => {});
 }
 
 let mediaQueryCleanup = null;
@@ -1984,7 +1976,7 @@ function navigateToDeckList(scope = activeDeckScope, options = {}) {
   }
 
   if (activeDeckScope === 'public' && !skipPublicSync) {
-    syncPublicDecksForCurrentUser({ allowFallback: false })
+    syncPublicDecksForCurrentUser({ allowFallback: true })
       .catch(() => {})
       .finally(() => {
         const deckListView = document.getElementById('view-deck-list');
