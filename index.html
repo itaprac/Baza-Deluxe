@@ -22,217 +22,264 @@
   <script src="/js/runtime-config.js"></script>
 </head>
 <body>
+  <div class="app-shell-overlay" id="app-shell-overlay" aria-hidden="true"></div>
   <div class="app-container">
-
-    <!-- Global header — always visible -->
-    <header class="app-header">
-      <h1 class="app-title" id="btn-go-home">Bazunia</h1>
-      <div id="header-app-actions">
-        <input type="file" id="file-input" class="file-input-hidden" accept=".json">
-        <button class="btn btn-secondary btn-sm" id="btn-docs">Dokumentacja</button>
-        <button class="btn btn-secondary btn-sm" id="btn-app-settings">Ustawienia</button>
+    <aside class="app-sidebar" id="app-sidebar" aria-label="Nawigacja aplikacji">
+      <div class="app-sidebar-head">
+        <div class="app-sidebar-title">Bazunia</div>
+        <div class="app-sidebar-controls">
+          <button class="sidebar-collapse-icon" id="btn-sidebar-collapse" type="button" aria-label="Ukryj panel boczny" title="Ukryj panel boczny">&laquo;</button>
+          <button class="sidebar-close" id="btn-sidebar-close" type="button" aria-label="Zamknij panel">Zamknij</button>
+        </div>
       </div>
-      <div class="header-auth">
-        <button class="avatar-trigger" id="btn-user-menu" type="button" aria-haspopup="menu" aria-expanded="false" data-tooltip="Menu użytkownika" aria-label="Menu użytkownika">
-          <span class="avatar-circle" id="auth-user-avatar">?</span>
+      <nav class="sidebar-nav" aria-label="Główne sekcje">
+        <button class="sidebar-nav-item active" id="btn-nav-dashboard" type="button" aria-label="Dashboard" data-tooltip="Dashboard">
+          <span class="sidebar-nav-icon" aria-hidden="true">&#8962;</span>
+          <span class="sidebar-nav-label">Dashboard</span>
         </button>
-        <div class="user-menu" id="user-menu" hidden>
-          <div class="user-menu-head">
-            <div class="user-menu-email" id="auth-menu-email">Niezalogowany</div>
-            <div class="user-menu-role" id="auth-menu-role">gość</div>
+        <button class="sidebar-nav-item" id="btn-nav-settings" type="button" aria-label="Ustawienia" data-tooltip="Ustawienia">
+          <span class="sidebar-nav-icon" aria-hidden="true">&#9881;</span>
+          <span class="sidebar-nav-label">Ustawienia</span>
+        </button>
+        <button class="sidebar-nav-item" id="btn-nav-docs" type="button" aria-label="Dokumentacja" data-tooltip="Dokumentacja">
+          <span class="sidebar-nav-icon" aria-hidden="true">&#128196;</span>
+          <span class="sidebar-nav-label">Dokumentacja</span>
+        </button>
+        <button class="sidebar-nav-item" id="btn-nav-stats" type="button" style="display: none;" aria-label="Statystyki" data-tooltip="Statystyki">
+          <span class="sidebar-nav-icon" aria-hidden="true">&#128200;</span>
+          <span class="sidebar-nav-label">Statystyki</span>
+        </button>
+        <button class="sidebar-nav-item" id="btn-nav-admin" type="button" style="display: none;" aria-label="Panel admina" data-tooltip="Panel admina">
+          <span class="sidebar-nav-icon" aria-hidden="true">&#128737;</span>
+          <span class="sidebar-nav-label">Panel admina</span>
+        </button>
+      </nav>
+      <div class="sidebar-foot">
+        <div class="sidebar-foot-label">Sesja</div>
+        <div class="sidebar-foot-value" id="sidebar-session-label">Niezalogowany</div>
+      </div>
+    </aside>
+
+    <div class="app-main">
+      <!-- Global header — always visible -->
+      <header class="app-header">
+        <div class="app-header-left">
+          <button class="sidebar-toggle" id="btn-sidebar-toggle" type="button" aria-label="Otwórz panel nawigacji">☰</button>
+          <div class="topbar-context">
+            <div class="topbar-eyebrow">Bazunia</div>
+            <h1 class="app-title" id="btn-go-home">Dashboard</h1>
+            <div class="topbar-subtitle" id="topbar-view-subtitle">Talie, postęp i tryby nauki</div>
           </div>
-          <button class="user-menu-item" id="btn-open-user-view" type="button" style="display: none;">Mój profil</button>
-          <button class="user-menu-item" id="btn-open-admin-view" type="button" style="display: none;">Panel admina</button>
-          <button class="user-menu-item danger" id="btn-auth-logout" type="button" style="display: none;">Wyloguj</button>
         </div>
-      </div>
-    </header>
-
-    <!-- === AUTH VIEW === -->
-    <div id="view-auth" class="view">
-      <div class="auth-card">
-        <div class="auth-mode-tabs" role="tablist" aria-label="Tryb logowania">
-          <button class="auth-mode-tab active" id="btn-auth-mode-login" type="button" aria-pressed="true">Logowanie</button>
-          <button class="auth-mode-tab" id="btn-auth-mode-signup" type="button" aria-pressed="false">Rejestracja</button>
+        <div class="topbar-meta">
+          <div class="topbar-session-chip" id="topbar-session-chip">Tryb gościa</div>
+          <div class="header-auth">
+            <button class="avatar-trigger" id="btn-user-menu" type="button" aria-haspopup="menu" aria-expanded="false" data-tooltip="Menu użytkownika" aria-label="Menu użytkownika">
+              <span class="avatar-circle" id="auth-user-avatar">?</span>
+            </button>
+            <div class="user-menu" id="user-menu" hidden>
+              <div class="user-menu-head">
+                <div class="user-menu-email" id="auth-menu-email">Niezalogowany</div>
+                <div class="user-menu-role" id="auth-menu-role">gość</div>
+              </div>
+              <button class="user-menu-item" id="btn-open-user-view" type="button" style="display: none;">Mój profil</button>
+              <button class="user-menu-item" id="btn-open-admin-view" type="button" style="display: none;">Panel admina</button>
+              <button class="user-menu-item danger" id="btn-auth-logout" type="button" style="display: none;">Wyloguj</button>
+            </div>
+          </div>
         </div>
-        <h2 class="auth-title" id="auth-title">Zaloguj się</h2>
-        <p class="auth-subtitle" id="auth-subtitle">Logowanie jest opcjonalne. Możesz też kontynuować jako gość.</p>
-        <form id="auth-form" class="auth-form">
-          <div class="auth-field">
-            <label class="auth-label" for="auth-email">E-mail</label>
-            <input class="auth-input" id="auth-email" type="email" autocomplete="email" required>
+      </header>
+      <input type="file" id="file-input" class="file-input-hidden" accept=".json">
+
+      <main class="app-content">
+        <div class="app-content-inner">
+          <!-- === AUTH VIEW === -->
+          <div id="view-auth" class="view">
+            <div class="auth-card">
+              <div class="auth-mode-tabs" role="tablist" aria-label="Tryb logowania">
+                <button class="auth-mode-tab active" id="btn-auth-mode-login" type="button" aria-pressed="true">Logowanie</button>
+                <button class="auth-mode-tab" id="btn-auth-mode-signup" type="button" aria-pressed="false">Rejestracja</button>
+              </div>
+              <h2 class="auth-title" id="auth-title">Zaloguj się</h2>
+              <p class="auth-subtitle" id="auth-subtitle">Logowanie jest opcjonalne. Możesz też kontynuować jako gość.</p>
+              <form id="auth-form" class="auth-form">
+                <div class="auth-field">
+                  <label class="auth-label" for="auth-email">E-mail</label>
+                  <input class="auth-input" id="auth-email" type="email" autocomplete="email" required>
+                </div>
+
+                <div class="auth-field" id="auth-password-field">
+                  <label class="auth-label" for="auth-password">Hasło</label>
+                  <input class="auth-input" id="auth-password" type="password" autocomplete="current-password" required>
+                </div>
+
+                <div class="auth-field" id="auth-password-confirm-field" hidden>
+                  <label class="auth-label" for="auth-password-confirm">Powtórz hasło</label>
+                  <input class="auth-input" id="auth-password-confirm" type="password" autocomplete="new-password">
+                </div>
+
+                <div class="auth-actions">
+                  <button class="btn btn-primary" id="btn-auth-submit" type="submit">Zaloguj</button>
+                </div>
+                <div class="auth-links">
+                  <button class="auth-link-btn" id="btn-auth-reset-password" type="button">Nie pamiętam hasła</button>
+                </div>
+                <div class="auth-actions auth-actions-stack">
+                  <button class="btn btn-secondary" id="btn-auth-google" type="button">Zaloguj przez Google</button>
+                  <button class="btn btn-secondary" id="btn-auth-guest" type="button">Kontynuuj jako gość</button>
+                </div>
+                <p id="auth-message" class="auth-message"></p>
+              </form>
+            </div>
           </div>
 
-          <div class="auth-field" id="auth-password-field">
-            <label class="auth-label" for="auth-password">Hasło</label>
-            <input class="auth-input" id="auth-password" type="password" autocomplete="current-password" required>
+          <!-- === DECK LIST VIEW === -->
+          <div id="view-deck-list" class="view active">
+            <div id="deck-list-container" class="deck-list">
+              <div class="deck-list-loading boot" role="status" aria-live="polite">
+                <span class="deck-list-loading-spinner" aria-hidden="true"></span>
+                <span class="deck-list-loading-text">Ładowanie talii ogólnych...</span>
+              </div>
+              <div class="deck-list-progress boot" aria-hidden="true">
+                <span class="deck-list-progress-bar"></span>
+              </div>
+            </div>
           </div>
 
-          <div class="auth-field" id="auth-password-confirm-field" hidden>
-            <label class="auth-label" for="auth-password-confirm">Powtórz hasło</label>
-            <input class="auth-input" id="auth-password-confirm" type="password" autocomplete="new-password">
+          <!-- === STUDY SESSION VIEW === -->
+          <div id="view-study" class="view">
+            <div class="study-header">
+              <button class="btn-back" id="btn-back-to-decks">&larr; Powrót</button>
+              <span class="deck-name" id="study-deck-name"></span>
+              <div class="study-counts">
+                <span class="count-learning" id="count-learning">0</span>
+                <span>+</span>
+                <span class="count-review" id="count-review">0</span>
+                <span>+</span>
+                <span class="count-new" id="count-new">0</span>
+              </div>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-bar-fill" id="study-progress" style="width: 0%"></div>
+            </div>
+            <div id="study-content"></div>
           </div>
 
-          <div class="auth-actions">
-            <button class="btn btn-primary" id="btn-auth-submit" type="submit">Zaloguj</button>
+          <!-- === SESSION COMPLETE VIEW === -->
+          <div id="view-complete" class="view">
+            <div class="study-header">
+              <button class="btn-back" id="btn-back-from-complete">&larr; Powrót</button>
+              <span class="deck-name" id="complete-deck-name"></span>
+              <div></div>
+            </div>
+            <div id="complete-content"></div>
           </div>
-          <div class="auth-links">
-            <button class="auth-link-btn" id="btn-auth-reset-password" type="button">Nie pamiętam hasła</button>
-          </div>
-          <div class="auth-actions auth-actions-stack">
-            <button class="btn btn-secondary" id="btn-auth-google" type="button">Zaloguj przez Google</button>
-            <button class="btn btn-secondary" id="btn-auth-guest" type="button">Kontynuuj jako gość</button>
-          </div>
-          <p id="auth-message" class="auth-message"></p>
-        </form>
-      </div>
-    </div>
 
-    <!-- === DECK LIST VIEW === -->
-    <div id="view-deck-list" class="view active">
-      <div id="deck-list-container" class="deck-list">
-        <div class="deck-list-loading boot" role="status" aria-live="polite">
-          <span class="deck-list-loading-spinner" aria-hidden="true"></span>
-          <span class="deck-list-loading-text">Ładowanie talii ogólnych...</span>
+          <!-- === CATEGORY SELECT VIEW === -->
+          <div id="view-category-select" class="view">
+            <div class="study-header">
+              <button class="btn-back" id="btn-back-from-categories">&larr; Powrót</button>
+              <span class="deck-name" id="category-select-deck-name"></span>
+              <div></div>
+            </div>
+            <div id="category-select-content"></div>
+          </div>
+
+          <!-- === MODE SELECT VIEW === -->
+          <div id="view-mode-select" class="view">
+            <div class="study-header">
+              <button class="btn-back" id="btn-back-from-mode-select">&larr; Powrót</button>
+              <span class="deck-name" id="mode-select-deck-name"></span>
+              <div></div>
+            </div>
+            <div id="mode-select-content"></div>
+          </div>
+
+          <!-- === TEST SESSION VIEW === -->
+          <div id="view-test" class="view">
+            <div class="study-header">
+              <button class="btn-back" id="btn-back-from-test">&larr; Powrót</button>
+              <span class="deck-name" id="test-deck-name"></span>
+              <div class="test-counter" id="test-counter"></div>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-bar-fill" id="test-progress" style="width: 0%"></div>
+            </div>
+            <div id="test-content"></div>
+          </div>
+
+          <!-- === TEST RESULT VIEW === -->
+          <div id="view-test-result" class="view">
+            <div class="study-header">
+              <button class="btn-back" id="btn-back-from-test-result">&larr; Powrót</button>
+              <span class="deck-name" id="test-result-deck-name"></span>
+              <div></div>
+            </div>
+            <div id="test-result-content"></div>
+          </div>
+
+          <!-- === BROWSE VIEW === -->
+          <div id="view-browse" class="view">
+            <div class="study-header">
+              <button class="btn-back" id="btn-back-from-browse">&larr; Powrót</button>
+              <span class="deck-name" id="browse-deck-name"></span>
+              <div></div>
+            </div>
+            <div id="browse-content"></div>
+          </div>
+
+          <!-- === APP SETTINGS VIEW === -->
+          <div id="view-app-settings" class="view">
+            <div class="study-header">
+              <button class="btn-back" id="btn-back-from-app-settings">&larr; Powrót</button>
+              <span class="deck-name">Ustawienia aplikacji</span>
+              <div></div>
+            </div>
+            <div id="app-settings-content"></div>
+          </div>
+
+          <!-- === USER PROFILE VIEW === -->
+          <div id="view-user" class="view">
+            <div class="study-header">
+              <button class="btn-back" id="btn-back-from-user">&larr; Powrót</button>
+              <span class="deck-name">Profil użytkownika</span>
+              <div></div>
+            </div>
+            <div id="user-profile-content"></div>
+          </div>
+
+          <!-- === ADMIN VIEW === -->
+          <div id="view-admin" class="view">
+            <div class="study-header">
+              <button class="btn-back" id="btn-back-from-admin">&larr; Powrót</button>
+              <span class="deck-name">Panel admina</span>
+              <div></div>
+            </div>
+            <div id="admin-panel-content"></div>
+          </div>
+
+          <!-- === DOCS VIEW === -->
+          <div id="view-docs" class="view">
+            <div class="study-header">
+              <button class="btn-back" id="btn-back-from-docs">&larr; Powrót</button>
+              <span class="deck-name">Dokumentacja</span>
+              <div></div>
+            </div>
+            <div id="docs-content-container" class="docs-content"></div>
+          </div>
+
+          <!-- === SETTINGS VIEW === -->
+          <div id="view-settings" class="view">
+            <div class="study-header">
+              <button class="btn-back" id="btn-back-from-settings">&larr; Powrót</button>
+              <span class="deck-name" id="settings-deck-name"></span>
+              <div></div>
+            </div>
+            <div id="settings-content"></div>
+          </div>
         </div>
-        <div class="deck-list-progress boot" aria-hidden="true">
-          <span class="deck-list-progress-bar"></span>
-        </div>
-      </div>
+      </main>
     </div>
-
-    <!-- === STUDY SESSION VIEW === -->
-    <div id="view-study" class="view">
-      <div class="study-header">
-        <button class="btn-back" id="btn-back-to-decks">&larr; Powrót</button>
-        <span class="deck-name" id="study-deck-name"></span>
-        <div class="study-counts">
-          <span class="count-learning" id="count-learning">0</span>
-          <span>+</span>
-          <span class="count-review" id="count-review">0</span>
-          <span>+</span>
-          <span class="count-new" id="count-new">0</span>
-        </div>
-      </div>
-      <div class="progress-bar">
-        <div class="progress-bar-fill" id="study-progress" style="width: 0%"></div>
-      </div>
-      <div id="study-content"></div>
-    </div>
-
-    <!-- === SESSION COMPLETE VIEW === -->
-    <div id="view-complete" class="view">
-      <div class="study-header">
-        <button class="btn-back" id="btn-back-from-complete">&larr; Powrót</button>
-        <span class="deck-name" id="complete-deck-name"></span>
-        <div></div>
-      </div>
-      <div id="complete-content"></div>
-    </div>
-
-    <!-- === CATEGORY SELECT VIEW === -->
-    <div id="view-category-select" class="view">
-      <div class="study-header">
-        <button class="btn-back" id="btn-back-from-categories">&larr; Powrót</button>
-        <span class="deck-name" id="category-select-deck-name"></span>
-        <div></div>
-      </div>
-      <div id="category-select-content"></div>
-    </div>
-
-    <!-- === MODE SELECT VIEW === -->
-    <div id="view-mode-select" class="view">
-      <div class="study-header">
-        <button class="btn-back" id="btn-back-from-mode-select">&larr; Powrót</button>
-        <span class="deck-name" id="mode-select-deck-name"></span>
-        <div></div>
-      </div>
-      <div id="mode-select-content"></div>
-    </div>
-
-    <!-- === TEST SESSION VIEW === -->
-    <div id="view-test" class="view">
-      <div class="study-header">
-        <button class="btn-back" id="btn-back-from-test">&larr; Powrót</button>
-        <span class="deck-name" id="test-deck-name"></span>
-        <div class="test-counter" id="test-counter"></div>
-      </div>
-      <div class="progress-bar">
-        <div class="progress-bar-fill" id="test-progress" style="width: 0%"></div>
-      </div>
-      <div id="test-content"></div>
-    </div>
-
-    <!-- === TEST RESULT VIEW === -->
-    <div id="view-test-result" class="view">
-      <div class="study-header">
-        <button class="btn-back" id="btn-back-from-test-result">&larr; Powrót</button>
-        <span class="deck-name" id="test-result-deck-name"></span>
-        <div></div>
-      </div>
-      <div id="test-result-content"></div>
-    </div>
-
-    <!-- === BROWSE VIEW === -->
-    <div id="view-browse" class="view">
-      <div class="study-header">
-        <button class="btn-back" id="btn-back-from-browse">&larr; Powrót</button>
-        <span class="deck-name" id="browse-deck-name"></span>
-        <div></div>
-      </div>
-      <div id="browse-content"></div>
-    </div>
-
-    <!-- === APP SETTINGS VIEW === -->
-    <div id="view-app-settings" class="view">
-      <div class="study-header">
-        <button class="btn-back" id="btn-back-from-app-settings">&larr; Powrót</button>
-        <span class="deck-name">Ustawienia aplikacji</span>
-        <div></div>
-      </div>
-      <div id="app-settings-content"></div>
-    </div>
-
-    <!-- === USER PROFILE VIEW === -->
-    <div id="view-user" class="view">
-      <div class="study-header">
-        <button class="btn-back" id="btn-back-from-user">&larr; Powrót</button>
-        <span class="deck-name">Profil użytkownika</span>
-        <div></div>
-      </div>
-      <div id="user-profile-content"></div>
-    </div>
-
-    <!-- === ADMIN VIEW === -->
-    <div id="view-admin" class="view">
-      <div class="study-header">
-        <button class="btn-back" id="btn-back-from-admin">&larr; Powrót</button>
-        <span class="deck-name">Panel admina</span>
-        <div></div>
-      </div>
-      <div id="admin-panel-content"></div>
-    </div>
-
-    <!-- === DOCS VIEW === -->
-    <div id="view-docs" class="view">
-      <div class="study-header">
-        <button class="btn-back" id="btn-back-from-docs">&larr; Powrót</button>
-        <span class="deck-name">Dokumentacja</span>
-        <div></div>
-      </div>
-      <div id="docs-content-container" class="docs-content"></div>
-    </div>
-
-    <!-- === SETTINGS VIEW === -->
-    <div id="view-settings" class="view">
-      <div class="study-header">
-        <button class="btn-back" id="btn-back-from-settings">&larr; Powrót</button>
-        <span class="deck-name" id="settings-deck-name"></span>
-        <div></div>
-      </div>
-      <div id="settings-content"></div>
-    </div>
-
   </div>
   <div class="font-size-control">
     <button class="btn-font" id="btn-font-decrease" data-tooltip="Zmniejsz rozmiar tekstu" aria-label="Zmniejsz rozmiar tekstu">A&minus;</button>

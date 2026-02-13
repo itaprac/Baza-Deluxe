@@ -103,8 +103,10 @@ const AUTH_VIEW_CONFIG = {
 const DEFAULT_APP_SETTINGS = {
   theme: 'auto',
   colorTheme: 'academic-noir',
-  layoutWidth: '65%',
+  layoutWidth: '80%',
+  layoutWidthPresetVersion: 2,
   deckListMode: 'compact', // 'compact' or 'classic'
+  sidebarCollapsed: false,
   shuffleAnswers: true,
   questionOrder: 'shuffled', // 'shuffled' or 'ordered'
   flaggedInAnki: true, // include flagged cards in normal Anki mode
@@ -218,7 +220,10 @@ let voteRpcUnavailableNotified = false;
 let voteSummaryCache = new Map();
 
 function normalizeLayoutWidth(value) {
-  return String(value || '').trim() === '50%' ? '50%' : '65%';
+  const normalized = String(value || '').trim();
+  if (normalized === '65%') return '65%';
+  if (normalized === '80%') return '80%';
+  return '80%';
 }
 
 function slugifyDeckId(value) {
@@ -769,6 +774,238 @@ function getRoleLabel(role = currentUserRole) {
   return 'user';
 }
 
+function isMobileShell() {
+  return window.matchMedia('(max-width: 1024px)').matches;
+}
+
+function setSidebarOpen(open) {
+  const body = document.body;
+  if (!body) return;
+  const nextOpen = open === true && isMobileShell();
+  body.classList.toggle('sidebar-open', nextOpen);
+  const toggleBtn = document.getElementById('btn-sidebar-toggle');
+  if (toggleBtn) {
+    toggleBtn.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
+  }
+}
+
+function closeSidebar() {
+  setSidebarOpen(false);
+}
+
+function toggleSidebar() {
+  const body = document.body;
+  if (!body || !isMobileShell()) return;
+  setSidebarOpen(!body.classList.contains('sidebar-open'));
+}
+
+function setSidebarCollapseButtonLabel() {
+  const btn = document.getElementById('btn-sidebar-collapse');
+  if (!btn) return;
+  const collapsed = document.body.classList.contains('sidebar-collapsed');
+  const label = collapsed ? 'Pokaż panel boczny' : 'Ukryj panel boczny';
+  btn.innerHTML = collapsed ? '&raquo;' : '&laquo;';
+  btn.setAttribute('aria-label', label);
+  btn.setAttribute('title', label);
+}
+
+function setSidebarCollapsed(collapsed, options = {}) {
+  const body = document.body;
+  if (!body) return;
+  const nextCollapsed = collapsed === true;
+  body.classList.toggle('sidebar-collapsed', nextCollapsed);
+  setSidebarCollapseButtonLabel();
+  if (options.persist !== false) {
+    appSettings.sidebarCollapsed = nextCollapsed;
+    storage.saveAppSettings(appSettings);
+  }
+}
+
+function toggleSidebarCollapsed() {
+  const body = document.body;
+  if (!body) return;
+  if (isMobileShell()) {
+    closeSidebar();
+    return;
+  }
+  setSidebarCollapsed(!body.classList.contains('sidebar-collapsed'));
+}
+
+function getShellNavKey(viewId = 'deck-list') {
+  const normalized = String(viewId || 'deck-list');
+  if (normalized === 'app-settings') return 'settings';
+  if (normalized === 'docs') return 'docs';
+  if (normalized === 'user') return null;
+  if (normalized === 'admin') return 'admin';
+  if (normalized === 'auth') return null;
+  return 'dashboard';
+}
+
+function getTopbarCopy(viewId = 'deck-list') {
+  if (viewId === 'deck-list') {
+    if (activeDeckScope === 'private') {
+      return {
+        title: 'Moje talie',
+        subtitle: 'Własne i subskrybowane talie w jednym miejscu',
+      };
+    }
+    if (activeDeckScope === 'shared') {
+      return {
+        title: 'Udostępnione',
+        subtitle: 'Katalog społeczności i szybkie subskrypcje',
+      };
+    }
+    return {
+      title: 'Dashboard',
+      subtitle: 'Talie, postęp i tryby nauki',
+    };
+  }
+
+  const copyMap = {
+    auth: { title: 'Dostęp', subtitle: 'Logowanie, rejestracja i tryb gościa' },
+    study: { title: 'Sesja Anki', subtitle: 'Skupienie na pytaniu i jakości odpowiedzi' },
+    complete: { title: 'Podsumowanie', subtitle: 'Wynik bieżącej sesji nauki' },
+    'category-select': { title: 'Kategorie', subtitle: 'Wybierz zakres nauki dla talii' },
+    'mode-select': { title: 'Tryb nauki', subtitle: 'Anki, test lub przeglądanie treści' },
+    test: { title: 'Tryb testu', subtitle: 'Egzaminacyjny przebieg pytań bez wpływu na SRS' },
+    'test-result': { title: 'Wynik testu', subtitle: 'Ocena i przegląd odpowiedzi' },
+    browse: { title: 'Przeglądanie', subtitle: 'Lista pytań, filtracja i edycja treści' },
+    settings: { title: 'Ustawienia talii', subtitle: 'Parametry SRS i konfiguracja decka' },
+    'app-settings': { title: 'Ustawienia aplikacji', subtitle: 'Wygląd, skróty i zachowanie UI' },
+    user: { title: 'Profil użytkownika', subtitle: 'Tożsamość konta i preferencje' },
+    admin: { title: 'Panel admina', subtitle: 'Zarządzanie użytkownikami i widocznością talii' },
+    docs: { title: 'Dokumentacja', subtitle: 'Zasady działania i przewodnik po funkcjach' },
+  };
+
+  return copyMap[viewId] || {
+    title: 'Bazunia',
+    subtitle: 'Aplikacja do nauki pytań i fiszek',
+  };
+}
+
+function updateTopbarContext(viewId = 'deck-list') {
+  const titleEl = document.getElementById('btn-go-home');
+  const subtitleEl = document.getElementById('topbar-view-subtitle');
+  const copy = getTopbarCopy(viewId);
+  if (titleEl) titleEl.textContent = copy.title;
+  if (subtitleEl) subtitleEl.textContent = copy.subtitle;
+}
+
+function setShellNavActive(navKey) {
+  const navButtons = [
+    { key: 'dashboard', id: 'btn-nav-dashboard' },
+    { key: 'settings', id: 'btn-nav-settings' },
+    { key: 'docs', id: 'btn-nav-docs' },
+    { key: 'stats', id: 'btn-nav-stats' },
+    { key: 'admin', id: 'btn-nav-admin' },
+  ];
+
+  for (const entry of navButtons) {
+    const btn = document.getElementById(entry.id);
+    if (!btn) continue;
+    btn.classList.toggle('active', entry.key === navKey);
+  }
+}
+
+function syncShellState(viewId = 'deck-list') {
+  const navKey = getShellNavKey(viewId);
+  setShellNavActive(navKey);
+  updateTopbarContext(viewId);
+
+  const body = document.body;
+  if (!body) return;
+  body.classList.toggle('app-docs-mode', viewId === 'docs');
+
+  if (isMobileShell()) {
+    closeSidebar();
+  }
+}
+
+function bindShellNavigationEvents() {
+  const sidebarToggleBtn = document.getElementById('btn-sidebar-toggle');
+  if (sidebarToggleBtn) {
+    sidebarToggleBtn.addEventListener('click', () => {
+      toggleSidebar();
+    });
+  }
+
+  const sidebarCloseBtn = document.getElementById('btn-sidebar-close');
+  if (sidebarCloseBtn) {
+    sidebarCloseBtn.addEventListener('click', () => {
+      closeSidebar();
+    });
+  }
+
+  const shellOverlay = document.getElementById('app-shell-overlay');
+  if (shellOverlay) {
+    shellOverlay.addEventListener('click', () => {
+      closeSidebar();
+    });
+  }
+
+  const sidebarCollapseBtn = document.getElementById('btn-sidebar-collapse');
+  if (sidebarCollapseBtn) {
+    sidebarCollapseBtn.addEventListener('click', () => {
+      toggleSidebarCollapsed();
+    });
+  }
+
+  const dashboardBtn = document.getElementById('btn-nav-dashboard');
+  if (dashboardBtn) {
+    dashboardBtn.addEventListener('click', () => {
+      if (!isSessionReady()) {
+        showAuthPanel('Zaloguj się lub kontynuuj jako gość.', 'info');
+        return;
+      }
+      navigateToDeckList();
+    });
+  }
+
+  const settingsBtn = document.getElementById('btn-nav-settings');
+  if (settingsBtn) {
+    settingsBtn.addEventListener('click', () => {
+      if (!isSessionReady()) {
+        showAuthPanel('Zaloguj się lub kontynuuj jako gość.', 'info');
+        return;
+      }
+      navigateToAppSettings();
+    });
+  }
+
+  const docsBtn = document.getElementById('btn-nav-docs');
+  if (docsBtn) {
+    docsBtn.addEventListener('click', () => {
+      navigateToDocs();
+    });
+  }
+
+  const statsBtn = document.getElementById('btn-nav-stats');
+  if (statsBtn) {
+    statsBtn.addEventListener('click', () => {
+      showNotification('Sekcja statystyk będzie dostępna wkrótce.', 'info');
+    });
+  }
+
+  const adminBtn = document.getElementById('btn-nav-admin');
+  if (adminBtn) {
+    adminBtn.addEventListener('click', async () => {
+      await navigateToAdminPanel();
+    });
+  }
+
+  document.addEventListener('bazunia:view-change', (event) => {
+    const viewId = String(event?.detail?.viewId || '');
+    syncShellState(viewId || 'deck-list');
+  });
+
+  window.addEventListener('resize', () => {
+    if (!isMobileShell()) {
+      closeSidebar();
+    }
+    setSidebarCollapseButtonLabel();
+  });
+}
+
 // --- Per-deck settings ---
 
 const DEFAULT_DECK_BEHAVIOR_SETTINGS = Object.freeze({
@@ -912,6 +1149,26 @@ function loadUserPreferences() {
       keybindings: { ...DEFAULT_APP_SETTINGS.keybindings },
     };
   }
+  const presetVersion = Number(appSettings.layoutWidthPresetVersion) || 1;
+  if (presetVersion < 2) {
+    const legacyWidth = String(appSettings.layoutWidth || '').trim();
+    if (legacyWidth === '50%') {
+      appSettings.layoutWidth = '65%';
+    } else if (legacyWidth === '65%') {
+      appSettings.layoutWidth = '80%';
+    }
+    appSettings.layoutWidthPresetVersion = 2;
+    storage.saveAppSettings(appSettings);
+  }
+  // Deck list layout is now fixed to compact in redesigned shell.
+  if (appSettings.deckListMode !== 'compact') {
+    appSettings.deckListMode = 'compact';
+    storage.saveAppSettings(appSettings);
+  }
+  if (typeof appSettings.sidebarCollapsed !== 'boolean') {
+    appSettings.sidebarCollapsed = false;
+    storage.saveAppSettings(appSettings);
+  }
   const normalizedLayoutWidth = normalizeLayoutWidth(appSettings.layoutWidth);
   if (normalizedLayoutWidth !== appSettings.layoutWidth) {
     appSettings.layoutWidth = normalizedLayoutWidth;
@@ -923,6 +1180,7 @@ function loadUserPreferences() {
   applyTheme(appSettings.theme);
   applyColorTheme(appSettings.colorTheme);
   applyLayoutWidth(appSettings.layoutWidth);
+  setSidebarCollapsed(appSettings.sidebarCollapsed === true, { persist: false });
 
   const savedFont = storage.getFontScale();
   if (typeof savedFont === 'number' && savedFont > 0) {
@@ -950,9 +1208,13 @@ function updateHeaderSessionState(mode, profile = {}) {
   const avatarEl = document.getElementById('auth-user-avatar');
   const menuEmailEl = document.getElementById('auth-menu-email');
   const menuRoleEl = document.getElementById('auth-menu-role');
+  const sidebarSessionEl = document.getElementById('sidebar-session-label');
+  const topbarSessionChipEl = document.getElementById('topbar-session-chip');
   const authActionBtn = document.getElementById('btn-auth-logout');
   const openUserViewBtn = document.getElementById('btn-open-user-view');
   const openAdminViewBtn = document.getElementById('btn-open-admin-view');
+  const sidebarStatsBtn = document.getElementById('btn-nav-stats');
+  const sidebarAdminBtn = document.getElementById('btn-nav-admin');
   const userMenuBtn = document.getElementById('btn-user-menu');
 
   const email = String(profile.email || '');
@@ -975,6 +1237,16 @@ function updateHeaderSessionState(mode, profile = {}) {
   if (menuRoleEl) {
     menuRoleEl.textContent = mode === 'user' ? getRoleLabel() : 'gość';
   }
+  if (sidebarSessionEl) {
+    sidebarSessionEl.textContent = mode === 'user'
+      ? `${displayName} (${getRoleLabel()})`
+      : (mode === 'guest' ? 'Tryb gościa' : 'Niezalogowany');
+  }
+  if (topbarSessionChipEl) {
+    topbarSessionChipEl.textContent = mode === 'user'
+      ? `${displayName} • ${getRoleLabel()}`
+      : (mode === 'guest' ? 'Tryb gościa' : 'Niezalogowany');
+  }
   if (userMenuBtn) {
     userMenuBtn.style.display = '';
   }
@@ -987,6 +1259,8 @@ function updateHeaderSessionState(mode, profile = {}) {
     }
     if (openUserViewBtn) openUserViewBtn.style.display = '';
     if (openAdminViewBtn) openAdminViewBtn.style.display = canAccessAdminPanel() ? '' : 'none';
+    if (sidebarStatsBtn) sidebarStatsBtn.style.display = '';
+    if (sidebarAdminBtn) sidebarAdminBtn.style.display = canAccessAdminPanel() ? '' : 'none';
     return;
   }
 
@@ -998,6 +1272,8 @@ function updateHeaderSessionState(mode, profile = {}) {
     }
     if (openUserViewBtn) openUserViewBtn.style.display = 'none';
     if (openAdminViewBtn) openAdminViewBtn.style.display = 'none';
+    if (sidebarStatsBtn) sidebarStatsBtn.style.display = 'none';
+    if (sidebarAdminBtn) sidebarAdminBtn.style.display = 'none';
     return;
   }
 
@@ -1005,6 +1281,8 @@ function updateHeaderSessionState(mode, profile = {}) {
   if (authActionBtn) authActionBtn.style.display = 'none';
   if (openUserViewBtn) openUserViewBtn.style.display = 'none';
   if (openAdminViewBtn) openAdminViewBtn.style.display = 'none';
+  if (sidebarStatsBtn) sidebarStatsBtn.style.display = 'none';
+  if (sidebarAdminBtn) sidebarAdminBtn.style.display = 'none';
 }
 
 function openUserMenu() {
@@ -1857,12 +2135,18 @@ function applyColorTheme(colorTheme) {
 }
 
 function applyLayoutWidth(width) {
-  document.documentElement.style.setProperty('--app-max-width', width || '65%');
+  document.documentElement.style.setProperty('--app-max-width', width || '80%');
 }
 
 function handleKeyDown(e) {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
   if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+  if (e.key === 'Escape' && document.body.classList.contains('sidebar-open')) {
+    e.preventDefault();
+    closeSidebar();
+    return;
+  }
 
   const activeView = document.querySelector('.view.active');
   if (!activeView) return;
@@ -3631,16 +3915,6 @@ function bindAppSettingsEvents() {
     });
   });
 
-  // Deck list layout options
-  document.querySelectorAll('.deck-layout-option').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.deck-layout-option').forEach((b) => b.classList.remove('active'));
-      btn.classList.add('active');
-      appSettings.deckListMode = btn.dataset.deckLayout === 'classic' ? 'classic' : 'compact';
-      storage.saveAppSettings(appSettings);
-    });
-  });
-
   // Shuffle toggle
   const shuffleToggle = document.getElementById('toggle-shuffle');
   if (shuffleToggle) {
@@ -4342,6 +4616,9 @@ function bindAuthEvents() {
 function bindGlobalEvents() {
   // Keyboard shortcuts
   document.addEventListener('keydown', handleKeyDown);
+  bindShellNavigationEvents();
+  const activeView = document.querySelector('.view.active');
+  syncShellState(activeView ? activeView.id.replace('view-', '') : 'deck-list');
 
   const userMenuBtn = document.getElementById('btn-user-menu');
   const userMenu = document.getElementById('user-menu');
@@ -4385,19 +4662,24 @@ function bindGlobalEvents() {
     navigateToDeckList();
   });
 
-  // App settings button
-  document.getElementById('btn-app-settings').addEventListener('click', () => {
-    if (!isSessionReady()) {
-      showAuthPanel('Zaloguj się lub kontynuuj jako gość.', 'info');
-      return;
-    }
-    navigateToAppSettings();
-  });
+  // Optional legacy topbar buttons
+  const appSettingsBtn = document.getElementById('btn-app-settings');
+  if (appSettingsBtn) {
+    appSettingsBtn.addEventListener('click', () => {
+      if (!isSessionReady()) {
+        showAuthPanel('Zaloguj się lub kontynuuj jako gość.', 'info');
+        return;
+      }
+      navigateToAppSettings();
+    });
+  }
 
-  // Docs button
-  document.getElementById('btn-docs').addEventListener('click', () => {
-    navigateToDocs();
-  });
+  const docsBtn = document.getElementById('btn-docs');
+  if (docsBtn) {
+    docsBtn.addEventListener('click', () => {
+      navigateToDocs();
+    });
+  }
 
   // File input
   document.getElementById('file-input').addEventListener('change', async (e) => {

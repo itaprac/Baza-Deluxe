@@ -889,6 +889,10 @@ export function showView(viewId) {
   if (fontControl) {
     fontControl.style.display = FONT_SCALE_VIEWS.has(viewId) ? '' : 'none';
   }
+
+  document.dispatchEvent(new CustomEvent('bazunia:view-change', {
+    detail: { viewId },
+  }));
 }
 
 // --- Notification Toast ---
@@ -2020,27 +2024,14 @@ export function renderAppSettings(appSettings, defaults) {
   `).join('');
 
   const layoutWidths = [
-    { value: '65%', label: 'Normalny', desc: '65%' },
-    { value: '50%', label: 'Kompaktowy', desc: '50%' },
+    { value: '80%', label: 'Normalny', desc: '80%' },
+    { value: '65%', label: 'Kompaktowy', desc: '65%' },
   ];
 
   const layoutHtml = layoutWidths.map(lw => `
     <button class="layout-width-option ${appSettings.layoutWidth === lw.value ? 'active' : ''}" data-width="${lw.value}">
       <div class="layout-width-label">${lw.label}</div>
       <div class="layout-width-desc">${lw.desc}</div>
-    </button>
-  `).join('');
-
-  const deckListLayouts = [
-    { value: 'compact', label: 'Kompaktowy', desc: '2 talie obok siebie na desktopie' },
-    { value: 'classic', label: 'Klasyczny', desc: '1 talia w wierszu (jak wcześniej)' },
-  ];
-  const deckListMode = appSettings.deckListMode === 'classic' ? 'classic' : 'compact';
-
-  const deckListLayoutHtml = deckListLayouts.map((layout) => `
-    <button class="deck-layout-option ${deckListMode === layout.value ? 'active' : ''}" data-deck-layout="${layout.value}">
-      <div class="layout-width-label">${layout.label}</div>
-      <div class="layout-width-desc">${layout.desc}</div>
     </button>
   `).join('');
 
@@ -2074,13 +2065,6 @@ export function renderAppSettings(appSettings, defaults) {
         <div class="settings-section-title">Szerokość układu</div>
         <div class="layout-width-options" id="layout-width-options">
           ${layoutHtml}
-        </div>
-      </div>
-
-      <div class="settings-section">
-        <div class="settings-section-title">Widok listy talii</div>
-        <div class="deck-layout-options" id="deck-layout-options">
-          ${deckListLayoutHtml}
         </div>
       </div>
 
